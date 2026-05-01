@@ -1,11 +1,53 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { customers as CUSTOMERS } from '@/lib/data';
+import { useState, useMemo, useEffect } from 'react';
+import { customers as MOCK_CUSTOMERS } from '@/lib/data';
 import { customerStatusMeta } from '@/lib/utils';
-import { Search, Download, Send, Gift, X } from 'lucide-react';
+import { api, type ApiCustomer, type ApiCouponPass } from '@/lib/api';
+import { Search, Download, Send, Gift, X, Ticket } from 'lucide-react';
 
-type Customer = typeof CUSTOMERS[number];
+type CustomerStatus = 'vip' | 'active' | 'new' | 'at-risk';
+
+interface Customer {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+  phone: string;
+  joined: string;
+  biz: string[];
+  cards: number;
+  totalStamps: number;
+  lastVisit: string;
+  spend: number;
+  status: CustomerStatus;
+  tags: string[];
+}
+
+const AVATAR_COLORS = ['#1D9E75', '#3B6BCC', '#C26B1F', '#C53A6B', '#1A1A1F', '#8B5CF6'];
+
+function mapCustomer(c: ApiCustomer, i: number): Customer {
+  const parts = c.name.trim().split(/\s+/);
+  const initials = parts.map((w) => w[0]?.toUpperCase() ?? '').join('').slice(0, 2);
+  const stamps = c.total_stamps ?? 0;
+  const daysSince = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86_400_000);
+  const status: CustomerStatus = stamps > 20 ? 'vip' : daysSince < 30 ? 'new' : 'active';
+  return {
+    id: c.id,
+    name: c.name,
+    initials,
+    color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+    phone: c.phone,
+    joined: new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    biz: [api.getBusinessName() || 'Nook Café'],
+    cards: 1,
+    totalStamps: stamps,
+    lastVisit: daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : `${daysSince}d ago`,
+    spend: 0,
+    status,
+    tags: [],
+  };
+}
 
 function StatusPill({ status }: { status: string }) {
   const s = customerStatusMeta[status] ?? customerStatusMeta.active;
@@ -32,9 +74,26 @@ function KPI({ label, value, delta, up, warn }: { label: string; value: string; 
   );
 }
 
+const PASS_STATUS: Record<string, { label: string; bg: string; fg: string }> = {
+  active:   { label: 'Active',   bg: '#E8F7F2', fg: '#085041' },
+  redeemed: { label: 'Redeemed', bg: '#F0F1F4', fg: '#5C5F66' },
+  expired:  { label: 'Expired',  bg: '#FBE2EC', fg: '#9C2848' },
+};
+
 function CustomerDetail({ customer, onClose }: { customer: Customer; onClose: () => void }) {
-  const s = customerStatusMeta[customer.status] ?? customerStatusMeta.active;
   const visits = [3, 5, 4, 6, 7, 5, 8, 6, 7, 9, 8, 10];
+  const [activeTab, setActiveTab] = useState<'activity' | 'coupons'>('activity');
+  const [passes, setPasses] = useState<ApiCouponPass[]>([]);
+  const [passesLoading, setPassesLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab !== 'coupons') return;
+    setPassesLoading(true);
+    api.couponPasses(customer.id)
+      .then(setPasses)
+      .catch(() => setPasses([]))
+      .finally(() => setPassesLoading(false));
+  }, [customer.id, activeTab]);
 
   return (
     <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0, position: 'sticky', top: 84 }} className="fadeup">
@@ -59,11 +118,13 @@ function CustomerDetail({ customer, onClose }: { customer: Customer; onClose: ()
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
-          {customer.tags.map((t, i) => (
-            <span key={i} style={{ fontSize: 11, padding: '2px 8px', background: '#F0F1F4', borderRadius: 999, color: '#5C5F66' }}>#{t}</span>
-          ))}
-        </div>
+        {customer.tags.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
+            {customer.tags.map((t, i) => (
+              <span key={i} style={{ fontSize: 11, padding: '2px 8px', background: '#F0F1F4', borderRadius: 999, color: '#5C5F66' }}>#{t}</span>
+            ))}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginTop: 14 }}>
           {[['Cards', customer.cards.toString()], ['Stamps', customer.totalStamps.toString()], ['Spend', `$${customer.spend}`]].map(([l, v]) => (
@@ -74,31 +135,91 @@ function CustomerDetail({ customer, onClose }: { customer: Customer; onClose: ()
           ))}
         </div>
 
-        <div style={{ marginTop: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 500 }}>Visits · 12 weeks</span>
-            <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{visits.reduce((a, b) => a + b, 0)} total</span>
-          </div>
-          <div style={{ display: 'flex', gap: 3, height: 40, alignItems: 'flex-end' }}>
-            {visits.map((v, i) => (
-              <div key={i} style={{
-                flex: 1, height: `${(v / Math.max(...visits)) * 100}%`,
-                background: customer.color, borderRadius: 2,
-                opacity: 0.65 + (i / visits.length) * 0.35,
-              }} />
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>Cards in wallet</div>
-          {customer.biz.map((b, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', border: '1px solid #F0F0F2', borderRadius: 8, marginBottom: 6 }}>
-              <span style={{ fontSize: 13 }}>{b}</span>
-              <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{Math.floor(customer.totalStamps / customer.biz.length)} stamps</span>
-            </div>
+        {/* Tab switcher */}
+        <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3, marginTop: 16 }}>
+          {([['activity', 'Activity'], ['coupons', 'Coupons']] as const).map(([id, label]) => (
+            <button key={id} onClick={() => setActiveTab(id)} style={{
+              flex: 1, height: 26, border: 0, borderRadius: 7,
+              background: activeTab === id ? 'white' : 'transparent',
+              color: activeTab === id ? '#1A1A1F' : '#5C5F66',
+              fontSize: 12, fontWeight: activeTab === id ? 500 : 400,
+              cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: activeTab === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+            }}>{label}</button>
           ))}
         </div>
+
+        {activeTab === 'activity' && (
+          <>
+            <div style={{ marginTop: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 500 }}>Visits · 12 weeks</span>
+                <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{visits.reduce((a, b) => a + b, 0)} total</span>
+              </div>
+              <div style={{ display: 'flex', gap: 3, height: 40, alignItems: 'flex-end' }}>
+                {visits.map((v, i) => (
+                  <div key={i} style={{
+                    flex: 1, height: `${(v / Math.max(...visits)) * 100}%`,
+                    background: customer.color, borderRadius: 2,
+                    opacity: 0.65 + (i / visits.length) * 0.35,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>Cards in wallet</div>
+              {customer.biz.map((b, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', border: '1px solid #F0F0F2', borderRadius: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 13 }}>{b}</span>
+                  <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{Math.floor(customer.totalStamps / customer.biz.length)} stamps</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {activeTab === 'coupons' && (
+          <div style={{ marginTop: 16 }}>
+            {passesLoading ? (
+              <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 12, color: '#8A8D94' }}>Loading…</div>
+            ) : passes.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <Ticket size={28} color="#EBEBEB" style={{ margin: '0 auto 8px' }} />
+                <div style={{ fontSize: 12, color: '#8A8D94' }}>No coupon passes yet</div>
+              </div>
+            ) : (
+              passes.map((p) => {
+                const meta = PASS_STATUS[p.status] ?? PASS_STATUS.active;
+                const coupon = p.coupons;
+                const expiryDate = new Date(p.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                return (
+                  <div key={p.id} style={{ padding: '10px 12px', border: '1px solid #F0F0F2', borderRadius: 10, marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>{coupon?.title ?? 'Coupon'}</div>
+                      <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 999, background: meta.bg, color: meta.fg }}>{meta.label}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 3, fontFamily: 'var(--font-mono)' }}>
+                      {p.barcode} · Exp {expiryDate}
+                    </div>
+                    {p.redeemed_at && (
+                      <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 2 }}>
+                        Redeemed {new Date(p.redeemed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+            <button style={{
+              width: '100%', height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              border: '1px dashed #EBEBEB', borderRadius: 8, background: 'transparent',
+              cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', color: '#5C5F66', marginTop: 4,
+            }}>
+              <Ticket size={13} /> Send coupon
+            </button>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
           <button style={{ flex: 1, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -113,25 +234,42 @@ function CustomerDetail({ customer, onClose }: { customer: Customer; onClose: ()
   );
 }
 
-const SEGS = [
-  { id: 'all', label: 'All', count: CUSTOMERS.length },
-  { id: 'vip', label: 'VIP', count: CUSTOMERS.filter((c) => c.status === 'vip').length },
-  { id: 'new', label: 'New (30d)', count: CUSTOMERS.filter((c) => c.status === 'new').length },
-  { id: 'at-risk', label: 'At risk', count: CUSTOMERS.filter((c) => c.status === 'at-risk').length },
-  { id: 'multi', label: 'Multi-business', count: CUSTOMERS.filter((c) => c.biz.length > 1).length },
-];
-
 export default function CustomersPage() {
   const [q, setQ] = useState('');
   const [seg, setSeg] = useState('all');
-  const [selected, setSelected] = useState<Customer>(CUSTOMERS[0]);
+  const [allCustomers, setAllCustomers] = useState<Customer[]>(MOCK_CUSTOMERS as Customer[]);
+  const [selected, setSelected] = useState<Customer>(MOCK_CUSTOMERS[0] as Customer);
 
-  const rows = useMemo(() => CUSTOMERS.filter((c) => {
+  useEffect(() => {
+    api.customers()
+      .then((cs) => {
+        const mapped = cs.map(mapCustomer);
+        if (mapped.length > 0) {
+          setAllCustomers(mapped);
+          setSelected(mapped[0]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const segs = [
+    { id: 'all',     label: 'All',            count: allCustomers.length },
+    { id: 'vip',     label: 'VIP',            count: allCustomers.filter((c) => c.status === 'vip').length },
+    { id: 'new',     label: 'New (30d)',       count: allCustomers.filter((c) => c.status === 'new').length },
+    { id: 'at-risk', label: 'At risk',        count: allCustomers.filter((c) => c.status === 'at-risk').length },
+    { id: 'multi',   label: 'Multi-business', count: allCustomers.filter((c) => c.biz.length > 1).length },
+  ];
+
+  const rows = useMemo(() => allCustomers.filter((c) => {
     if (q && !c.name.toLowerCase().includes(q.toLowerCase()) && !c.phone.includes(q)) return false;
     if (seg === 'all') return true;
     if (seg === 'multi') return c.biz.length > 1;
     return c.status === seg;
-  }), [q, seg]);
+  }), [q, seg, allCustomers]);
+
+  const vipCount    = allCustomers.filter((c) => c.status === 'vip').length;
+  const newCount    = allCustomers.filter((c) => c.status === 'new').length;
+  const atRiskCount = allCustomers.filter((c) => c.status === 'at-risk').length;
 
   const thStyle: React.CSSProperties = { padding: '12px 16px', textAlign: 'left', fontWeight: 500, fontSize: 11, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '0.04em', background: '#FAFAFB' };
   const tdStyle: React.CSSProperties = { padding: '12px 16px', verticalAlign: 'middle' };
@@ -140,10 +278,10 @@ export default function CustomersPage() {
     <div style={{ padding: '24px 28px', display: 'grid', gap: 16 }}>
       {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
-        <KPI label="Total customers" value="284" delta="+18 this week" up />
-        <KPI label="VIPs" value="32" delta="11.3% of base" />
-        <KPI label="New (30d)" value="46" delta="+12% MoM" up />
-        <KPI label="At-risk" value="9" delta="No visit in 14d" warn />
+        <KPI label="Total customers" value={allCustomers.length.toString()} delta={`${allCustomers.length} total`} up />
+        <KPI label="VIPs"            value={vipCount.toString()}            delta={`${allCustomers.length ? ((vipCount / allCustomers.length) * 100).toFixed(1) : 0}% of base`} />
+        <KPI label="New (30d)"       value={newCount.toString()}            delta="joined in last 30 days" up />
+        <KPI label="At-risk"         value={atRiskCount.toString()}         delta="No visit in 14d" warn />
       </div>
 
       {/* Toolbar */}
@@ -154,7 +292,7 @@ export default function CustomersPage() {
             style={{ flex: 1, border: 0, background: 'transparent', outline: 'none', fontSize: 13, fontFamily: 'inherit' }} />
         </div>
         <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
-          {SEGS.map((s) => (
+          {segs.map((s) => (
             <button key={s.id} onClick={() => setSeg(s.id)} style={{
               height: 26, padding: '0 10px', border: 0, borderRadius: 7,
               background: seg === s.id ? 'white' : 'transparent',
@@ -232,7 +370,7 @@ export default function CustomersPage() {
             </tbody>
           </table>
         </div>
-        {selected && <CustomerDetail customer={selected} onClose={() => setSelected(CUSTOMERS[0])} />}
+        {selected && <CustomerDetail customer={selected} onClose={() => setSelected(allCustomers[0])} />}
       </div>
     </div>
   );

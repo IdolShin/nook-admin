@@ -1,20 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
 
-function Field({ label, type = 'text', placeholder, hint }: { label: string; type?: string; placeholder: string; hint?: React.ReactNode }) {
+function Field({ label, type = 'text', placeholder, hint, value, onChange }: {
+  label: string; type?: string; placeholder: string; hint?: React.ReactNode;
+  value?: string; onChange?: (v: string) => void;
+}) {
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
         <label style={{ fontSize: 12, color: '#5C5F66', fontWeight: 500 }}>{label}</label>
         {hint}
       </div>
-      <input type={type} placeholder={placeholder} style={{
-        width: '100%', height: 42, padding: '0 12px',
-        border: '1px solid #EBEBEB', borderRadius: 10,
-        fontSize: 14, fontFamily: 'inherit', outline: 'none',
-        color: '#1A1A1F',
-      }} />
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        style={{
+          width: '100%', height: 42, padding: '0 12px',
+          border: '1px solid #EBEBEB', borderRadius: 10,
+          fontSize: 14, fontFamily: 'inherit', outline: 'none',
+          color: '#1A1A1F',
+        }}
+      />
     </div>
   );
 }
@@ -36,6 +47,31 @@ const AppleLogo = () => (
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  async function handleSubmit() {
+    if (!email || !password) { setError('Email and password are required.'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      await api.login(email, password);
+      router.push('/dashboard');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Login failed';
+      try {
+        const parsed = JSON.parse(msg);
+        setError(parsed.error ?? msg);
+      } catch {
+        setError(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div style={{
@@ -81,16 +117,32 @@ export default function AuthPage() {
           </div>
 
           {mode === 'signup' && <Field label="Business name" placeholder="e.g. Nook Café" />}
-          <Field label="Email" type="email" placeholder="you@yourbusiness.com" />
-          <Field label="Password" type="password" placeholder="••••••••"
-            hint={mode === 'login' ? <a href="#" style={{ color: '#085041', textDecoration: 'none', fontWeight: 500, fontSize: 12 }}>Forgot?</a> : undefined} />
+          <Field
+            label="Email" type="email" placeholder="you@yourbusiness.com"
+            value={email} onChange={setEmail}
+          />
+          <Field
+            label="Password" type="password" placeholder="••••••••"
+            value={password} onChange={setPassword}
+            hint={mode === 'login' ? <a href="#" style={{ color: '#085041', textDecoration: 'none', fontWeight: 500, fontSize: 12 }}>Forgot?</a> : undefined}
+          />
 
-          <button style={{
-            width: '100%', marginTop: 18, height: 44,
-            border: 0, borderRadius: 10, background: '#1D9E75', color: 'white',
-            fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}>
-            {mode === 'login' ? 'Log in' : 'Create workspace'}
+          {error && (
+            <div style={{ fontSize: 12, color: '#9C2848', marginBottom: 8, padding: '8px 12px', background: '#FBE2EC', borderRadius: 8 }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{
+              width: '100%', marginTop: 8, height: 44,
+              border: 0, borderRadius: 10, background: loading ? '#8A8D94' : '#1D9E75', color: 'white',
+              fontSize: 14, fontWeight: 600, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            {loading ? 'Logging in…' : mode === 'login' ? 'Log in' : 'Create workspace'}
           </button>
 
           <div style={{ flex: 1 }} />
@@ -139,7 +191,7 @@ export default function AuthPage() {
 
           <div style={{ marginTop: 30, padding: 16, background: 'rgba(255,255,255,0.10)', borderRadius: 12 }}>
             <div style={{ fontSize: 13, lineHeight: 1.5, fontStyle: 'italic' }}>
-              "We launched Nook in a weekend. By month two, we'd issued more punch cards than we did in a year of paper."
+              &quot;We launched Nook in a weekend. By month two, we&apos;d issued more punch cards than we did in a year of paper.&quot;
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
               <div style={{ width: 28, height: 28, borderRadius: 999, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>JK</div>

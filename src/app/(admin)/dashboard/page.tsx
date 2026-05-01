@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { trend30, redeem30, cardMix, bizActivity, activity, scheduledPush } from '@/lib/data';
+import { api } from '@/lib/api';
 import NookLineChart from '@/components/charts/NookLineChart';
 import NookDonutChart from '@/components/charts/NookDonutChart';
 import NookStackedBar from '@/components/charts/NookStackedBar';
@@ -76,11 +78,25 @@ const activityIconComp: Record<string, React.ElementType> = {
 };
 
 export default function DashboardPage() {
+  const [customerCount, setCustomerCount] = useState<number | null>(null);
+  const [cardCount, setCardCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    api.customers().then((cs) => setCustomerCount(cs.length)).catch(() => {});
+    api.cards().then((cs) => setCardCount(cs.filter((c) => c.is_active).length)).catch(() => {});
+  }, []);
+
+  const displayStats = STAT_CARDS.map((s, i) => {
+    if (i === 0 && customerCount !== null) return { ...s, value: customerCount.toLocaleString() };
+    if (i === 1 && cardCount !== null)     return { ...s, value: cardCount.toLocaleString() };
+    return s;
+  });
+
   return (
     <div style={{ padding: '24px 28px', display: 'grid', gap: 18 }}>
       {/* KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-        {STAT_CARDS.map((c, i) => (
+        {displayStats.map((c, i) => (
           <Card key={i} style={{
             padding: 20,
             background: c.grad,

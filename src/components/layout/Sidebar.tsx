@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, CreditCard, Users, Bell, BarChart2, Settings,
-  QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight,
+  QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight, Ticket,
 } from 'lucide-react';
 import { businesses } from '@/lib/data';
 
 const NAV_ITEMS = [
   { href: '/dashboard',  label: 'Dashboard',          icon: LayoutDashboard },
   { href: '/cards',      label: 'Loyalty cards',      icon: CreditCard,  count: 12 },
+  { href: '/coupons',    label: 'Coupons',             icon: Ticket,      count: 4 },
   { href: '/customers',  label: 'Customers',           icon: Users,       count: 284 },
   { href: '/push',       label: 'Push notifications', icon: Bell },
   { href: '/analytics',  label: 'Analytics',           icon: BarChart2 },

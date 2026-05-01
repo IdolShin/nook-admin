@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { pastCampaigns } from '@/lib/data';
 import { Zap, Calendar, Send } from 'lucide-react';
+import { api } from '@/lib/api';
 
 const AUDIENCES = [
   { id: 'all',     label: 'All customers',       count: 128 },
@@ -64,7 +65,25 @@ export default function PushPage() {
   const [title, setTitle] = useState('Weekend special: 2x stamps');
   const [body, setBody] = useState('Drop by this weekend and earn double stamps on every drink. Limited time only ☕');
   const [when, setWhen] = useState('now');
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState('');
   const reach = AUDIENCES.find((a) => a.id === audience)?.count ?? 128;
+
+  async function handleSend() {
+    if (!title || !body) { setSendResult('Add a title and message before sending.'); return; }
+    setSending(true);
+    setSendResult('');
+    try {
+      const res = await api.broadcast(title, body);
+      setSendResult(`Sent · ${res.web_push_sent} push · ${res.wallet_updated} wallets updated`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Send failed';
+      try { setSendResult(`Error: ${JSON.parse(msg).error ?? msg}`); }
+      catch { setSendResult(`Error: ${msg}`); }
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <div style={{ padding: '24px 28px', display: 'grid', gap: 16 }}>
@@ -144,18 +163,33 @@ export default function PushPage() {
               </div>
             </FormSection>
 
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 24, paddingTop: 16, borderTop: '1px solid #F0F0F2' }}>
-              <button style={{ height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Save as draft</button>
-              <div style={{ flex: 1 }} />
-              <button style={{ height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Send test to me</button>
-              <button style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                height: 34, padding: '0 16px',
-                background: '#1D9E75', color: 'white', border: 0, borderRadius: 8,
-                fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-              }}>
-                <Send size={13} /> {when === 'now' ? `Send to ${reach}` : `Schedule (${reach})`}
-              </button>
+            <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #F0F0F2' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button style={{ height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Save as draft</button>
+                <div style={{ flex: 1 }} />
+                <button style={{ height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Send test to me</button>
+                <button
+                  onClick={handleSend}
+                  disabled={sending}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    height: 34, padding: '0 16px',
+                    background: sending ? '#8A8D94' : '#1D9E75', color: 'white', border: 0, borderRadius: 8,
+                    fontSize: 13, fontWeight: 500, cursor: sending ? 'default' : 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  <Send size={13} /> {sending ? 'Sending…' : when === 'now' ? `Send to ${reach}` : `Schedule (${reach})`}
+                </button>
+              </div>
+              {sendResult && (
+                <div style={{
+                  fontSize: 12, marginTop: 10, padding: '8px 12px', borderRadius: 8,
+                  background: sendResult.startsWith('Error') ? '#FBE2EC' : '#E8F7F2',
+                  color: sendResult.startsWith('Error') ? '#9C2848' : '#0D6B45',
+                }}>
+                  {sendResult}
+                </div>
+              )}
             </div>
           </div>
 

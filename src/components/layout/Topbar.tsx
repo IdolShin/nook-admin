@@ -7,6 +7,7 @@ import { businesses } from '@/lib/data';
 const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
   '/dashboard':  { t: 'Dashboard',          s: "Welcome back, Woosang — here's what's happening across your businesses.", cta: 'New card' },
   '/cards':      { t: 'Loyalty cards',      s: 'Design, manage, and track every card across your businesses.', cta: 'New card' },
+  '/coupons':    { t: 'Coupons',            s: 'Create, issue, and track coupon passes for your customers.', cta: 'New coupon' },
   '/customers':  { t: 'Customers',          s: "Everyone who's added one of your cards to their wallet.", cta: 'Add customer' },
   '/push':       { t: 'Push notifications', s: 'Reach customers right inside Apple & Google Wallet.', cta: 'New campaign' },
   '/analytics':  { t: 'Analytics',          s: 'Performance across cards, businesses, and time.', cta: 'Export report' },
