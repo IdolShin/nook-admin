@@ -1,13 +1,76 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { cards as LC_DATA } from '@/lib/data';
+import { useState, useMemo, useEffect } from 'react';
 import { typeMeta, statusMeta } from '@/lib/utils';
 import MiniCardArt from '@/components/cards/MiniCardArt';
 import Sparkline from '@/components/charts/Sparkline';
+import { api, type ApiCard } from '@/lib/api';
 import { Search, Download, Plus, ChevronDown, X, MoreHorizontal, Send } from 'lucide-react';
 
-type Card = typeof LC_DATA[number];
+/* ─── Types ────────────────────────────────────────────────── */
+
+interface Card {
+  id: string;
+  name: string;
+  biz: string;
+  bizColor: string;
+  type: string;
+  status: string;
+  active: number;
+  issued: number;
+  redemptions: number;
+  reward: string;
+  updated: string;
+  stamps: number | null;
+  gradient: string[];
+  color: string;
+  goal_stamps: number;
+  is_active: boolean;
+}
+
+const CARD_COLORS: Record<string, string[]> = {
+  '#1D9E75': ['#0F4D38', '#1D9E75'],
+  '#3B6BCC': ['#0F2A55', '#3B6BCC'],
+  '#C26B1F': ['#5C2F0E', '#C26B1F'],
+  '#C53A6B': ['#5C1A30', '#C53A6B'],
+  '#8B5CF6': ['#3B1A7A', '#8B5CF6'],
+  '#1A1A1F': ['#0A0A0E', '#1A1A1F'],
+};
+
+function darkenHex(hex: string, amount = 80): string {
+  const h = hex.replace('#', '');
+  const r = Math.max(0, parseInt(h.slice(0, 2), 16) - amount);
+  const g = Math.max(0, parseInt(h.slice(2, 4), 16) - amount);
+  const b = Math.max(0, parseInt(h.slice(4, 6), 16) - amount);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function mapApiCard(c: ApiCard): Card {
+  const bizName = api.getBusinessName() || 'Nook Café';
+  const gradient = CARD_COLORS[c.color] ?? [darkenHex(c.color), c.color];
+  const daysSince = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86_400_000);
+  const updated = daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : `${daysSince}d ago`;
+  return {
+    id: c.id,
+    name: c.name,
+    biz: bizName,
+    bizColor: c.color,
+    type: c.card_type,
+    status: c.is_active ? 'active' : 'paused',
+    active: 0,
+    issued: 0,
+    redemptions: 0,
+    reward: c.reward_desc || '',
+    updated,
+    stamps: c.card_type === 'stamp' ? c.goal_stamps : null,
+    gradient,
+    color: c.color,
+    goal_stamps: c.goal_stamps,
+    is_active: c.is_active,
+  };
+}
+
+/* ─── Shared sub-components ────────────────────────────────── */
 
 function StatusPill({ status }: { status: string }) {
   const s = statusMeta[status] ?? statusMeta.active;
@@ -83,6 +146,158 @@ function FilterDropdown({ label, value, options, onChange }: {
     </div>
   );
 }
+
+/* ─── New Card Modal ────────────────────────────────────────── */
+
+const PRESET_COLORS = ['#1D9E75', '#3B6BCC', '#C26B1F', '#C53A6B', '#8B5CF6', '#1A1A1F'];
+
+function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c: Card) => void }) {
+  const [name, setName] = useState('');
+  const [cardType, setCardType] = useState('stamp');
+  const [goalStamps, setGoalStamps] = useState(10);
+  const [rewardDesc, setRewardDesc] = useState('');
+  const [color, setColor] = useState('#1D9E75');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  const handleCreate = async () => {
+    if (!name.trim()) { setError('Card name is required'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      const result = await api.createCard({
+        name: name.trim(),
+        card_type: cardType,
+        goal_stamps: goalStamps,
+        reward_desc: rewardDesc.trim() || undefined,
+        color,
+        is_active: true,
+      });
+      setDone(true);
+      setTimeout(() => { onCreate(mapApiCard(result)); onClose(); }, 1000);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to create card');
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.3)' }} onClick={onClose} />
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+        zIndex: 50, width: 480, background: 'white', borderRadius: 16,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.16)', overflow: 'hidden',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #F0F0F2' }}>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>New loyalty card</div>
+          <button onClick={onClose} style={{ border: 0, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26 }}>
+            <X size={14} color="#5C5F66" />
+          </button>
+        </div>
+
+        {done ? (
+          <div style={{ padding: 48, textAlign: 'center' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 999, background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>Card created!</div>
+          </div>
+        ) : (
+          <div style={{ padding: 20, display: 'grid', gap: 14 }}>
+            {error && (
+              <div style={{ padding: '10px 14px', background: '#FBE2EC', borderRadius: 8, fontSize: 12, color: '#9C2848' }}>{error}</div>
+            )}
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Card name *</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Coffee lovers"
+                style={{ width: '100%', height: 36, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Card type</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+                {(['stamp', 'cashback', 'coupon', 'membership'] as const).map((t) => {
+                  const m = typeMeta[t];
+                  return (
+                    <button key={t} onClick={() => setCardType(t)} style={{
+                      padding: '8px 4px', border: `1px solid ${cardType === t ? color : '#EBEBEB'}`,
+                      borderRadius: 8, background: cardType === t ? '#E8F7F2' : 'white',
+                      cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
+                      color: cardType === t ? '#085041' : '#5C5F66', fontWeight: cardType === t ? 500 : 400,
+                    }}>{m.label}</button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {cardType === 'stamp' && (
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Goal stamps</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[5, 6, 7, 8, 10, 12].map((n) => (
+                    <button key={n} onClick={() => setGoalStamps(n)} style={{
+                      flex: 1, height: 32, border: `1px solid ${goalStamps === n ? color : '#EBEBEB'}`,
+                      borderRadius: 8, background: goalStamps === n ? '#E8F7F2' : 'white',
+                      cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
+                      color: goalStamps === n ? '#085041' : '#5C5F66', fontWeight: goalStamps === n ? 600 : 400,
+                    }}>{n}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Reward description</label>
+              <input value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)} placeholder="e.g. Free latte after 10 stamps"
+                style={{ width: '100%', height: 36, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 8 }}>Color</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {PRESET_COLORS.map((c) => (
+                  <button key={c} onClick={() => setColor(c)} style={{
+                    width: 28, height: 28, borderRadius: 999, background: c, border: 'none', cursor: 'pointer',
+                    outline: color === c ? `3px solid ${c}` : '3px solid transparent',
+                    outlineOffset: 2,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 4 }}>
+              <MiniCardArt card={{
+                id: 'preview', name: name || 'Card name', biz: api.getBusinessName() || 'Your business',
+                type: cardType, reward: rewardDesc || 'Your reward',
+                gradient: CARD_COLORS[color] ?? [darkenHex(color), color],
+                stamps: cardType === 'stamp' ? goalStamps : null,
+                issued: 0, redemptions: 0,
+              }} w={320} h={196} />
+            </div>
+
+            <button
+              onClick={handleCreate}
+              disabled={saving}
+              style={{
+                height: 38, background: saving ? '#8A8D94' : '#1D9E75', color: 'white',
+                border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500,
+                cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              {saving ? 'Creating…' : 'Create card'}
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ─── Card tile & table ────────────────────────────────────── */
 
 function CardTile({ card, selected, onSelect }: { card: Card; selected: boolean; onSelect: () => void }) {
   const adoption = card.issued ? Math.round((card.active / card.issued) * 100) : 0;
@@ -187,8 +402,18 @@ function CardsTable({ rows, selectedId, onSelect }: { rows: Card[]; selectedId: 
   );
 }
 
-function CardDetail({ card, onClose }: { card: Card; onClose: () => void }) {
+function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => void; onToggle: (id: string, active: boolean) => void }) {
   const last7 = [12, 18, 22, 19, 26, 31, 28];
+  const [toggling, setToggling] = useState(false);
+
+  const handleToggle = async () => {
+    setToggling(true);
+    try {
+      await api.updateCard(card.id, { is_active: !card.is_active });
+      onToggle(card.id, !card.is_active);
+    } catch { /* silent */ } finally { setToggling(false); }
+  };
+
   return (
     <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0, position: 'sticky', top: 84 }} className="fadeup">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid #F0F0F2' }}>
@@ -224,8 +449,16 @@ function CardDetail({ card, onClose }: { card: Card; onClose: () => void }) {
         </div>
         <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 14 }}>Updated {card.updated}</div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button style={{ flex: 1, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Edit card
+          <button
+            onClick={handleToggle}
+            disabled={toggling}
+            style={{
+              flex: 1, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              background: card.is_active ? '#FBE2EC' : '#1D9E75', color: card.is_active ? '#9C2848' : 'white',
+              border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: toggling ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            {toggling ? '…' : card.is_active ? 'Pause card' : 'Activate card'}
           </button>
           <button style={{ height: 34, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
             <Send size={13} color="#5C5F66" /> Push
@@ -239,19 +472,31 @@ function CardDetail({ card, onClose }: { card: Card; onClose: () => void }) {
   );
 }
 
+/* ─── Page ─────────────────────────────────────────────────── */
+
 export default function CardsPage() {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [type, setType] = useState('all');
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Card | null>(null);
+  const [allCards, setAllCards] = useState<Card[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
-  const filtered = useMemo(() => LC_DATA.filter((c) => {
+  useEffect(() => {
+    api.cards()
+      .then((cs) => { setAllCards(cs.map(mapApiCard)); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = useMemo(() => allCards.filter((c) => {
     if (type !== 'all' && c.type !== type) return false;
     if (status !== 'all' && c.status !== status) return false;
     if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.biz.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  }), [type, status, search]);
+  }), [type, status, search, allCards]);
 
   const totals = useMemo(() => ({
     total: filtered.length,
@@ -259,21 +504,36 @@ export default function CardsPage() {
     issued: filtered.reduce((s, c) => s + c.issued, 0),
   }), [filtered]);
 
+  const handleToggle = (id: string, newActive: boolean) => {
+    setAllCards((prev) => prev.map((c) => c.id === id ? { ...c, is_active: newActive, status: newActive ? 'active' : 'paused' } : c));
+    setSelected((prev) => prev?.id === id ? { ...prev, is_active: newActive, status: newActive ? 'active' : 'paused' } : prev);
+  };
+
   return (
     <div style={{ padding: '24px 28px', display: 'grid', gap: 18 }}>
+      {showModal && (
+        <NewCardModal
+          onClose={() => setShowModal(false)}
+          onCreate={(c) => setAllCards((prev) => [c, ...prev])}
+        />
+      )}
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.015em' }}>Loyalty cards</div>
           <div style={{ fontSize: 13, color: '#5C5F66' }}>
-            {totals.total} cards · {totals.active} active · {totals.issued.toLocaleString()} total issued
+            {loading ? 'Loading…' : `${totals.total} cards · ${totals.active} active · ${totals.issued.toLocaleString()} total issued`}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
             <Download size={14} color="#5C5F66" /> Export
           </button>
-          <button style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
             <Plus size={14} /> New card
           </button>
         </div>
@@ -289,7 +549,7 @@ export default function CardsPage() {
         <FilterDropdown label="Type" value={type} onChange={setType}
           options={[{ value: 'all', label: 'All types' }, { value: 'stamp', label: 'Stamp' }, { value: 'coupon', label: 'Coupon' }, { value: 'cashback', label: 'Cashback' }, { value: 'membership', label: 'Membership' }]} />
         <FilterDropdown label="Status" value={status} onChange={setStatus}
-          options={[{ value: 'all', label: 'All statuses' }, { value: 'active', label: 'Active' }, { value: 'draft', label: 'Draft' }, { value: 'paused', label: 'Paused' }]} />
+          options={[{ value: 'all', label: 'All statuses' }, { value: 'active', label: 'Active' }, { value: 'paused', label: 'Paused' }]} />
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
           {(['grid', 'list'] as const).map((v) => (
@@ -309,10 +569,17 @@ export default function CardsPage() {
       {/* Body */}
       <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 360px' : '1fr', gap: 16, alignItems: 'start' }}>
         <div>
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>
+              Loading cards…
+            </div>
+          ) : filtered.length === 0 ? (
             <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 48, textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 600 }}>No cards match</div>
-              <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>Try clearing a filter or creating a new card.</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>No cards yet</div>
+              <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>Create your first loyalty card to get started.</div>
+              <button onClick={() => setShowModal(true)} style={{ marginTop: 14, height: 34, padding: '0 16px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <Plus size={14} /> New card
+              </button>
             </div>
           ) : view === 'grid' ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -324,7 +591,7 @@ export default function CardsPage() {
             <CardsTable rows={filtered} selectedId={selected?.id ?? null} onSelect={(c) => setSelected(selected?.id === c.id ? null : c)} />
           )}
         </div>
-        {selected && <CardDetail card={selected} onClose={() => setSelected(null)} />}
+        {selected && <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />}
       </div>
     </div>
   );

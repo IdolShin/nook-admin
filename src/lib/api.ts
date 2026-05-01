@@ -79,6 +79,15 @@ export const api = {
 
   cards: () => req<{ cards: ApiCard[] }>('/api/cards').then((d) => d.cards),
 
+  createCard: (data: Partial<ApiCard>) =>
+    req<{ card: ApiCard }>('/api/cards', { method: 'POST', body: JSON.stringify(data) }).then((d) => d.card),
+
+  updateCard: (id: string, data: Partial<ApiCard>) =>
+    req<{ card: ApiCard }>(`/api/cards/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.card),
+
+  cardStats: (id: string) =>
+    req<{ total_customers: number; total_stamps: number; total_redeems: number }>(`/api/cards/${id}/stats`),
+
   customers: () => req<{ customers: ApiCustomer[] }>('/api/customers').then((d) => d.customers),
 
   broadcast: (title: string, body: string) =>
