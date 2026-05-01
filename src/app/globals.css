@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette */
+  --color-accent:       #1D9E75;
+  --color-accent-light: #E8F7F2;
+  --color-accent-dark:  #085041;
+
+  /* Surface palette */
+  --color-bg:          #F5F6FA;
+  --color-surface:     #FFFFFF;
+  --color-border:      #EBEBEB;
+  --color-border-soft: #F0F0F2;
+
+  /* Text scale */
+  --color-text:   #1A1A1F;
+  --color-text-2: #5C5F66;
+  --color-text-3: #8A8D94;
+
+  /* Stat-card gradients */
+  --color-grad-green-from: #DFF4EB;
+  --color-grad-green-to:   #C7EBDB;
+  --color-grad-blue-from:  #E2ECFB;
+  --color-grad-blue-to:    #CADCF7;
+  --color-grad-amber-from: #FBEFD9;
+  --color-grad-amber-to:   #F6E0B5;
+  --color-grad-pink-from:  #FBE2EC;
+  --color-grad-pink-to:    #F6CCDD;
+
+  /* Business accents */
+  --color-biz-nook:    #1D9E75;
+  --color-biz-kook:    #3B6BCC;
+  --color-biz-fortlee: #C26B1F;
+  --color-biz-kbbq:    #C53A6B;
+
+  /* Radii */
+  --radius-card:  13px;
+  --radius-input: 10px;
+  --radius-btn:   8px;
+  --radius-badge: 9999px;
+
+  /* Fonts */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Base resets */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 999px; }
+
+/* Typography helpers */
+.mono { font-family: var(--font-mono); }
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+/* Fade-up animation */
+@keyframes fadeup {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fadeup { animation: fadeup 360ms ease both; }
+
+/* Chart tooltip */
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: #1A1A1F;
+  color: white;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: nowrap;
+  transform: translate(-50%, -110%);
+  opacity: 0;
+  transition: opacity 80ms;
+  z-index: 10;
+}
+.chart-tooltip.show { opacity: 1; }
