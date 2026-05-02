@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, CreditCard, Users, Bell, BarChart2, Settings,
-  QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight, Ticket,
+  QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight, Ticket, X,
 } from 'lucide-react';
 import { businesses } from '@/lib/data';
 
@@ -26,23 +26,22 @@ const SEC2_ITEMS = [
   { href: '#',        label: 'Help & docs',    icon: HelpCircle },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ mobileMode, onClose }: { mobileMode?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const w = collapsed ? 72 : 240;
+  const w = mobileMode ? 260 : (collapsed ? 72 : 240);
 
   return (
     <aside style={{
-      width: w,
-      minWidth: w,
-      transition: 'width 200ms ease, min-width 200ms ease',
+      width: w, minWidth: w,
+      transition: mobileMode ? 'none' : 'width 200ms ease, min-width 200ms ease',
       background: '#FFFFFF',
       borderRight: '1px solid #EBEBEB',
       display: 'flex',
       flexDirection: 'column',
       padding: '18px 14px',
       height: '100vh',
-      position: 'sticky',
+      position: mobileMode ? 'relative' : 'sticky',
       top: 0,
       overflow: 'hidden',
     }}>
@@ -51,57 +50,66 @@ export default function Sidebar() {
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '0 6px 18px',
         borderBottom: '1px solid #F0F0F2',
-        justifyContent: collapsed ? 'center' : 'flex-start',
+        justifyContent: collapsed && !mobileMode ? 'center' : 'flex-start',
       }}>
         <div style={{
           width: 30, height: 30, borderRadius: 9,
           background: '#1D9E75', color: 'white',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 700, fontSize: 15, letterSpacing: '-0.02em',
-          flexShrink: 0,
+          fontWeight: 700, fontSize: 15, letterSpacing: '-0.02em', flexShrink: 0,
         }}>n</div>
-        {!collapsed && (
-          <div style={{ lineHeight: 1.1 }}>
+        {(!collapsed || mobileMode) && (
+          <div style={{ lineHeight: 1.1, flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em' }}>Nook</div>
             <div style={{ fontSize: 11, color: '#8A8D94' }}>Loyalty platform</div>
           </div>
         )}
+        {mobileMode && (
+          <button onClick={onClose} style={{
+            width: 28, height: 28, border: 0, background: 'transparent',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6,
+          }}>
+            <X size={16} color="#5C5F66" />
+          </button>
+        )}
       </div>
 
       {/* Manage section */}
-      {!collapsed && (
+      {(!collapsed || mobileMode) && (
         <div style={{ padding: '16px 8px 6px', fontSize: 11, fontWeight: 500, color: '#8A8D94', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
           Manage
         </div>
       )}
-      <nav style={{ display: 'grid', gap: 2, marginTop: collapsed ? 16 : 0 }}>
+      <nav style={{ display: 'grid', gap: 2, marginTop: (collapsed && !mobileMode) ? 16 : 0 }}>
         {NAV_ITEMS.map((it) => (
-          <NavItem key={it.href} {...it} active={pathname === it.href || (it.href !== '/dashboard' && pathname.startsWith(it.href))} collapsed={collapsed} />
+          <NavItem
+            key={it.href} {...it}
+            active={pathname === it.href || (it.href !== '/dashboard' && pathname.startsWith(it.href))}
+            collapsed={collapsed && !mobileMode}
+          />
         ))}
       </nav>
 
       {/* More section */}
-      {!collapsed && (
+      {(!collapsed || mobileMode) && (
         <div style={{ padding: '16px 8px 6px', fontSize: 11, fontWeight: 500, color: '#8A8D94', letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: 18 }}>
           More
         </div>
       )}
-      <nav style={{ display: 'grid', gap: 2, marginTop: collapsed ? 12 : 0 }}>
+      <nav style={{ display: 'grid', gap: 2, marginTop: (collapsed && !mobileMode) ? 12 : 0 }}>
         {SEC2_ITEMS.map((it) => (
-          <NavItem key={it.href} {...it} active={pathname === it.href} collapsed={collapsed} />
+          <NavItem key={it.href} {...it} active={pathname === it.href} collapsed={collapsed && !mobileMode} />
         ))}
       </nav>
 
       <div style={{ flex: 1 }} />
 
       {/* Upgrade card */}
-      {!collapsed && (
+      {(!collapsed || mobileMode) && (
         <div style={{
-          margin: '12px 4px 8px',
-          padding: 14,
+          margin: '12px 4px 8px', padding: 14,
           background: 'linear-gradient(135deg, #E8F7F2 0%, #D8F0E5 100%)',
-          borderRadius: 12,
-          overflow: 'hidden',
+          borderRadius: 12, overflow: 'hidden',
         }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#085041' }}>Trial · 14 days left</div>
           <div style={{ fontSize: 11, color: '#085041', opacity: 0.75, marginTop: 4, lineHeight: 1.4 }}>
@@ -120,8 +128,8 @@ export default function Sidebar() {
         padding: 8, borderRadius: 10,
         border: '1px solid #F0F0F2',
         display: 'flex', alignItems: 'center',
-        gap: collapsed ? 0 : 8,
-        justifyContent: collapsed ? 'center' : 'flex-start',
+        gap: (collapsed && !mobileMode) ? 0 : 8,
+        justifyContent: (collapsed && !mobileMode) ? 'center' : 'flex-start',
         marginTop: 4,
       }}>
         <div style={{
@@ -130,7 +138,7 @@ export default function Sidebar() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 11, fontWeight: 600, flexShrink: 0,
         }}>WS</div>
-        {!collapsed && (
+        {(!collapsed || mobileMode) && (
           <div style={{ flex: 1, minWidth: 0, lineHeight: 1.2 }}>
             <div style={{ fontSize: 13, fontWeight: 500 }}>Woosang</div>
             <div style={{ fontSize: 11, color: '#8A8D94' }}>Admin</div>
@@ -138,23 +146,24 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        style={{
-          marginTop: 8, height: 28,
-          border: '1px solid #EBEBEB', borderRadius: 8,
-          background: 'transparent', color: '#8A8D94',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', fontSize: 12,
-          transition: 'background 120ms',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = '#F5F6FA')}
-        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-      >
-        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
+      {/* Collapse toggle — desktop only */}
+      {!mobileMode && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          style={{
+            marginTop: 8, height: 28,
+            border: '1px solid #EBEBEB', borderRadius: 8,
+            background: 'transparent', color: '#8A8D94',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', fontSize: 12, transition: 'background 120ms',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#F5F6FA')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+        >
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
+      )}
     </aside>
   );
 }
@@ -176,8 +185,7 @@ function NavItem({
         background: active ? '#E8F7F2' : 'transparent',
         color: active ? '#085041' : '#5C5F66',
         fontSize: 13, fontWeight: active ? 500 : 400,
-        textDecoration: 'none',
-        transition: 'background 120ms',
+        textDecoration: 'none', transition: 'background 120ms',
       }}
       onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = '#F5F6FA'; }}
       onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}

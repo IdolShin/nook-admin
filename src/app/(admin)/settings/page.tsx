@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { businesses } from '@/lib/data';
 import { Plus, MoreHorizontal } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 function SettingsCard({ title, desc, right, children, danger }: {
   title: string; desc?: string; right?: React.ReactNode; children?: React.ReactNode; danger?: boolean;
@@ -94,20 +95,25 @@ const INTEGRATIONS = [
 ];
 
 export default function SettingsPage() {
+  const { isMobile } = useBreakpoint();
   const [tab, setTab] = useState('workspace');
 
   return (
-    <div style={{ padding: '24px 28px', display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24 }}>
-      {/* Left nav */}
-      <nav style={{ display: 'grid', gap: 2, alignContent: 'start' }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '200px 1fr', gap: isMobile ? 16 : 24 }}>
+      {/* Left nav / top tabs */}
+      <nav style={isMobile ? {
+        display: 'flex', gap: 2, overflowX: 'auto', padding: '3px', background: '#F0F1F4', borderRadius: 9,
+        scrollbarWidth: 'none',
+      } : { display: 'grid', gap: 2, alignContent: 'start' }}>
         {TABS.map((t) => (
           <button key={t} onClick={() => setTab(t)} style={{
-            padding: '8px 12px', border: 0, borderRadius: 8,
-            background: tab === t ? '#E8F7F2' : 'transparent',
-            color: tab === t ? '#085041' : '#5C5F66',
+            padding: isMobile ? '6px 10px' : '8px 12px', border: 0, borderRadius: 8,
+            background: tab === t ? (isMobile ? 'white' : '#E8F7F2') : 'transparent',
+            color: tab === t ? (isMobile ? '#1A1A1F' : '#085041') : '#5C5F66',
             fontWeight: tab === t ? 500 : 400,
             textAlign: 'left', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-            textTransform: 'capitalize',
+            textTransform: 'capitalize', whiteSpace: 'nowrap', flexShrink: 0,
+            boxShadow: (isMobile && tab === t) ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
           }}>{t}</button>
         ))}
       </nav>

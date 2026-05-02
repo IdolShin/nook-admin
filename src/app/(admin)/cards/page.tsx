@@ -6,6 +6,7 @@ import MiniCardArt from '@/components/cards/MiniCardArt';
 import Sparkline from '@/components/charts/Sparkline';
 import { api, type ApiCard } from '@/lib/api';
 import { Search, Download, Plus, ChevronDown, X, MoreHorizontal, Send } from 'lucide-react';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -481,6 +482,7 @@ function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => vo
 /* ─── Page ─────────────────────────────────────────────────── */
 
 export default function CardsPage() {
+  const { isMobile } = useBreakpoint();
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [type, setType] = useState('all');
   const [status, setStatus] = useState('all');
@@ -522,7 +524,7 @@ export default function CardsPage() {
   };
 
   return (
-    <div style={{ padding: '24px 28px', display: 'grid', gap: 18 }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 18 }}>
       {showModal && (
         <NewCardModal
           onClose={() => setShowModal(false)}
@@ -579,7 +581,7 @@ export default function CardsPage() {
       </div>
 
       {/* Body */}
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 360px' : '1fr', gap: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: (selected && !isMobile) ? '1fr 360px' : '1fr', gap: 16, alignItems: 'start' }}>
         <div>
           {loading ? (
             <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>
@@ -603,8 +605,23 @@ export default function CardsPage() {
             <CardsTable rows={filtered} selectedId={selected?.id ?? null} onSelect={(c) => setSelected(selected?.id === c.id ? null : c)} />
           )}
         </div>
-        {selected && <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />}
+        {selected && !isMobile && <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />}
       </div>
+
+      {/* Mobile detail bottom sheet */}
+      {isMobile && selected && (
+        <>
+          <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.4)' }} />
+          <div style={{
+            position: 'fixed', bottom: 60, left: 0, right: 0, zIndex: 50,
+            maxHeight: '85vh', overflowY: 'auto',
+            background: 'white', borderRadius: '16px 16px 0 0',
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
+          }}>
+            <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

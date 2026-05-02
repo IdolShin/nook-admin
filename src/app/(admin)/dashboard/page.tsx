@@ -9,6 +9,7 @@ import NookDonutChart from '@/components/charts/NookDonutChart';
 import NookStackedBar from '@/components/charts/NookStackedBar';
 import Sparkline from '@/components/charts/Sparkline';
 import { Bell, Send, Users, Gift } from 'lucide-react';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 const STAT_CARDS = [
   {
@@ -80,6 +81,7 @@ const activityIconComp: Record<string, React.ElementType> = {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { isMobile } = useBreakpoint();
   const [customerCount, setCustomerCount] = useState<number | null>(null);
   const [cardCount, setCardCount] = useState<number | null>(null);
 
@@ -101,9 +103,9 @@ export default function DashboardPage() {
   });
 
   return (
-    <div style={{ padding: '24px 28px', display: 'grid', gap: 18 }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 18 }}>
       {/* KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         {displayStats.map((c, i) => (
           <Card key={i} style={{
             padding: 20,
@@ -142,7 +144,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 2: line chart + donut */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.7fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.7fr 1fr', gap: 16 }}>
         <ChartCard title="Stamp issuance" sub="Last 30 days">
           <NookLineChart stamps={trend30} redeems={redeem30} />
         </ChartCard>
@@ -152,7 +154,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 3: stacked bar + activity */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.3fr', gap: 16 }}>
         <ChartCard title="Business activity" sub="Stamps + redemptions · 30 days">
           <NookStackedBar data={bizActivity} />
         </ChartCard>
@@ -200,7 +202,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 4: leaderboard + scheduled pushes */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.3fr', gap: 16 }}>
         <Card style={{ padding: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #F0F0F2' }}>
             <div>

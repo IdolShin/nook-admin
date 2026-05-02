@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api, type ApiCoupon } from '@/lib/api';
 import { Plus, X, ChevronRight, Send, Gift, Zap, Calendar, Users, ToggleLeft, ToggleRight, RefreshCw } from 'lucide-react';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 // ─── Mock fallback data ────────────────────────────────────────
 const MOCK_COUPONS: ApiCoupon[] = [
@@ -482,6 +483,7 @@ function IssuePanel({ coupon, onClose, onDone }: { coupon: ApiCoupon; onClose: (
 
 // ─── Main page ─────────────────────────────────────────────────
 export default function CouponsPage() {
+  const { isMobile } = useBreakpoint();
   const [coupons, setCoupons] = useState<ApiCoupon[]>(MOCK_COUPONS);
   const [showCreate, setShowCreate] = useState(false);
   const [issueTarget, setIssueTarget] = useState<ApiCoupon | null>(null);
@@ -516,9 +518,9 @@ export default function CouponsPage() {
   ];
 
   return (
-    <div style={{ padding: '24px 28px', display: 'grid', gap: 16 }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
       {/* KPI stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         {STAT_CARDS.map((s, i) => (
           <div key={i} style={{ background: s.grad, borderRadius: 13, border: '1px solid rgba(0,0,0,0.04)', padding: 20 }} className="fadeup">
             <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(20,30,30,0.65)' }}>{s.label}</div>
@@ -529,7 +531,7 @@ export default function CouponsPage() {
       </div>
 
       {/* Main body */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 16, alignItems: 'start' }}>
         {/* Left: coupon list */}
         <div style={{ display: 'grid', gap: 10 }}>
           {coupons.length === 0 ? (

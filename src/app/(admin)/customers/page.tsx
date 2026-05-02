@@ -6,6 +6,7 @@ import { customerStatusMeta } from '@/lib/utils';
 import { api, type ApiCustomer, type ApiCouponPass } from '@/lib/api';
 import { toast } from '@/lib/toast';
 import { Search, Download, Send, Gift, X, Ticket } from 'lucide-react';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 type CustomerStatus = 'vip' | 'active' | 'new' | 'at-risk';
 
@@ -237,6 +238,7 @@ function CustomerDetail({ customer, onClose, onSendPush }: { customer: Customer;
 
 export default function CustomersPage() {
   const router = useRouter();
+  const { isMobile } = useBreakpoint();
   const [q, setQ] = useState('');
   const [seg, setSeg] = useState('all');
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
@@ -277,9 +279,9 @@ export default function CustomersPage() {
   const tdStyle: React.CSSProperties = { padding: '12px 16px', verticalAlign: 'middle' };
 
   return (
-    <div style={{ padding: '24px 28px', display: 'grid', gap: 16 }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
       {/* KPI strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         <KPI label="Total customers" value={allCustomers.length.toString()} delta={`${allCustomers.length} total`} up />
         <KPI label="VIPs"            value={vipCount.toString()}            delta={`${allCustomers.length ? ((vipCount / allCustomers.length) * 100).toFixed(1) : 0}% of base`} />
         <KPI label="New (30d)"       value={newCount.toString()}            delta="joined in last 30 days" up />
@@ -319,7 +321,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Body */}
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 380px' : '1fr', gap: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: (selected && !isMobile) ? '1fr 380px' : '1fr', gap: 16, alignItems: 'start' }}>
         <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
           {loading ? (
             <div style={{ padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading customers…</div>
@@ -381,8 +383,23 @@ export default function CustomersPage() {
           </table>
           )}
         </div>
-        {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
+        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
       </div>
+
+      {/* Mobile detail bottom sheet */}
+      {isMobile && selected && (
+        <>
+          <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.4)' }} />
+          <div style={{
+            position: 'fixed', bottom: 60, left: 0, right: 0, zIndex: 50,
+            maxHeight: '80vh', overflowY: 'auto',
+            background: 'white', borderRadius: '16px 16px 0 0',
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
+          }}>
+            <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

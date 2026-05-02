@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { pastCampaigns } from '@/lib/data';
 import { Zap, Calendar, Send } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 const AUDIENCES = [
   { id: 'all',     label: 'All customers',       count: 128 },
@@ -59,6 +60,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function PushPage() {
+  const { isMobile } = useBreakpoint();
   const [tab, setTab] = useState('compose');
   const [biz, setBiz] = useState('Nook Café');
   const [audience, setAudience] = useState('all');
@@ -92,11 +94,11 @@ export default function PushPage() {
   }
 
   return (
-    <div style={{ padding: '24px 28px', display: 'grid', gap: 16 }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
       <Seg tabs={['compose', 'history', 'templates']} active={tab} setActive={setTab} />
 
       {tab === 'compose' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 16, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 16, alignItems: 'start' }}>
           {/* Form */}
           <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 22 }}>
             <FormSection title="From business">

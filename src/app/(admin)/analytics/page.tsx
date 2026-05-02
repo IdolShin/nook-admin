@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { cohortRetention } from '@/lib/data';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 const KPIS = [
   { label: '30-day retention',       value: '62%',   delta: '+4.2pp',  up: true },
@@ -32,10 +33,11 @@ function KpiCard({ label, value, delta, up }: { label: string; value: string; de
 
 export default function AnalyticsPage() {
   const [tab, setTab] = useState('overview');
+  const { isMobile } = useBreakpoint();
   const heatmap = useMemo(() => Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => Math.random())), []);
 
   return (
-    <div style={{ padding: '24px 28px', display: 'grid', gap: 16 }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
       {/* Tab bar */}
       <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3, width: 'fit-content' }}>
         {['overview', 'retention', 'funnel', 'engagement'].map((t) => (
@@ -52,12 +54,12 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         {KPIS.map((k, i) => <KpiCard key={i} {...k} />)}
       </div>
 
       {/* Cohort + Funnel */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: 16 }}>
         <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #F0F0F2' }}>
             <div className="section-title">Cohort retention</div>

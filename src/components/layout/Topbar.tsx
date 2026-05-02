@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, ChevronDown, Plus } from 'lucide-react';
+import { Search, ChevronDown, Plus, Menu } from 'lucide-react';
 import { businesses } from '@/lib/data';
 
 const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
@@ -17,12 +17,62 @@ const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
   '/auth':       { t: 'Business login',     s: 'What new businesses see when they come to Nook.' },
 };
 
-export default function Topbar({ pathname }: { pathname: string }) {
+export default function Topbar({
+  pathname,
+  isMobile,
+  onMenuClick,
+}: {
+  pathname: string;
+  isMobile?: boolean;
+  onMenuClick?: () => void;
+}) {
   const [bizOpen, setBizOpen] = useState(false);
   const [bizId, setBizId] = useState('all');
   const [range, setRange] = useState('30d');
   const head = PAGE_META[pathname] ?? PAGE_META['/dashboard'];
   const current = businesses.find((b) => b.id === bizId) ?? businesses[0];
+
+  if (isMobile) {
+    return (
+      <header style={{
+        display: 'flex', alignItems: 'center',
+        padding: '0 16px',
+        height: 52,
+        gap: 10,
+        borderBottom: '1px solid #EBEBEB',
+        background: '#FFFFFF',
+        position: 'sticky', top: 0, zIndex: 10,
+      }}>
+        <button onClick={onMenuClick} style={{
+          border: 0, background: 'transparent', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+        }}>
+          <Menu size={20} color="#1A1A1F" />
+        </button>
+
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>{head.t}</div>
+        </div>
+
+        {head.cta ? (
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('nook:cta'))}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 36, height: 36,
+              background: '#1D9E75', color: 'white',
+              border: 0, borderRadius: 8,
+              cursor: 'pointer', flexShrink: 0,
+            }}>
+            <Plus size={18} />
+          </button>
+        ) : (
+          <div style={{ width: 36 }} />
+        )}
+      </header>
+    );
+  }
 
   return (
     <header style={{
