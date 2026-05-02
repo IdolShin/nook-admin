@@ -7,6 +7,9 @@ function getToken(): string | null {
 
 function setToken(token: string): void {
   localStorage.setItem('nook_token', token);
+  if (typeof document !== 'undefined') {
+    document.cookie = 'nook_auth=1; path=/; max-age=604800; SameSite=Lax';
+  }
 }
 
 function getBusinessName(): string {
@@ -67,6 +70,14 @@ export interface BroadcastResult {
 export const api = {
   getToken,
   getBusinessName,
+
+  logout: () => {
+    localStorage.removeItem('nook_token');
+    localStorage.removeItem('nook_biz');
+    if (typeof document !== 'undefined') {
+      document.cookie = 'nook_auth=; path=/; max-age=0';
+    }
+  },
 
   login: async (email: string, password: string) => {
     const data = await req<{ token: string; business: { id: string; name: string } }>(

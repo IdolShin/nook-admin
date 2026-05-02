@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import NookMark from '@/components/NookMark';
@@ -56,6 +56,12 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const { isPhone } = useBreakpoint();
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('nook_token')) router.replace('/dashboard');
+    } catch(e) {}
+  }, [router]);
 
   async function handleSubmit() {
     if (!email || !password) { setError('Email and password are required.'); return; }
