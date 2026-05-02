@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, CreditCard, Users, Bell, BarChart2, Settings,
-  QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight, Ticket, X,
+  QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight, Ticket, X, Globe,
 } from 'lucide-react';
 import { businesses } from '@/lib/data';
 import NookMark from '@/components/NookMark';
@@ -128,6 +128,22 @@ export default function Sidebar({
           }}>Upgrade</button>
         </div>
       )}
+
+      {/* Homepage link */}
+      <div style={{ borderTop: '1px solid #F0F0F2', margin: '8px 0', paddingTop: 8 }}>
+        <Link href="/" style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '9px 12px', borderRadius: 8,
+          color: '#8A8D94', fontSize: 13, textDecoration: 'none',
+          transition: 'all 120ms',
+        }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#F5F6FA'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        >
+          <Globe size={16} color="#8A8D94" />
+          {(!collapsed || mobileMode) && <span>홈페이지</span>}
+        </Link>
+      </div>
 
       {/* User row */}
       <div style={{

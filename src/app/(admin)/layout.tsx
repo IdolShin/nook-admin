@@ -27,6 +27,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
+    try {
+      const token = localStorage.getItem('nook_token');
+      if (!token) {
+        window.location.replace('/auth');
+      }
+    } catch(e) {}
+  }, []);
+
+  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { setDrawerOpen(false); setMoreOpen(false); }
     };
