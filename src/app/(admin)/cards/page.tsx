@@ -7,6 +7,8 @@ import Sparkline from '@/components/charts/Sparkline';
 import { api, type ApiCard } from '@/lib/api';
 import { Search, Download, Plus, ChevronDown, X, MoreHorizontal, Send } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import ResponsiveModal from '@/components/ui/ResponsiveModal';
+import BottomSheet from '@/components/ui/BottomSheet';
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -161,12 +163,7 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  const { isPhone } = useBreakpoint();
 
   const handleCreate = async () => {
     if (!name.trim()) { setError('Card name is required'); return; }
@@ -190,29 +187,19 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
   };
 
   return (
-    <>
-      <div style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.3)' }} onClick={onClose} />
-      <div style={{
-        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-        zIndex: 50, width: 480, background: 'white', borderRadius: 16,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.16)', overflow: 'hidden',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #F0F0F2' }}>
-          <div style={{ fontSize: 15, fontWeight: 600 }}>New loyalty card</div>
-          <button onClick={onClose} style={{ border: 0, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26 }}>
-            <X size={14} color="#5C5F66" />
-          </button>
-        </div>
-
-        {done ? (
+    <ResponsiveModal isOpen onClose={onClose} title="New loyalty card">
+      {done ? (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: 48, textAlign: 'center' }}>
             <div style={{ width: 64, height: 64, borderRadius: 999, background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
             </div>
             <div style={{ fontSize: 16, fontWeight: 600 }}>Card created!</div>
           </div>
-        ) : (
-          <div style={{ padding: 20, display: 'grid', gap: 14 }}>
+        </div>
+      ) : (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div style={{ padding: isPhone ? '16px 20px' : 20, display: 'grid', gap: 14 }}>
             {error && (
               <div style={{ padding: '10px 14px', background: '#FBE2EC', borderRadius: 8, fontSize: 12, color: '#9C2848' }}>{error}</div>
             )}
@@ -220,19 +207,20 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
             <div>
               <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Card name *</label>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Coffee lovers"
-                style={{ width: '100%', height: 36, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+                style={{ width: '100%', height: 40, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Card type</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isPhone ? 2 : 4},1fr)`, gap: 6 }}>
                 {(['stamp', 'cashback', 'coupon', 'membership'] as const).map((t) => {
                   const m = typeMeta[t];
                   return (
                     <button key={t} onClick={() => setCardType(t)} style={{
-                      padding: '8px 4px', border: `1px solid ${cardType === t ? color : '#EBEBEB'}`,
+                      padding: isPhone ? '10px 4px' : '8px 4px',
+                      border: `1px solid ${cardType === t ? color : '#EBEBEB'}`,
                       borderRadius: 8, background: cardType === t ? '#E8F7F2' : 'white',
-                      cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
+                      cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
                       color: cardType === t ? '#085041' : '#5C5F66', fontWeight: cardType === t ? 500 : 400,
                     }}>{m.label}</button>
                   );
@@ -246,7 +234,7 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
                 <div style={{ display: 'flex', gap: 6 }}>
                   {[5, 6, 7, 8, 10, 12].map((n) => (
                     <button key={n} onClick={() => setGoalStamps(n)} style={{
-                      flex: 1, height: 32, border: `1px solid ${goalStamps === n ? color : '#EBEBEB'}`,
+                      flex: 1, height: 36, border: `1px solid ${goalStamps === n ? color : '#EBEBEB'}`,
                       borderRadius: 8, background: goalStamps === n ? '#E8F7F2' : 'white',
                       cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
                       color: goalStamps === n ? '#085041' : '#5C5F66', fontWeight: goalStamps === n ? 600 : 400,
@@ -259,7 +247,7 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
             <div>
               <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Reward description</label>
               <input value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)} placeholder="e.g. Free latte after 10 stamps"
-                style={{ width: '100%', height: 36, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+                style={{ width: '100%', height: 40, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             <div>
@@ -267,7 +255,7 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
               <div style={{ display: 'flex', gap: 8 }}>
                 {PRESET_COLORS.map((c) => (
                   <button key={c} onClick={() => setColor(c)} style={{
-                    width: 28, height: 28, borderRadius: 999, background: c, border: 'none', cursor: 'pointer',
+                    width: 32, height: 32, borderRadius: 999, background: c, border: 'none', cursor: 'pointer',
                     outline: color === c ? `3px solid ${c}` : '3px solid transparent',
                     outlineOffset: 2,
                   }} />
@@ -275,7 +263,6 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
               </div>
             </div>
 
-            {/* Preview */}
             <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 4 }}>
               <MiniCardArt card={{
                 id: 'preview', name: name || 'Card name', biz: api.getBusinessName() || 'Your business',
@@ -283,24 +270,24 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
                 gradient: CARD_COLORS[color] ?? [darkenHex(color), color],
                 stamps: cardType === 'stamp' ? goalStamps : null,
                 issued: 0, redemptions: 0,
-              }} w={320} h={196} />
+              }} w={isPhone ? 280 : 320} h={isPhone ? 172 : 196} />
             </div>
 
             <button
               onClick={handleCreate}
               disabled={saving}
               style={{
-                height: 38, background: saving ? '#8A8D94' : '#1D9E75', color: 'white',
-                border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500,
+                height: isPhone ? 52 : 40, background: saving ? '#8A8D94' : '#1D9E75', color: 'white',
+                border: 0, borderRadius: 10, fontSize: 14, fontWeight: 600,
                 cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
               }}
             >
               {saving ? 'Creating…' : 'Create card'}
             </button>
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </ResponsiveModal>
   );
 }
 
@@ -610,19 +597,15 @@ export default function CardsPage() {
         {selected && !isMobile && <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />}
       </div>
 
-      {/* Mobile detail bottom sheet */}
-      {isMobile && selected && (
-        <>
-          <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.4)' }} />
-          <div style={{
-            position: 'fixed', bottom: 60, left: 0, right: 0, zIndex: 50,
-            maxHeight: '85vh', overflowY: 'auto',
-            background: 'white', borderRadius: '16px 16px 0 0',
-            boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
-          }}>
-            <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />
-          </div>
-        </>
+      {isMobile && (
+        <BottomSheet
+          isOpen={!!selected}
+          onClose={() => setSelected(null)}
+          bottomOffset="calc(60px + env(safe-area-inset-bottom))"
+          maxHeight="85vh"
+        >
+          {selected && <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />}
+        </BottomSheet>
       )}
     </div>
   );

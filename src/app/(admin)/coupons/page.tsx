@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { api, type ApiCoupon } from '@/lib/api';
 import { Plus, X, ChevronRight, Send, Gift, Zap, Calendar, Users, ToggleLeft, ToggleRight, RefreshCw } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import ResponsiveModal from '@/components/ui/ResponsiveModal';
 
 // ─── Mock fallback data ────────────────────────────────────────
 const MOCK_COUPONS: ApiCoupon[] = [
@@ -168,12 +169,7 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [sendEmail, setSendEmail] = useState(false);
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState<{ issued: number } | null>(null);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  const { isPhone } = useBreakpoint();
 
   const previewDiscount = couponType === 'percent' ? `${discountValue || '0'}% off`
     : couponType === 'fixed' ? `$${discountValue || '0'} off`
@@ -209,226 +205,224 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
-      <div style={{
-        background: 'white', borderRadius: 16, border: '1px solid #EBEBEB',
-        width: 640, maxHeight: '88vh', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.18)',
-      }} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #F0F0F2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: '-0.01em' }}>
-              {result ? 'Coupon issued!' : `Create coupon — Step ${step} of 3`}
-            </div>
-            <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 2 }}>
-              {step === 1 ? 'Choose type and set details' : step === 2 ? 'Configure settings' : 'Issue to customers'}
-            </div>
+    <ResponsiveModal isOpen onClose={onClose} maxWidth={640}>
+      {/* Header with step indicator */}
+      <div style={{ padding: isPhone ? '16px 20px' : '20px 24px', borderBottom: '1px solid #F0F0F2', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div>
+          <div style={{ fontSize: isPhone ? 16 : 17, fontWeight: 600, letterSpacing: '-0.01em' }}>
+            {result ? 'Coupon issued!' : `Create coupon — Step ${step} of 3`}
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 5 }}>
-              {[1, 2, 3].map((s) => (
-                <div key={s} style={{ width: s === step ? 20 : 8, height: 8, borderRadius: 999, background: s <= step ? '#1D9E75' : '#E0E1E6', transition: 'all 200ms' }} />
-              ))}
-            </div>
-            <button onClick={onClose} style={{ width: 28, height: 28, border: 0, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <X size={16} color="#5C5F66" />
-            </button>
+          <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 2 }}>
+            {step === 1 ? 'Choose type and set details' : step === 2 ? 'Configure settings' : 'Issue to customers'}
           </div>
         </div>
-
-        {/* Body */}
-        <div style={{ padding: '22px 24px', overflowY: 'auto', flex: 1 }}>
-          {result ? (
-            <div style={{ textAlign: 'center', padding: '32px 0' }}>
-              <div style={{ width: 72, height: 72, borderRadius: 999, background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>Coupon created & issued</div>
-              <div style={{ fontSize: 14, color: '#5C5F66', marginTop: 6 }}>Sent to {result.issued} customers · passes now in their wallets</div>
-              <button onClick={onClose} style={{ marginTop: 24, height: 40, padding: '0 24px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
-            </div>
-          ) : step === 1 ? (
-            <div style={{ display: 'grid', gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Coupon type</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                  {COUPON_TYPE_OPTIONS.map((opt) => (
-                    <button key={opt.type} onClick={() => setCouponType(opt.type)} style={{
-                      padding: '12px', border: `2px solid ${couponType === opt.type ? '#1D9E75' : '#EBEBEB'}`,
-                      borderRadius: 10, background: couponType === opt.type ? '#E8F7F2' : 'white',
-                      cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-                    }}>
-                      <div style={{ fontSize: 20 }}>{opt.emoji}</div>
-                      <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4, color: couponType === opt.type ? '#085041' : '#1A1A1F' }}>{opt.label}</div>
-                      <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 2, lineHeight: 1.3 }}>{opt.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Title</div>
-                <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Weekend 20% off" style={inputStyle} />
-              </div>
-              {(couponType === 'percent' || couponType === 'fixed') && (
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{couponType === 'percent' ? 'Discount %' : 'Discount amount ($)'}</div>
-                  <input type="number" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder={couponType === 'percent' ? '20' : '5'} style={inputStyle} />
-                </div>
-              )}
-              {couponType === 'free_item' && (
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Free item name</div>
-                  <input value={freeItemName} onChange={(e) => setFreeItemName(e.target.value)} placeholder="e.g. coffee, pastry" style={inputStyle} />
-                </div>
-              )}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Description <span style={{ color: '#8A8D94', fontWeight: 400 }}>(optional)</span></div>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Short description shown on the coupon pass" style={{ ...inputStyle, resize: 'vertical' }} />
-              </div>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Terms <span style={{ color: '#8A8D94', fontWeight: 400 }}>(optional)</span></div>
-                <input value={terms} onChange={(e) => setTerms(e.target.value)} placeholder="e.g. One per customer, not combinable" style={inputStyle} />
-              </div>
-            </div>
-          ) : step === 2 ? (
-            <div style={{ display: 'grid', gap: 18 }}>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Coupon color</div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {BRAND_COLORS.map((c) => (
-                    <button key={c} onClick={() => setColor(c)} style={{
-                      width: 36, height: 36, borderRadius: 10, background: c,
-                      border: `3px solid ${color === c ? '#1A1A1F' : 'transparent'}`,
-                      cursor: 'pointer', outline: 'none',
-                    }} />
-                  ))}
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Valid for (days)</div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {[7, 14, 30, 60].map((d) => (
-                      <button key={d} onClick={() => setValidDays(String(d))} style={{
-                        flex: 1, height: 34, border: `1px solid ${validDays === String(d) ? '#1D9E75' : '#EBEBEB'}`,
-                        borderRadius: 8, background: validDays === String(d) ? '#E8F7F2' : 'white',
-                        color: validDays === String(d) ? '#085041' : '#1A1A1F',
-                        cursor: 'pointer', fontSize: 13, fontFamily: 'inherit',
-                      }}>{d}d</button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Max redemptions <span style={{ color: '#8A8D94', fontWeight: 400 }}>(optional)</span></div>
-                  <input type="number" value={maxRedemptions} onChange={(e) => setMaxRedemptions(e.target.value)} placeholder="Unlimited" style={inputStyle} />
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Trigger</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-                  {Object.entries(TRIGGER_META).map(([key, meta]) => (
-                    <button key={key} onClick={() => setTriggerType(key)} style={{
-                      padding: '9px 12px', border: `1px solid ${triggerType === key ? '#1D9E75' : '#EBEBEB'}`,
-                      borderRadius: 8, background: triggerType === key ? '#E8F7F2' : 'white',
-                      color: triggerType === key ? '#085041' : '#1A1A1F',
-                      cursor: 'pointer', fontSize: 12, fontWeight: triggerType === key ? 500 : 400, fontFamily: 'inherit',
-                      textAlign: 'left',
-                    }}>{meta.label}</button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gap: 16 }}>
-              {/* Preview */}
-              <div>
-                <div style={{ fontSize: 11, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>Preview</div>
-                <div style={{
-                  background: `linear-gradient(135deg, ${color} 0%, ${color}CC 100%)`,
-                  borderRadius: 12, padding: '18px 20px', color: 'white',
-                }}>
-                  <div style={{ fontSize: 11, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '.06em' }}>Coupon</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6 }}>{previewDiscount}</div>
-                  <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4 }}>{title || 'Coupon title'}</div>
-                  {description && <div style={{ fontSize: 12, opacity: 0.75, marginTop: 3 }}>{description}</div>}
-                  <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', fontSize: 11, opacity: 0.7 }}>
-                    <span>Valid {validDays}d from issue</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.06em' }}>123456789012</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Audience */}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Audience</div>
-                <div style={{ padding: '10px 14px', background: '#E8F7F2', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Users size={14} color="#0D6B45" />
-                  <span style={{ fontSize: 13, color: '#0D6B45', fontWeight: 500 }}>All customers of this business</span>
-                </div>
-              </div>
-
-              {/* Channels */}
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Delivery channels</div>
-                <div style={{ display: 'grid', gap: 6 }}>
-                  {[
-                    { key: 'push', label: 'Push notification', desc: 'Wallet + lock screen', enabled: sendPush, toggle: () => setSendPush(!sendPush) },
-                    { key: 'email', label: 'Email', desc: 'Requires customer email on file', enabled: sendEmail, toggle: () => setSendEmail(!sendEmail) },
-                  ].map((ch) => (
-                    <div key={ch.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', border: '1px solid #EBEBEB', borderRadius: 8 }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 500 }}>{ch.label}</div>
-                        <div style={{ fontSize: 11, color: '#8A8D94' }}>{ch.desc}</div>
-                      </div>
-                      <Toggle on={ch.enabled} onChange={ch.toggle} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 5 }}>
+            {[1, 2, 3].map((s) => (
+              <div key={s} style={{ width: s === step ? 20 : 8, height: 8, borderRadius: 999, background: s <= step ? '#1D9E75' : '#E0E1E6', transition: 'all 200ms' }} />
+            ))}
+          </div>
+          <button onClick={onClose} style={{ border: 0, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: isPhone ? 44 : 28, minHeight: isPhone ? 44 : 28, borderRadius: 6 }}>
+            <X size={isPhone ? 18 : 16} color="#5C5F66" />
+          </button>
         </div>
+      </div>
 
-        {/* Footer */}
-        {!result && (
-          <div style={{ padding: '14px 24px', borderTop: '1px solid #F0F0F2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button
-              onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-              style={{ height: 34, padding: '0 14px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}
-            >
-              {step === 1 ? 'Cancel' : '← Back'}
-            </button>
-            {step < 3 ? (
-              <button
-                onClick={() => setStep(step + 1)}
-                disabled={step === 1 && !title}
-                style={{
-                  height: 34, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 5,
-                  background: (step === 1 && !title) ? '#8A8D94' : '#1D9E75', color: 'white',
-                  border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: title ? 'pointer' : 'default', fontFamily: 'inherit',
-                }}
-              >
-                Continue <ChevronRight size={14} />
-              </button>
-            ) : (
-              <button
-                onClick={handleCreate}
-                disabled={saving}
-                style={{
-                  height: 34, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 5,
-                  background: saving ? '#8A8D94' : '#1D9E75', color: 'white',
-                  border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                <Send size={13} /> {saving ? 'Creating…' : 'Create & issue'}
-              </button>
+      {/* Body */}
+      <div style={{ padding: isPhone ? '16px 20px' : '22px 24px', overflowY: 'auto', flex: 1 }}>
+        {result ? (
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <div style={{ width: 72, height: 72, borderRadius: 999, background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>Coupon created & issued</div>
+            <div style={{ fontSize: 14, color: '#5C5F66', marginTop: 6 }}>Sent to {result.issued} customers · passes now in their wallets</div>
+            <button onClick={onClose} style={{ marginTop: 24, height: 44, padding: '0 24px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
+          </div>
+        ) : step === 1 ? (
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Coupon type</div>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isPhone ? 2 : 3}, 1fr)`, gap: 8 }}>
+                {COUPON_TYPE_OPTIONS.map((opt) => (
+                  <button key={opt.type} onClick={() => setCouponType(opt.type)} style={{
+                    padding: '12px', border: `2px solid ${couponType === opt.type ? '#1D9E75' : '#EBEBEB'}`,
+                    borderRadius: 10, background: couponType === opt.type ? '#E8F7F2' : 'white',
+                    cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                  }}>
+                    <div style={{ fontSize: 20 }}>{opt.emoji}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4, color: couponType === opt.type ? '#085041' : '#1A1A1F' }}>{opt.label}</div>
+                    <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 2, lineHeight: 1.3 }}>{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Title</div>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Weekend 20% off" style={inputStyle} />
+            </div>
+            {(couponType === 'percent' || couponType === 'fixed') && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{couponType === 'percent' ? 'Discount %' : 'Discount amount ($)'}</div>
+                <input type="number" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder={couponType === 'percent' ? '20' : '5'} style={inputStyle} />
+              </div>
             )}
+            {couponType === 'free_item' && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Free item name</div>
+                <input value={freeItemName} onChange={(e) => setFreeItemName(e.target.value)} placeholder="e.g. coffee, pastry" style={inputStyle} />
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Description <span style={{ color: '#8A8D94', fontWeight: 400 }}>(optional)</span></div>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Short description shown on the coupon pass" style={{ ...inputStyle, resize: 'vertical' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Terms <span style={{ color: '#8A8D94', fontWeight: 400 }}>(optional)</span></div>
+              <input value={terms} onChange={(e) => setTerms(e.target.value)} placeholder="e.g. One per customer, not combinable" style={inputStyle} />
+            </div>
+          </div>
+        ) : step === 2 ? (
+          <div style={{ display: 'grid', gap: 18 }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Coupon color</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {BRAND_COLORS.map((c) => (
+                  <button key={c} onClick={() => setColor(c)} style={{
+                    width: 36, height: 36, borderRadius: 10, background: c,
+                    border: `3px solid ${color === c ? '#1A1A1F' : 'transparent'}`,
+                    cursor: 'pointer', outline: 'none',
+                  }} />
+                ))}
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: isPhone ? '1fr' : '1fr 1fr', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Valid for (days)</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[7, 14, 30, 60].map((d) => (
+                    <button key={d} onClick={() => setValidDays(String(d))} style={{
+                      flex: 1, height: 36, border: `1px solid ${validDays === String(d) ? '#1D9E75' : '#EBEBEB'}`,
+                      borderRadius: 8, background: validDays === String(d) ? '#E8F7F2' : 'white',
+                      color: validDays === String(d) ? '#085041' : '#1A1A1F',
+                      cursor: 'pointer', fontSize: 13, fontFamily: 'inherit',
+                    }}>{d}d</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Max redemptions <span style={{ color: '#8A8D94', fontWeight: 400 }}>(optional)</span></div>
+                <input type="number" value={maxRedemptions} onChange={(e) => setMaxRedemptions(e.target.value)} placeholder="Unlimited" style={inputStyle} />
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Trigger</div>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isPhone ? 2 : 3}, 1fr)`, gap: 6 }}>
+                {Object.entries(TRIGGER_META).map(([key, meta]) => (
+                  <button key={key} onClick={() => setTriggerType(key)} style={{
+                    padding: '9px 12px', border: `1px solid ${triggerType === key ? '#1D9E75' : '#EBEBEB'}`,
+                    borderRadius: 8, background: triggerType === key ? '#E8F7F2' : 'white',
+                    color: triggerType === key ? '#085041' : '#1A1A1F',
+                    cursor: 'pointer', fontSize: 12, fontWeight: triggerType === key ? 500 : 400, fontFamily: 'inherit',
+                    textAlign: 'left',
+                  }}>{meta.label}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 11, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>Preview</div>
+              <div style={{
+                background: `linear-gradient(135deg, ${color} 0%, ${color}CC 100%)`,
+                borderRadius: 12, padding: '18px 20px', color: 'white',
+              }}>
+                <div style={{ fontSize: 11, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '.06em' }}>Coupon</div>
+                <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6 }}>{previewDiscount}</div>
+                <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4 }}>{title || 'Coupon title'}</div>
+                {description && <div style={{ fontSize: 12, opacity: 0.75, marginTop: 3 }}>{description}</div>}
+                <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', fontSize: 11, opacity: 0.7 }}>
+                  <span>Valid {validDays}d from issue</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.06em' }}>123456789012</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Audience</div>
+              <div style={{ padding: '10px 14px', background: '#E8F7F2', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Users size={14} color="#0D6B45" />
+                <span style={{ fontSize: 13, color: '#0D6B45', fontWeight: 500 }}>All customers of this business</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Delivery channels</div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                {[
+                  { key: 'push', label: 'Push notification', desc: 'Wallet + lock screen', enabled: sendPush, toggle: () => setSendPush(!sendPush) },
+                  { key: 'email', label: 'Email', desc: 'Requires customer email on file', enabled: sendEmail, toggle: () => setSendEmail(!sendEmail) },
+                ].map((ch) => (
+                  <div key={ch.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', border: '1px solid #EBEBEB', borderRadius: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>{ch.label}</div>
+                      <div style={{ fontSize: 11, color: '#8A8D94' }}>{ch.desc}</div>
+                    </div>
+                    <Toggle on={ch.enabled} onChange={ch.toggle} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
-    </div>
+
+      {/* Footer */}
+      {!result && (
+        <div style={{
+          padding: isPhone ? '12px 20px' : '14px 24px',
+          borderTop: '1px solid #F0F0F2',
+          display: 'flex',
+          flexDirection: isPhone ? 'column-reverse' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isPhone ? 'stretch' : 'center',
+          gap: isPhone ? 8 : 0,
+          flexShrink: 0,
+          paddingBottom: isPhone ? 'max(12px, env(safe-area-inset-bottom))' : undefined,
+        }}>
+          <button
+            onClick={() => step > 1 ? setStep(step - 1) : onClose()}
+            style={{ height: isPhone ? 48 : 34, padding: '0 14px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}
+          >
+            {step === 1 ? 'Cancel' : '← Back'}
+          </button>
+          {step < 3 ? (
+            <button
+              onClick={() => setStep(step + 1)}
+              disabled={step === 1 && !title}
+              style={{
+                height: isPhone ? 48 : 34, padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                background: (step === 1 && !title) ? '#8A8D94' : '#1D9E75', color: 'white',
+                border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: title ? 'pointer' : 'default', fontFamily: 'inherit',
+              }}
+            >
+              Continue <ChevronRight size={14} />
+            </button>
+          ) : (
+            <button
+              onClick={handleCreate}
+              disabled={saving}
+              style={{
+                height: isPhone ? 48 : 34, padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                background: saving ? '#8A8D94' : '#1D9E75', color: 'white',
+                border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <Send size={13} /> {saving ? 'Creating…' : 'Create & issue'}
+            </button>
+          )}
+        </div>
+      )}
+    </ResponsiveModal>
   );
 }
 
@@ -436,12 +430,7 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 function IssuePanel({ coupon, onClose, onDone }: { coupon: ApiCoupon; onClose: () => void; onDone: () => void }) {
   const [issuing, setIssuing] = useState(false);
   const [result, setResult] = useState<{ issued: number; skipped: number } | null>(null);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  const { isPhone } = useBreakpoint();
 
   async function handleIssue() {
     setIssuing(true);
@@ -453,31 +442,32 @@ function IssuePanel({ coupon, onClose, onDone }: { coupon: ApiCoupon; onClose: (
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
-      <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', width: 400, padding: 24, boxShadow: '0 24px 64px rgba(0,0,0,0.14)' }} onClick={(e) => e.stopPropagation()}>
-        {result ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 56, height: 56, borderRadius: 999, background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
+    <ResponsiveModal isOpen onClose={onClose} title="Issue coupon" maxWidth={400}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: isPhone ? '16px 20px' : 24 }}>
+          {result ? (
+            <div style={{ textAlign: 'center', paddingTop: 8 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 999, background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>Issued!</div>
+              <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>{result.issued} passes sent · {result.skipped} skipped (already had pass)</div>
+              <button onClick={() => { onDone(); onClose(); }} style={{ marginTop: 18, height: 44, padding: '0 20px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
             </div>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>Issued!</div>
-            <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>{result.issued} passes sent · {result.skipped} skipped (already had pass)</div>
-            <button onClick={() => { onDone(); onClose(); }} style={{ marginTop: 18, height: 36, padding: '0 20px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
-          </div>
-        ) : (
-          <>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Issue coupon</div>
-            <div style={{ fontSize: 13, color: '#5C5F66', marginBottom: 16 }}>Issue <strong>{coupon.title}</strong> to all customers who don&apos;t already have an active pass.</div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button onClick={onClose} style={{ height: 34, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleIssue} disabled={issuing} style={{ height: 34, padding: '0 14px', display: 'flex', alignItems: 'center', gap: 5, background: issuing ? '#8A8D94' : '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: issuing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
-                <Send size={13} /> {issuing ? 'Issuing…' : 'Issue to all'}
-              </button>
-            </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div style={{ fontSize: 13, color: '#5C5F66', marginBottom: 20, lineHeight: 1.5 }}>Issue <strong>{coupon.title}</strong> to all customers who don&apos;t already have an active pass.</div>
+              <div style={{ display: 'flex', flexDirection: isPhone ? 'column' : 'row', gap: 8 }}>
+                <button onClick={onClose} style={{ flex: 1, height: isPhone ? 48 : 38, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Cancel</button>
+                <button onClick={handleIssue} disabled={issuing} style={{ flex: 1, height: isPhone ? 48 : 38, padding: '0 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: issuing ? '#8A8D94' : '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: issuing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                  <Send size={13} /> {issuing ? 'Issuing…' : 'Issue to all'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </ResponsiveModal>
   );
 }
 

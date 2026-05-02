@@ -7,6 +7,7 @@ import { api, type ApiCustomer, type ApiCouponPass } from '@/lib/api';
 import { toast } from '@/lib/toast';
 import { Search, Download, Send, Gift, X, Ticket } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import BottomSheet from '@/components/ui/BottomSheet';
 
 type CustomerStatus = 'vip' | 'active' | 'new' | 'at-risk';
 
@@ -388,19 +389,15 @@ export default function CustomersPage() {
         {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
       </div>
 
-      {/* Mobile detail bottom sheet */}
-      {isMobile && selected && (
-        <>
-          <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.4)' }} />
-          <div style={{
-            position: 'fixed', bottom: 60, left: 0, right: 0, zIndex: 50,
-            maxHeight: '80vh', overflowY: 'auto',
-            background: 'white', borderRadius: '16px 16px 0 0',
-            boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
-          }}>
-            <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />
-          </div>
-        </>
+      {isMobile && (
+        <BottomSheet
+          isOpen={!!selected}
+          onClose={() => setSelected(null)}
+          bottomOffset="calc(60px + env(safe-area-inset-bottom))"
+          maxHeight="82vh"
+        >
+          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
+        </BottomSheet>
       )}
     </div>
   );

@@ -137,3 +137,23 @@ body {
   scrollbar-width: none;
 }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── Modal / bottom sheet ── */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+body.modal-open { overflow: hidden; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 48;
+  animation: backdropIn 180ms ease;
+}
