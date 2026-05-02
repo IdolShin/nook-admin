@@ -145,14 +145,16 @@ export default function Topbar({ pathname }: { pathname: string }) {
 
       {/* CTA */}
       {head.cta && (
-        <button style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          height: 34, padding: '0 14px',
-          background: '#1D9E75', color: 'white',
-          border: 0, borderRadius: 8,
-          fontSize: 13, fontWeight: 500,
-          cursor: 'pointer', fontFamily: 'inherit',
-        }}>
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('nook:cta'))}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            height: 34, padding: '0 14px',
+            background: '#1D9E75', color: 'white',
+            border: 0, borderRadius: 8,
+            fontSize: 13, fontWeight: 500,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>
           <Plus size={15} /> {head.cta}
         </button>
       )}

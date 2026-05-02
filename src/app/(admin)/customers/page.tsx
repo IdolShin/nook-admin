@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { customers as MOCK_CUSTOMERS } from '@/lib/data';
+import { useRouter } from 'next/navigation';
 import { customerStatusMeta } from '@/lib/utils';
 import { api, type ApiCustomer, type ApiCouponPass } from '@/lib/api';
+import { toast } from '@/lib/toast';
 import { Search, Download, Send, Gift, X, Ticket } from 'lucide-react';
 
 type CustomerStatus = 'vip' | 'active' | 'new' | 'at-risk';
@@ -80,7 +81,7 @@ const PASS_STATUS: Record<string, { label: string; bg: string; fg: string }> = {
   expired:  { label: 'Expired',  bg: '#FBE2EC', fg: '#9C2848' },
 };
 
-function CustomerDetail({ customer, onClose }: { customer: Customer; onClose: () => void }) {
+function CustomerDetail({ customer, onClose, onSendPush }: { customer: Customer; onClose: () => void; onSendPush?: () => void }) {
   const visits = [3, 5, 4, 6, 7, 5, 8, 6, 7, 9, 8, 10];
   const [activeTab, setActiveTab] = useState<'activity' | 'coupons'>('activity');
   const [passes, setPasses] = useState<ApiCouponPass[]>([]);
@@ -222,10 +223,10 @@ function CustomerDetail({ customer, onClose }: { customer: Customer; onClose: ()
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <button style={{ flex: 1, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={onSendPush} style={{ flex: 1, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
             <Send size={13} /> Send push
           </button>
-          <button style={{ height: 34, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+          <button onClick={() => toast('Navigate to the Scanner page to redeem a reward', 'info')} style={{ height: 34, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
             <Gift size={13} color="#5C5F66" /> Reward
           </button>
         </div>
@@ -235,21 +236,22 @@ function CustomerDetail({ customer, onClose }: { customer: Customer; onClose: ()
 }
 
 export default function CustomersPage() {
+  const router = useRouter();
   const [q, setQ] = useState('');
   const [seg, setSeg] = useState('all');
-  const [allCustomers, setAllCustomers] = useState<Customer[]>(MOCK_CUSTOMERS as Customer[]);
-  const [selected, setSelected] = useState<Customer>(MOCK_CUSTOMERS[0] as Customer);
+  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
+  const [selected, setSelected] = useState<Customer | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.customers()
       .then((cs) => {
         const mapped = cs.map(mapCustomer);
-        if (mapped.length > 0) {
-          setAllCustomers(mapped);
-          setSelected(mapped[0]);
-        }
+        setAllCustomers(mapped);
+        if (mapped.length > 0) setSelected(mapped[0]);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const segs = [
@@ -308,7 +310,7 @@ export default function CustomersPage() {
           ))}
         </div>
         <div style={{ flex: 1 }} />
-        <button style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+        <button onClick={() => router.push('/push')} style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
           <Send size={13} color="#5C5F66" /> Message segment
         </button>
         <button style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
@@ -317,8 +319,16 @@ export default function CustomersPage() {
       </div>
 
       {/* Body */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 380px' : '1fr', gap: 16, alignItems: 'start' }}>
         <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
+          {loading ? (
+            <div style={{ padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading customers…</div>
+          ) : rows.length === 0 && !q ? (
+            <div style={{ padding: 48, textAlign: 'center' }}>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>No customers yet</div>
+              <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>Customers appear when they register a loyalty card.</div>
+            </div>
+          ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
@@ -369,8 +379,9 @@ export default function CustomersPage() {
               })}
             </tbody>
           </table>
+          )}
         </div>
-        {selected && <CustomerDetail customer={selected} onClose={() => setSelected(allCustomers[0])} />}
+        {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
       </div>
     </div>
   );

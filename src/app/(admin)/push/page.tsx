@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { pastCampaigns } from '@/lib/data';
 import { Zap, Calendar, Send } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -39,7 +39,7 @@ function Seg({ tabs, active, setActive }: { tabs: string[]; active: string; setA
   );
 }
 
-function FormSection({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+function FormSection({ title, hint, children }: { title: string; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -67,7 +67,13 @@ export default function PushPage() {
   const [when, setWhen] = useState('now');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState('');
-  const reach = AUDIENCES.find((a) => a.id === audience)?.count ?? 128;
+  const [realCount, setRealCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    api.customers().then((cs) => setRealCount(cs.length)).catch(() => {});
+  }, []);
+
+  const reach = realCount ?? (AUDIENCES.find((a) => a.id === audience)?.count ?? 128);
 
   async function handleSend() {
     if (!title || !body) { setSendResult('Add a title and message before sending.'); return; }
@@ -130,9 +136,9 @@ export default function PushPage() {
                 style={inputStyle} placeholder="Catchy title…" />
             </FormSection>
 
-            <FormSection title="Message" hint={`${body.length} / 160`}>
+            <FormSection title="Message" hint={<span style={{ color: body.length >= 120 ? '#C26B1F' : undefined }}>{body.length} / 160{body.length >= 120 ? ' ⚠' : ''}</span>}>
               <textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={160} rows={3}
-                style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }} />
+                style={{ ...inputStyle, resize: 'vertical', minHeight: 80, borderColor: body.length >= 120 ? '#C26B1F' : undefined }} />
             </FormSection>
 
             <FormSection title="Send">
@@ -257,7 +263,7 @@ export default function PushPage() {
             <div key={i} style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 14 }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{tpl.t}</div>
               <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 6, lineHeight: 1.45 }}>{tpl.b}</div>
-              <button style={{ marginTop: 12, height: 28, padding: '0 10px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Use template</button>
+              <button onClick={() => { setTitle(tpl.t); setBody(tpl.b); setTab('compose'); }} style={{ marginTop: 12, height: 28, padding: '0 10px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Use template</button>
             </div>
           ))}
         </div>

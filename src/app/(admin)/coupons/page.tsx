@@ -168,6 +168,12 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState<{ issued: number } | null>(null);
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
   const previewDiscount = couponType === 'percent' ? `${discountValue || '0'}% off`
     : couponType === 'fixed' ? `$${discountValue || '0'} off`
     : couponType === 'free_item' ? `Free ${freeItemName || 'item'}`
@@ -430,6 +436,12 @@ function IssuePanel({ coupon, onClose, onDone }: { coupon: ApiCoupon; onClose: (
   const [issuing, setIssuing] = useState(false);
   const [result, setResult] = useState<{ issued: number; skipped: number } | null>(null);
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
   async function handleIssue() {
     setIssuing(true);
     try {
@@ -477,6 +489,12 @@ export default function CouponsPage() {
 
   useEffect(() => {
     api.coupons().then((cs) => { if (cs.length > 0) setCoupons(cs); }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setShowCreate(true);
+    window.addEventListener('nook:cta', handler);
+    return () => window.removeEventListener('nook:cta', handler);
   }, []);
 
   async function handleToggle(coupon: ApiCoupon) {

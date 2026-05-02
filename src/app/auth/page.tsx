@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
-function Field({ label, type = 'text', placeholder, hint, value, onChange }: {
+function Field({ label, type = 'text', placeholder, hint, value, onChange, onKeyDown }: {
   label: string; type?: string; placeholder: string; hint?: React.ReactNode;
-  value?: string; onChange?: (v: string) => void;
+  value?: string; onChange?: (v: string) => void; onKeyDown?: (e: React.KeyboardEvent) => void;
 }) {
   return (
     <div style={{ marginBottom: 12 }}>
@@ -19,6 +19,7 @@ function Field({ label, type = 'text', placeholder, hint, value, onChange }: {
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
+        onKeyDown={onKeyDown}
         style={{
           width: '100%', height: 42, padding: '0 12px',
           border: '1px solid #EBEBEB', borderRadius: 10,
@@ -120,10 +121,12 @@ export default function AuthPage() {
           <Field
             label="Email" type="email" placeholder="you@yourbusiness.com"
             value={email} onChange={setEmail}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           />
           <Field
             label="Password" type="password" placeholder="••••••••"
             value={password} onChange={setPassword}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             hint={mode === 'login' ? <a href="#" style={{ color: '#085041', textDecoration: 'none', fontWeight: 500, fontSize: 12 }}>Forgot?</a> : undefined}
           />
 

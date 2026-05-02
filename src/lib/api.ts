@@ -117,6 +117,17 @@ export const api = {
 
   couponPasses: (customerId: string) =>
     req<{ passes: ApiCouponPass[] }>(`/api/coupons/passes/${customerId}`).then((d) => d.passes),
+
+  scanStamp: (code: string, scanType: 'qr' | 'barcode' = 'barcode') =>
+    req<{ success: boolean; customer_name: string; new_stamps: number; goal_stamps: number; reward_ready: boolean; message: string }>(
+      '/api/scan',
+      { method: 'POST', body: JSON.stringify({ code, scan_type: scanType }) }
+    ),
+
+  customerLookup: (code: string, type: 'qr' | 'barcode' = 'barcode') =>
+    req<{ customer: { id: string; name: string; wallet_type: string; card: { name: string; goal_stamps: number; reward_desc: string }; current_stamps: number; goal_stamps: number; rewards_earned: number } }>(
+      `/api/customers/lookup?code=${encodeURIComponent(code)}&type=${type}`
+    ),
 };
 
 export interface ApiCoupon {

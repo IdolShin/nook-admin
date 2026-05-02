@@ -161,6 +161,12 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
   const handleCreate = async () => {
     if (!name.trim()) { setError('Card name is required'); return; }
     setSaving(true);
@@ -489,6 +495,12 @@ export default function CardsPage() {
       .then((cs) => { setAllCards(cs.map(mapApiCard)); })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setShowModal(true);
+    window.addEventListener('nook:cta', handler);
+    return () => window.removeEventListener('nook:cta', handler);
   }, []);
 
   const filtered = useMemo(() => allCards.filter((c) => {

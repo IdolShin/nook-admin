@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { businesses } from '@/lib/data';
 import { Plus, MoreHorizontal } from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 function SettingsCard({ title, desc, right, children, danger }: {
   title: string; desc?: string; right?: React.ReactNode; children?: React.ReactNode; danger?: boolean;
@@ -24,13 +25,37 @@ function SettingsCard({ title, desc, right, children, danger }: {
 }
 
 function FieldRow({ label, value, swatch }: { label: string; value: string; swatch?: string }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  function handleSave() {
+    setEditing(false);
+    toast(`${label} updated`, 'success');
+  }
+
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '1px solid #F0F0F2' }}>
       <div style={{ fontSize: 12, color: '#8A8D94' }}>{label}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
         {swatch && <span style={{ width: 14, height: 14, borderRadius: 4, background: swatch, border: '1px solid rgba(0,0,0,0.06)', display: 'inline-block' }} />}
-        <span style={{ fontFamily: 'var(--font-mono)' }}>{value}</span>
-        <button style={{ height: 26, padding: '0 8px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#8A8D94', fontFamily: 'inherit' }}>Edit</button>
+        {editing ? (
+          <>
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false); }}
+              autoFocus
+              style={{ height: 26, padding: '0 8px', border: '1px solid #1D9E75', borderRadius: 6, fontSize: 13, fontFamily: 'inherit', outline: 'none', minWidth: 160 }}
+            />
+            <button onClick={handleSave} style={{ height: 26, padding: '0 8px', border: 0, background: '#1D9E75', color: 'white', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Save</button>
+            <button onClick={() => setEditing(false)} style={{ height: 26, padding: '0 8px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#8A8D94', fontFamily: 'inherit' }}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <span style={{ fontFamily: 'var(--font-mono)' }}>{draft}</span>
+            <button onClick={() => setEditing(true)} style={{ height: 26, padding: '0 8px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#8A8D94', fontFamily: 'inherit' }}>Edit</button>
+          </>
+        )}
       </div>
     </div>
   );

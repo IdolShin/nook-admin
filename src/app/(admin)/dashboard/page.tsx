@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { trend30, redeem30, cardMix, bizActivity, activity, scheduledPush } from '@/lib/data';
 import { api } from '@/lib/api';
 import NookLineChart from '@/components/charts/NookLineChart';
@@ -78,6 +79,7 @@ const activityIconComp: Record<string, React.ElementType> = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [customerCount, setCustomerCount] = useState<number | null>(null);
   const [cardCount, setCardCount] = useState<number | null>(null);
 
@@ -85,6 +87,12 @@ export default function DashboardPage() {
     api.customers().then((cs) => setCustomerCount(cs.length)).catch(() => {});
     api.cards().then((cs) => setCardCount(cs.filter((c) => c.is_active).length)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const handler = () => router.push('/cards');
+    window.addEventListener('nook:cta', handler);
+    return () => window.removeEventListener('nook:cta', handler);
+  }, [router]);
 
   const displayStats = STAT_CARDS.map((s, i) => {
     if (i === 0 && customerCount !== null) return { ...s, value: customerCount.toLocaleString() };
@@ -155,7 +163,7 @@ export default function DashboardPage() {
               <div className="section-title">Recent activity</div>
               <div style={{ fontSize: 12, color: '#8A8D94' }}>Live across all businesses</div>
             </div>
-            <button style={{ height: 28, padding: '0 10px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#5C5F66', fontFamily: 'inherit' }}>View all</button>
+            <button onClick={() => router.push('/customers')} style={{ height: 28, padding: '0 10px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#5C5F66', fontFamily: 'inherit' }}>View all</button>
           </div>
           <div style={{ padding: '8px' }}>
             {activity.map((it, i) => {
@@ -232,7 +240,7 @@ export default function DashboardPage() {
               <div className="section-title">Scheduled pushes</div>
               <div style={{ fontSize: 12, color: '#8A8D94' }}>Next 7 days</div>
             </div>
-            <button style={{
+            <button onClick={() => router.push('/push')} style={{
               display: 'flex', alignItems: 'center', gap: 5,
               height: 28, padding: '0 10px',
               background: '#1D9E75', color: 'white', border: 0, borderRadius: 8,
