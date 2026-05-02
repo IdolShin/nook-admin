@@ -50,7 +50,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="h-full antialiased">
-        <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         {children}
         <InstallPrompt />
         <script
