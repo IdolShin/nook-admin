@@ -43,6 +43,7 @@ export interface ApiCard {
   reward_desc: string;
   color: string;
   is_active: boolean;
+  created_at: string;
 }
 
 export interface ApiCustomer {
