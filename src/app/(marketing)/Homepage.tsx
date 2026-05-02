@@ -199,6 +199,7 @@ export default function Homepage() {
   const [journeyIdx, setJourneyIdx] = useState(0);
   const [journeyPaused, setJourneyPaused] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
   const [contactTab, setContactTab] = useState<'message' | 'email'>('message');
   const [formContactType, setFormContactType] = useState<'tel' | 'email'>('tel');
@@ -249,10 +250,17 @@ export default function Homepage() {
     };
   }, [journeyPaused]);
 
-  // Close modal on Escape
+  // Body scroll lock when mobile menu or contact modal open
+  useEffect(() => {
+    const locked = menuOpen || contactOpen;
+    document.body.style.overflow = locked ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen, contactOpen]);
+
+  // Close on Escape
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setContactOpen(false);
+      if (e.key === 'Escape') { setContactOpen(false); setMenuOpen(false); }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
@@ -345,34 +353,75 @@ export default function Homepage() {
                 EN
               </button>
             </div>
-            {isLoggedIn ? (
-              <Link href="/dashboard" className="btn btn-primary" style={{ height: 38 }}>
-                {t('대시보드 →', 'Dashboard →', lang)}
-              </Link>
-            ) : (
-              <button
-                className="btn btn-primary"
-                style={{ height: 38 }}
-                onClick={() => setContactOpen(true)}
-              >
-                {t('문의하기', 'Contact us', lang)}
-              </button>
-            )}
+            <div className="nav-cta">
+              {isLoggedIn ? (
+                <Link href="/dashboard" className="btn btn-primary" style={{ height: 38 }}>
+                  {t('대시보드 →', 'Dashboard →', lang)}
+                </Link>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  style={{ height: 38 }}
+                  onClick={() => setContactOpen(true)}
+                >
+                  {t('문의하기', 'Contact us', lang)}
+                </button>
+              )}
+            </div>
+            <button
+              className="nav-hamburger"
+              onClick={() => setMenuOpen(true)}
+              aria-label="메뉴 열기"
+              aria-expanded={menuOpen}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
           </div>
+        </div>
+      </div>
+
+      {/* MOBILE MENU */}
+      <div className={`mobile-menu${menuOpen ? ' open' : ''}`} role="dialog" aria-label="Navigation">
+        <div className="mobile-menu-header">
+          <a href="#" className="row gap-2" onClick={() => setMenuOpen(false)}>
+            <NookMark size={32} />
+            <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: '-0.02em' }}>Nook</span>
+          </a>
+          <button className="nav-hamburger" style={{ display: 'inline-flex' }} onClick={() => setMenuOpen(false)} aria-label="메뉴 닫기">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div className="mobile-menu-links">
+          <a href="#features" className="mobile-menu-link" onClick={() => setMenuOpen(false)}>{t('기능', 'Features', lang)}</a>
+          <a href="#how" className="mobile-menu-link" onClick={() => setMenuOpen(false)}>{t('작동 방식', 'How it works', lang)}</a>
+          <a href="#pricing" className="mobile-menu-link" onClick={() => setMenuOpen(false)}>{t('요금', 'Pricing', lang)}</a>
+          <a href="#faq" className="mobile-menu-link" onClick={() => setMenuOpen(false)}>{t('자주 묻는 질문', 'FAQ', lang)}</a>
+        </div>
+        <div className="mobile-menu-footer">
+          <div className="lang-toggle" style={{ marginBottom: 14, width: '100%', justifyContent: 'center' }}>
+            <button className={lang === 'ko' ? 'on' : ''} onClick={() => switchLang('ko')} style={{ flex: 1, justifyContent: 'center' }}>한국어</button>
+            <button className={lang === 'en' ? 'on' : ''} onClick={() => switchLang('en')} style={{ flex: 1, justifyContent: 'center' }}>EN</button>
+          </div>
+          {isLoggedIn ? (
+            <Link href="/dashboard" className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
+              {t('대시보드 →', 'Dashboard →', lang)}
+            </Link>
+          ) : (
+            <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setMenuOpen(false); setContactOpen(true); }}>
+              {t('문의하기 →', 'Contact us →', lang)}
+            </button>
+          )}
         </div>
       </div>
 
       {/* HERO */}
       <section className="hero">
-        <div
-          className="wrap"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 48,
-            alignItems: 'center',
-          }}
-        >
+        <div className="wrap">
+        <div className="hero-grid">
           <div>
             <div className="eyebrow">
               {t('Apple Wallet · Google Wallet 지원', 'Apple Wallet · Google Wallet supported', lang)}
@@ -398,7 +447,7 @@ export default function Homepage() {
                 lang
               )}
             </p>
-            <div className="row gap-2" style={{ marginTop: 28 }}>
+            <div className="hero-ctas">
               <button
                 className="btn btn-primary btn-lg"
                 onClick={() => setContactOpen(true)}
@@ -414,7 +463,7 @@ export default function Homepage() {
                 {t('작동 방식 보기', 'See how it works', lang)}
               </button>
             </div>
-            <div className="row gap-3" style={{ marginTop: 22, fontSize: 13, color: 'var(--text-3)' }}>
+            <div className="hero-checks">
               <span>{t('✓ 앱 설치 없음', '✓ No app install', lang)}</span>
               <span>{t('✓ 10분 셋업', '✓ 10-min setup', lang)}</span>
               <span>✓ Apple · Google Wallet</span>
@@ -513,6 +562,7 @@ export default function Homepage() {
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         {/* Stats grid */}
