@@ -25,7 +25,6 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Nook",
   },
-  themeColor: "#1D9E75",
 };
 
 export default function RootLayout({
@@ -36,7 +35,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} h-full`}>
       <head>
+        {/* Viewport: cover ensures content fills iPhone notch / Dynamic Island */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#1D9E75" />
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/icons/icon-192.png" sizes="192x192" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        {/* PWA / iOS */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Nook" />
@@ -47,13 +53,7 @@ export default function RootLayout({
         <InstallPrompt />
         <script
           dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
-                });
-              }
-            `,
+            __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')});}`,
           }}
         />
       </body>

@@ -8,6 +8,7 @@ import {
   QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight, Ticket, X,
 } from 'lucide-react';
 import { businesses } from '@/lib/data';
+import NookMark from '@/components/NookMark';
 
 const NAV_ITEMS = [
   { href: '/dashboard',  label: 'Dashboard',          icon: LayoutDashboard },
@@ -26,10 +27,18 @@ const SEC2_ITEMS = [
   { href: '#',        label: 'Help & docs',    icon: HelpCircle },
 ];
 
-export default function Sidebar({ mobileMode, onClose }: { mobileMode?: boolean; onClose?: () => void }) {
+export default function Sidebar({
+  mobileMode,
+  onClose,
+  drawerWidth = 260,
+}: {
+  mobileMode?: boolean;
+  onClose?: () => void;
+  drawerWidth?: number;
+}) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const w = mobileMode ? 260 : (collapsed ? 72 : 240);
+  const w = mobileMode ? drawerWidth : (collapsed ? 72 : 240);
 
   return (
     <aside style={{
@@ -44,6 +53,8 @@ export default function Sidebar({ mobileMode, onClose }: { mobileMode?: boolean;
       position: mobileMode ? 'relative' : 'sticky',
       top: 0,
       overflow: 'hidden',
+      /* Respect safe area on left edge (landscape iPhone) */
+      paddingLeft: mobileMode ? 14 : 'max(14px, calc(14px + env(safe-area-inset-left)))',
     }}>
       {/* Logo */}
       <div style={{
@@ -52,12 +63,7 @@ export default function Sidebar({ mobileMode, onClose }: { mobileMode?: boolean;
         borderBottom: '1px solid #F0F0F2',
         justifyContent: collapsed && !mobileMode ? 'center' : 'flex-start',
       }}>
-        <div style={{
-          width: 30, height: 30, borderRadius: 9,
-          background: '#1D9E75', color: 'white',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 700, fontSize: 15, letterSpacing: '-0.02em', flexShrink: 0,
-        }}>n</div>
+        <NookMark size={30} />
         {(!collapsed || mobileMode) && (
           <div style={{ lineHeight: 1.1, flex: 1 }}>
             <div style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em' }}>Nook</div>
@@ -66,7 +72,7 @@ export default function Sidebar({ mobileMode, onClose }: { mobileMode?: boolean;
         )}
         {mobileMode && (
           <button onClick={onClose} style={{
-            width: 28, height: 28, border: 0, background: 'transparent',
+            width: 36, height: 36, border: 0, background: 'transparent',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6,
           }}>
             <X size={16} color="#5C5F66" />
@@ -116,7 +122,7 @@ export default function Sidebar({ mobileMode, onClose }: { mobileMode?: boolean;
             Unlock unlimited cards & Apple Wallet on Pro.
           </div>
           <button style={{
-            marginTop: 10, height: 28, fontSize: 12,
+            marginTop: 10, height: 32, fontSize: 12,
             background: 'white', border: '1px solid #C7E5D7', color: '#085041',
             borderRadius: 8, padding: '0 10px', cursor: 'pointer', fontFamily: 'inherit',
           }}>Upgrade</button>
@@ -152,7 +158,7 @@ export default function Sidebar({ mobileMode, onClose }: { mobileMode?: boolean;
           onClick={() => setCollapsed(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{
-            marginTop: 8, height: 28,
+            marginTop: 8, height: 32,
             border: '1px solid #EBEBEB', borderRadius: 8,
             background: 'transparent', color: '#8A8D94',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -179,13 +185,15 @@ function NavItem({
       title={collapsed ? label : undefined}
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        padding: collapsed ? '9px' : '8px 10px',
+        padding: collapsed ? '9px' : '9px 10px',
         justifyContent: collapsed ? 'center' : 'flex-start',
         borderRadius: 8,
         background: active ? '#E8F7F2' : 'transparent',
         color: active ? '#085041' : '#5C5F66',
         fontSize: 13, fontWeight: active ? 500 : 400,
         textDecoration: 'none', transition: 'background 120ms',
+        /* Ensure 44px touch target height on mobile */
+        minHeight: 44,
       }}
       onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = '#F5F6FA'; }}
       onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}

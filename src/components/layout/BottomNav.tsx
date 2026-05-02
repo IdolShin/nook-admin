@@ -14,7 +14,11 @@ export default function BottomNav({ pathname, onMoreClick }: { pathname: string;
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30,
-      height: 60, background: 'white', borderTop: '1px solid #EBEBEB',
+      /* Height = 60px tabs + iPhone home indicator */
+      height: 'calc(60px + env(safe-area-inset-bottom))',
+      paddingBottom: 'env(safe-area-inset-bottom)',
+      background: 'white',
+      borderTop: '1px solid #EBEBEB',
       display: 'flex',
     }}>
       {ITEMS.map((item) => {
@@ -26,6 +30,7 @@ export default function BottomNav({ pathname, onMoreClick }: { pathname: string;
             alignItems: 'center', justifyContent: 'center', gap: 3,
             textDecoration: 'none',
             color: active ? '#1D9E75' : '#8A8D94',
+            /* 44px minimum touch target (satisfied by flex height of 60px) */
           }}>
             <Icon size={21} strokeWidth={active ? 2.2 : 1.8} />
             <span style={{ fontSize: 10, fontWeight: active ? 600 : 400, fontFamily: 'var(--font-sans)' }}>{item.label}</span>

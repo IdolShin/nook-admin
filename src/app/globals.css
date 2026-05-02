@@ -44,6 +44,14 @@
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
 }
 
+/* ── Safe area insets (notch / Dynamic Island / home indicator) ─ */
+:root {
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+}
+
 /* Base resets */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; }
@@ -55,12 +63,39 @@ body {
   font-size: 13px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  /* Prevent iOS text size inflate on rotation */
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 999px; }
+
+/* Hide scrollbar on mobile (keep functionality) */
+@media (max-width: 743px) {
+  ::-webkit-scrollbar { width: 0; height: 0; }
+}
+
+/* ── Touch targets: all interactive elements ≥ 44×44px on mobile ─ */
+@media (max-width: 743px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Override for inline icon-only buttons that should stay compact */
+  button.icon-sm, a.icon-sm { min-height: 36px; min-width: 36px; }
+}
+
+/* ── Horizontally scrollable table wrapper ── */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Ensure the table inside has minimum width to prevent squish */
+}
+.table-scroll table {
+  min-width: 560px;
+}
 
 /* Typography helpers */
 .mono { font-family: var(--font-mono); }
@@ -95,3 +130,10 @@ body {
   z-index: 10;
 }
 .chart-tooltip.show { opacity: 1; }
+
+/* Hide scrollbar utility (tab bars, etc.) */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar { display: none; }

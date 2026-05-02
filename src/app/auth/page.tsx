@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import NookMark from '@/components/NookMark';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 function Field({ label, type = 'text', placeholder, hint, value, onChange, onKeyDown }: {
   label: string; type?: string; placeholder: string; hint?: React.ReactNode;
@@ -53,6 +55,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { isPhone } = useBreakpoint();
 
   async function handleSubmit() {
     if (!email || !password) { setError('Email and password are required.'); return; }
@@ -78,21 +81,25 @@ export default function AuthPage() {
     <div style={{
       minHeight: '100vh', background: '#F5F6FA',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 24,
+      padding: isPhone ? 0 : 24,
+      /* Safe area for notch */
+      paddingTop: isPhone ? 'env(safe-area-inset-top)' : 24,
     }}>
       <div style={{
         width: '100%', maxWidth: 860,
-        background: 'white', borderRadius: 13, border: '1px solid #EBEBEB',
+        background: 'white',
+        borderRadius: isPhone ? 0 : 13,
+        border: isPhone ? 'none' : '1px solid #EBEBEB',
         overflow: 'hidden',
-        display: 'grid', gridTemplateColumns: '1fr 1fr',
-        minHeight: 580,
-        boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
+        display: 'grid',
+        gridTemplateColumns: isPhone ? '1fr' : '1fr 1fr',
+        minHeight: isPhone ? '100vh' : 580,
+        boxShadow: isPhone ? 'none' : '0 8px 30px rgba(0,0,0,0.06)',
       }}>
         {/* Left: form */}
-        <div style={{ padding: '48px 56px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 36 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 9, background: '#1D9E75', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15 }}>n</div>
-            <span style={{ fontWeight: 600, fontSize: 16, letterSpacing: '-0.01em' }}>Nook</span>
+        <div style={{ padding: isPhone ? '40px 24px 32px' : '48px 56px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ marginBottom: 36 }}>
+            <NookMark size={32} showText textColor="#1A1A1F" />
           </div>
 
           <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>
@@ -158,8 +165,8 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* Right: marketing panel */}
-        <div style={{
+        {/* Right: marketing panel — hidden on phones */}
+        {!isPhone && <div style={{
           background: 'linear-gradient(135deg, #0F4D38 0%, #1D9E75 100%)',
           color: 'white', padding: '48px 48px',
           position: 'relative', overflow: 'hidden',
@@ -201,7 +208,7 @@ export default function AuthPage() {
               <div style={{ fontSize: 12, opacity: 0.85 }}>Jisoo K. · Owner, Nook Café</div>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );

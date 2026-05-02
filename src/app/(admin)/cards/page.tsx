@@ -364,6 +364,7 @@ function CardsTable({ rows, selectedId, onSelect }: { rows: Card[]; selectedId: 
   const tdStyle: React.CSSProperties = { padding: '12px 14px', verticalAlign: 'middle' };
   return (
     <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
+      <div className="table-scroll">
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: '#FAFAFB' }}>
@@ -405,6 +406,7 @@ function CardsTable({ rows, selectedId, onSelect }: { rows: Card[]; selectedId: 
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

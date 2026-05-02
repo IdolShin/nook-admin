@@ -331,6 +331,7 @@ export default function CustomersPage() {
               <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>Customers appear when they register a loyalty card.</div>
             </div>
           ) : (
+          <div className="table-scroll">
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
@@ -381,6 +382,7 @@ export default function CustomersPage() {
               })}
             </tbody>
           </table>
+          </div>
           )}
         </div>
         {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
