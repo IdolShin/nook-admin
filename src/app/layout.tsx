@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import InstallPrompt from "@/components/InstallPrompt";
 
@@ -49,6 +50,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="h-full antialiased">
+        <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
         {children}
         <InstallPrompt />
         <script

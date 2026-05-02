@@ -79,6 +79,22 @@ export const api = {
     }
   },
 
+  googleLogin: async (id_token: string) => {
+    const res = await fetch(`${BASE}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token }),
+    });
+    if (!res.ok) {
+      const msg = await res.text().catch(() => res.statusText);
+      throw new Error(msg || String(res.status));
+    }
+    const data = await (res.json() as Promise<{ token: string; business: { id: string; name: string } }>);
+    setToken(data.token);
+    setBusinessName(data.business.name);
+    return data;
+  },
+
   login: async (email: string, password: string) => {
     const data = await req<{ token: string; business: { id: string; name: string } }>(
       '/api/auth/login',

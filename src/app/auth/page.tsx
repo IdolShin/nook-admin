@@ -1,10 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import NookMark from '@/components/NookMark';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (cfg: {
+            client_id: string;
+            callback: (r: { credential: string }) => void;
+            auto_select?: boolean;
+            cancel_on_tap_outside?: boolean;
+          }) => void;
+          renderButton: (el: HTMLElement, cfg: {
+            type?: string; theme?: string; size?: string;
+            width?: string; locale?: string; text?: string;
+          }) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 
 function Field({ label, type = 'text', placeholder, hint, value, onChange, onKeyDown }: {
   label: string; type?: string; placeholder: string; hint?: React.ReactNode;
@@ -56,12 +78,66 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const { isPhone } = useBreakpoint();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  // Stable ref so GIS callback always sees latest router/setters
+  const googleCallbackRef = useRef<(r: { credential: string }) => void>(null!);
 
   useEffect(() => {
     try {
       if (localStorage.getItem('nook_token')) router.replace('/dashboard');
     } catch(e) {}
   }, [router]);
+
+  // Keep callback ref current
+  googleCallbackRef.current = async (response: { credential: string }) => {
+    setLoading(true);
+    setError('');
+    try {
+      await api.googleLogin(response.credential);
+      router.push('/dashboard');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Google login failed';
+      try { setError(JSON.parse(msg).error ?? msg); } catch { setError(msg); }
+      setLoading(false);
+    }
+  };
+
+  // Initialize Google Identity Services
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    function init() {
+      if (!window.google?.accounts?.id) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId!,
+        callback: (r) => googleCallbackRef.current(r),
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      const el = googleButtonRef.current;
+      if (el) {
+        window.google.accounts.id.renderButton(el, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          width: String(el.offsetWidth || 340),
+          locale: 'ko',
+          text: 'continue_with',
+        });
+      }
+    }
+
+    if (window.google?.accounts?.id) {
+      init();
+    } else {
+      // Poll until GIS script is loaded
+      const t = setInterval(() => {
+        if (window.google?.accounts?.id) { clearInterval(t); init(); }
+      }, 80);
+      return () => clearInterval(t);
+    }
+  }, []);
 
   async function handleSubmit() {
     if (!email || !password) { setError('Email and password are required.'); return; }
@@ -115,16 +191,22 @@ export default function AuthPage() {
             {mode === 'login' ? 'Log in to your Nook workspace.' : 'Free for 14 days. No credit card. Set up your first card in 5 minutes.'}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 28 }}>
-            <button style={{ flex: 1, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: '1px solid #EBEBEB', borderRadius: 10, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-              <GoogleLogo /> Continue with Google
-            </button>
-            <button style={{ flex: 1, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: '1px solid #EBEBEB', borderRadius: 10, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-              <AppleLogo /> Continue with Apple
-            </button>
-          </div>
+          {/* Google Identity Services button — renders Google's official button */}
+          <div ref={googleButtonRef} style={{ width: '100%', minHeight: 44, marginTop: 24 }} />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0', color: '#8A8D94', fontSize: 11 }}>
+          {/* Fallback shown only if GIS not configured */}
+          {!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <div style={{
+              width: '100%', height: 44, marginTop: 24,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              border: '1px solid #DADCE0', borderRadius: 8, background: 'white',
+              fontSize: 13, color: '#5C5F66', fontFamily: 'inherit',
+            }}>
+              <GoogleLogo /> Google로 계속하기
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0', color: '#8A8D94', fontSize: 11 }}>
             <div style={{ flex: 1, height: 1, background: '#EBEBEB' }} />
             OR
             <div style={{ flex: 1, height: 1, background: '#EBEBEB' }} />
