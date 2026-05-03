@@ -155,7 +155,61 @@ export const api = {
     req<{ customer: { id: string; name: string; wallet_type: string; card: { name: string; goal_stamps: number; reward_desc: string }; current_stamps: number; goal_stamps: number; rewards_earned: number } }>(
       `/api/customers/lookup?code=${encodeURIComponent(code)}&type=${type}`
     ),
+
+  stats: () =>
+    req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>('/api/stats'),
+
+  updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string }) =>
+    req<{ business: { id: string; name: string; owner_email: string; plan: string } }>(
+      '/api/auth/me',
+      { method: 'PATCH', body: JSON.stringify(data) }
+    ),
+
+  // ─── Permissions ──────────────────────────────────────────
+  listBusinesses: () =>
+    req<{ businesses: ApiBusiness[] }>('/api/permissions/businesses').then((d) => d.businesses),
+
+  updateBusinessPermissions: (id: string, page_permissions: Record<string, string>) =>
+    req<{ business: ApiBusiness }>(`/api/permissions/businesses/${id}`, {
+      method: 'PATCH', body: JSON.stringify({ page_permissions }),
+    }).then((d) => d.business),
+
+  listStaff: () =>
+    req<{ users: ApiStaffUser[] }>('/api/permissions/users').then((d) => d.users),
+
+  createStaff: (data: { email: string; name: string; role: string; password: string; page_permissions?: Record<string, string> }) =>
+    req<{ user: ApiStaffUser }>('/api/permissions/users', {
+      method: 'POST', body: JSON.stringify(data),
+    }).then((d) => d.user),
+
+  updateStaff: (id: string, data: Partial<{ name: string; role: string; page_permissions: Record<string, string>; is_active: boolean; password: string }>) =>
+    req<{ user: ApiStaffUser }>(`/api/permissions/users/${id}`, {
+      method: 'PATCH', body: JSON.stringify(data),
+    }).then((d) => d.user),
+
+  deleteStaff: (id: string) =>
+    req<{ success: boolean }>(`/api/permissions/users/${id}`, { method: 'DELETE' }),
 };
+
+export interface ApiBusiness {
+  id: string;
+  name: string;
+  owner_email: string;
+  plan: string;
+  is_superadmin: boolean;
+  page_permissions: Record<string, string> | null;
+  created_at: string;
+}
+
+export interface ApiStaffUser {
+  id: string;
+  email: string;
+  name: string;
+  role: 'viewer' | 'editor' | 'admin';
+  page_permissions: Record<string, string>;
+  is_active: boolean;
+  created_at: string;
+}
 
 export interface ApiCoupon {
   id: string;

@@ -1,7 +1,8 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { decodeToken, canView, ALL_PAGES } from '@/lib/permissions';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
 import BottomNav from '@/components/layout/BottomNav';
@@ -26,14 +27,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
+  const router = useRouter();
+
   useEffect(() => {
     try {
       const token = localStorage.getItem('nook_token');
-      if (!token) {
-        window.location.replace('/auth');
+      if (!token) { window.location.replace('/auth'); return; }
+
+      // Permission guard: check if user can VIEW current page
+      const decoded = decodeToken();
+      if (!decoded) return;
+      const matched = ALL_PAGES.find((p) => pathname.startsWith(p.href));
+      if (matched && !canView(decoded, matched.key)) {
+        // Find first page they DO have access to
+        const first = ALL_PAGES.find((p) => canView(decoded, p.key));
+        router.replace(first ? first.href : '/auth');
       }
     } catch(e) {}
-  }, []);
+  }, [pathname, router]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {

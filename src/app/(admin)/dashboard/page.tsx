@@ -84,10 +84,22 @@ export default function DashboardPage() {
   const { isMobile } = useBreakpoint();
   const [customerCount, setCustomerCount] = useState<number | null>(null);
   const [cardCount, setCardCount] = useState<number | null>(null);
+  const [totalStamps, setTotalStamps] = useState<number | null>(null);
+  const [totalRedemptions, setTotalRedemptions] = useState<number | null>(null);
 
   useEffect(() => {
-    api.customers().then((cs) => setCustomerCount(cs.length)).catch(() => {});
-    api.cards().then((cs) => setCardCount(cs.filter((c) => c.is_active).length)).catch(() => {});
+    api.stats()
+      .then((s) => {
+        setCustomerCount(s.total_customers);
+        setCardCount(s.active_cards);
+        setTotalStamps(s.total_stamps);
+        setTotalRedemptions(s.total_redemptions);
+      })
+      .catch(() => {
+        // fallback: fetch individually
+        api.customers().then((cs) => setCustomerCount(cs.length)).catch(() => {});
+        api.cards().then((cs) => setCardCount(cs.filter((c) => c.is_active).length)).catch(() => {});
+      });
   }, []);
 
   useEffect(() => {
@@ -97,8 +109,10 @@ export default function DashboardPage() {
   }, [router]);
 
   const displayStats = STAT_CARDS.map((s, i) => {
-    if (i === 0 && customerCount !== null) return { ...s, value: customerCount.toLocaleString() };
-    if (i === 1 && cardCount !== null)     return { ...s, value: cardCount.toLocaleString() };
+    if (i === 0 && customerCount !== null)     return { ...s, value: customerCount.toLocaleString(), sub: 'total customers', deltaPct: '', up: true };
+    if (i === 1 && cardCount !== null)         return { ...s, value: cardCount.toLocaleString(), sub: 'active cards', deltaPct: '', up: true };
+    if (i === 2 && totalStamps !== null)       return { ...s, value: totalStamps.toLocaleString(), sub: 'all time', deltaPct: '', up: true };
+    if (i === 3 && totalRedemptions !== null)  return { ...s, value: totalRedemptions.toLocaleString(), sub: 'all time', deltaPct: '', up: true };
     return s;
   });
 

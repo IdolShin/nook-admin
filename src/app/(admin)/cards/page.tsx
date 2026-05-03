@@ -399,8 +399,14 @@ function CardsTable({ rows, selectedId, onSelect }: { rows: Card[]; selectedId: 
 }
 
 function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => void; onToggle: (id: string, active: boolean) => void }) {
-  const last7 = [12, 18, 22, 19, 26, 31, 28];
   const [toggling, setToggling] = useState(false);
+  const [cardStats, setCardStats] = useState<{ total_customers: number; total_stamps: number; total_redeems: number } | null>(null);
+
+  useEffect(() => {
+    api.cardStats(card.id)
+      .then(setCardStats)
+      .catch(() => {});
+  }, [card.id]);
 
   const handleToggle = async () => {
     setToggling(true);
@@ -429,7 +435,11 @@ function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => vo
           <MiniCardArt card={card} w={280} h={172} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginTop: 14 }}>
-          {([['Active', card.active], ['Issued', card.issued], ['Redeems', card.redemptions]] as [string, number][]).map(([l, v]) => (
+          {([
+            ['Customers', cardStats?.total_customers ?? card.active],
+            ['Stamps', cardStats?.total_stamps ?? card.issued],
+            ['Redeems', cardStats?.total_redeems ?? card.redemptions],
+          ] as [string, number][]).map(([l, v]) => (
             <div key={l} style={{ padding: '10px 12px', border: '1px solid #F0F0F2', borderRadius: 10 }}>
               <div style={{ fontSize: 11, color: '#8A8D94' }}>{l}</div>
               <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', fontFamily: 'var(--font-mono)' }}>{v.toLocaleString()}</div>
@@ -438,10 +448,10 @@ function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => vo
         </div>
         <div style={{ marginTop: 16, padding: 14, background: '#FAFAFB', borderRadius: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 500 }}>Last 7 days</span>
-            <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{last7.reduce((a, b) => a + b, 0)} stamps</span>
+            <span style={{ fontSize: 12, fontWeight: 500 }}>Total stamps</span>
+            <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{cardStats?.total_stamps ?? 0} stamps</span>
           </div>
-          <Sparkline values={last7} color={card.bizColor} w={290} h={36} />
+          <Sparkline values={[cardStats?.total_stamps ?? 0]} color={card.bizColor} w={290} h={36} />
         </div>
         <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 14 }}>Updated {card.updated}</div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
@@ -598,14 +608,17 @@ export default function CardsPage() {
       </div>
 
       {isMobile && (
-        <BottomSheet
-          isOpen={!!selected}
-          onClose={() => setSelected(null)}
-          bottomOffset="calc(60px + env(safe-area-inset-bottom))"
-          maxHeight="85vh"
-        >
-          {selected && <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />}
-        </BottomSheet>
+        selected && (
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+            background: 'white', borderRadius: '16px 16px 0 0',
+            border: '1px solid #EBEBEB', borderBottom: 'none',
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.10)',
+            maxHeight: '80vh', overflowY: 'auto',
+          }}>
+            <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />
+          </div>
+        )
       )}
     </div>
   );

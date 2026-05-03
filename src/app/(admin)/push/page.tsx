@@ -7,10 +7,10 @@ import { api } from '@/lib/api';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 const AUDIENCES = [
-  { id: 'all',     label: 'All customers',       count: 128 },
-  { id: 'vip',     label: 'VIPs only',           count: 23 },
-  { id: 'lapsing', label: 'Lapsing (14+ days)',  count: 19 },
-  { id: 'new',     label: 'New this month',       count: 14 },
+  { id: 'all',     label: 'All customers',      count: null },
+  { id: 'vip',     label: 'VIPs only',          count: null },
+  { id: 'lapsing', label: 'Lapsing (14+ days)', count: null },
+  { id: 'new',     label: 'New this month',      count: null },
 ];
 
 const TEMPLATES = [
@@ -62,20 +62,20 @@ const inputStyle: React.CSSProperties = {
 export default function PushPage() {
   const { isMobile } = useBreakpoint();
   const [tab, setTab] = useState('compose');
-  const [biz, setBiz] = useState('Nook Café');
   const [audience, setAudience] = useState('all');
-  const [title, setTitle] = useState('Weekend special: 2x stamps');
-  const [body, setBody] = useState('Drop by this weekend and earn double stamps on every drink. Limited time only ☕');
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
   const [when, setWhen] = useState('now');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState('');
   const [realCount, setRealCount] = useState<number | null>(null);
+  const bizName = typeof window !== 'undefined' ? localStorage.getItem('nook_biz') ?? 'My Business' : 'My Business';
 
   useEffect(() => {
     api.customers().then((cs) => setRealCount(cs.length)).catch(() => {});
   }, []);
 
-  const reach = realCount ?? (AUDIENCES.find((a) => a.id === audience)?.count ?? 128);
+  const reach = realCount ?? 0;
 
   async function handleSend() {
     if (!title || !body) { setSendResult('Add a title and message before sending.'); return; }
@@ -103,13 +103,13 @@ export default function PushPage() {
           <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 22 }}>
             <FormSection title="From business">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {['Nook Café', 'Kook 미용실', 'Fort Lee Gym', 'Korean BBQ'].map((b) => (
-                  <button key={b} onClick={() => setBiz(b)} style={{
+                {[bizName].map((b) => (
+                  <button key={b} style={{
                     height: 32, padding: '0 12px',
-                    border: `1px solid ${biz === b ? '#1D9E75' : '#EBEBEB'}`,
+                    border: `1px solid #1D9E75`,
                     borderRadius: 8,
-                    background: biz === b ? '#E8F7F2' : 'white',
-                    color: biz === b ? '#085041' : '#1A1A1F',
+                    background: '#E8F7F2',
+                    color: '#085041',
                     fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                   }}>{b}</button>
                 ))}
@@ -127,7 +127,7 @@ export default function PushPage() {
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   }}>
                     <span style={{ fontSize: 13, fontWeight: 500, color: audience === a.id ? '#085041' : '#1A1A1F' }}>{a.label}</span>
-                    <span style={{ fontSize: 12, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{a.count}</span>
+                    <span style={{ fontSize: 12, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{a.id === 'all' ? (realCount ?? '…') : '—'}</span>
                   </button>
                 ))}
               </div>

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { businesses } from '@/lib/data';
 import { Plus, MoreHorizontal } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { api } from '@/lib/api';
 
 function SettingsCard({ title, desc, right, children, danger }: {
   title: string; desc?: string; right?: React.ReactNode; children?: React.ReactNode; danger?: boolean;
@@ -25,13 +26,33 @@ function SettingsCard({ title, desc, right, children, danger }: {
   );
 }
 
-function FieldRow({ label, value, swatch }: { label: string; value: string; swatch?: string }) {
+function FieldRow({ label, value, swatch, apiKey, readOnly }: {
+  label: string; value: string; swatch?: string;
+  apiKey?: string; readOnly?: boolean;
+}) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
 
-  function handleSave() {
-    setEditing(false);
-    toast(`${label} updated`, 'success');
+  useEffect(() => { setDraft(value); }, [value]);
+
+  async function handleSave() {
+    if (apiKey) {
+      setSaving(true);
+      try {
+        await api.updateProfile({ [apiKey]: draft });
+        if (apiKey === 'name') localStorage.setItem('nook_biz', draft);
+        toast(`${label} updated`, 'success');
+        setEditing(false);
+      } catch {
+        toast(`Failed to update ${label}`, 'error');
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      setEditing(false);
+      toast(`${label} updated`, 'success');
+    }
   }
 
   return (
@@ -48,13 +69,13 @@ function FieldRow({ label, value, swatch }: { label: string; value: string; swat
               autoFocus
               style={{ height: 26, padding: '0 8px', border: '1px solid #1D9E75', borderRadius: 6, fontSize: 13, fontFamily: 'inherit', outline: 'none', minWidth: 160 }}
             />
-            <button onClick={handleSave} style={{ height: 26, padding: '0 8px', border: 0, background: '#1D9E75', color: 'white', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Save</button>
+            <button onClick={handleSave} disabled={saving} style={{ height: 26, padding: '0 8px', border: 0, background: saving ? '#8A8D94' : '#1D9E75', color: 'white', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 12, fontFamily: 'inherit' }}>{saving ? '…' : 'Save'}</button>
             <button onClick={() => setEditing(false)} style={{ height: 26, padding: '0 8px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#8A8D94', fontFamily: 'inherit' }}>Cancel</button>
           </>
         ) : (
           <>
             <span style={{ fontFamily: 'var(--font-mono)' }}>{draft}</span>
-            <button onClick={() => setEditing(true)} style={{ height: 26, padding: '0 8px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#8A8D94', fontFamily: 'inherit' }}>Edit</button>
+            {!readOnly && <button onClick={() => setEditing(true)} style={{ height: 26, padding: '0 8px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#8A8D94', fontFamily: 'inherit' }}>Edit</button>}
           </>
         )}
       </div>
@@ -97,6 +118,22 @@ const INTEGRATIONS = [
 export default function SettingsPage() {
   const { isMobile } = useBreakpoint();
   const [tab, setTab] = useState('workspace');
+  const [bizName, setBizName] = useState(typeof window !== 'undefined' ? localStorage.getItem('nook_biz') ?? '' : '');
+  const [bizEmail, setBizEmail] = useState('');
+
+  useEffect(() => {
+    // Load real business profile
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('nook_biz') ?? '' : '';
+    setBizName(stored);
+    // Decode email from JWT token
+    const token = typeof window !== 'undefined' ? localStorage.getItem('nook_token') : null;
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.email) setBizEmail(payload.email);
+      } catch { /* ignore */ }
+    }
+  }, []);
 
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '200px 1fr', gap: isMobile ? 16 : 24 }}>
@@ -121,11 +158,11 @@ export default function SettingsPage() {
       {/* Content */}
       <div style={{ display: 'grid', gap: 16 }}>
         {tab === 'workspace' && <>
-          <SettingsCard title="Workspace" desc="The container that owns all your businesses.">
-            <FieldRow label="Workspace name" value="Nook Loyalty Co." />
-            <FieldRow label="Owner" value="Woosang · woosang@nook.app" />
-            <FieldRow label="Region" value="us-east-1" />
-            <FieldRow label="Timezone" value="America/New_York" />
+          <SettingsCard title="Workspace" desc="Your business profile on Nook.">
+            <FieldRow label="Business name" value={bizName} apiKey="name" />
+            <FieldRow label="Owner email" value={bizEmail} apiKey="owner_email" />
+            <FieldRow label="Region" value="us-east-1" apiKey="region" />
+            <FieldRow label="Timezone" value="America/New_York" apiKey="timezone" />
           </SettingsCard>
           <SettingsCard title="Danger zone" danger>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -219,23 +256,6 @@ export default function SettingsPage() {
                 }
               </div>
             ))}
-          </SettingsCard>
-        )}
-
-        {tab === 'branding' && (
-          <SettingsCard title="Default branding" desc="Used as fallback when a business hasn't set its own.">
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <div style={{ width: 84, height: 84, borderRadius: 14, background: '#1D9E75', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 38 }}>n</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button style={{ height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Upload logo</button>
-                  <button style={{ height: 32, padding: '0 12px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 13, color: '#5C5F66', fontFamily: 'inherit' }}>Remove</button>
-                </div>
-                <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 8 }}>Recommended 512×512px PNG with transparent background.</div>
-              </div>
-            </div>
-            <FieldRow label="Brand color" value="#1D9E75" swatch="#1D9E75" />
-            <FieldRow label="Wallet card style" value="Gradient · dark" />
           </SettingsCard>
         )}
       </div>

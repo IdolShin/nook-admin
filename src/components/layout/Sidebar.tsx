@@ -5,26 +5,27 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, CreditCard, Users, Bell, BarChart2, Settings,
-  QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight, Ticket, X, Globe,
+  QrCode, Smartphone, LogIn, HelpCircle, ChevronLeft, ChevronRight, Ticket, X, Globe, Shield,
 } from 'lucide-react';
-import { businesses } from '@/lib/data';
 import NookMark from '@/components/NookMark';
+import { decodeToken, canView, PageKey } from '@/lib/permissions';
 
-const NAV_ITEMS = [
-  { href: '/dashboard',  label: 'Dashboard',          icon: LayoutDashboard },
-  { href: '/cards',      label: 'Loyalty cards',      icon: CreditCard,  count: 12 },
-  { href: '/coupons',    label: 'Coupons',             icon: Ticket,      count: 4 },
-  { href: '/customers',  label: 'Customers',           icon: Users,       count: 284 },
-  { href: '/push',       label: 'Push notifications', icon: Bell },
-  { href: '/analytics',  label: 'Analytics',           icon: BarChart2 },
-  { href: '/settings',   label: 'Settings',            icon: Settings },
+const NAV_ITEMS: { href: string; label: string; icon: React.ElementType; page: PageKey }[] = [
+  { href: '/dashboard',  label: 'Dashboard',          icon: LayoutDashboard, page: 'dashboard' },
+  { href: '/cards',      label: 'Loyalty cards',      icon: CreditCard,      page: 'cards' },
+  { href: '/coupons',    label: 'Coupons',             icon: Ticket,          page: 'coupons' },
+  { href: '/customers',  label: 'Customers',           icon: Users,           page: 'customers' },
+  { href: '/push',       label: 'Push notifications', icon: Bell,            page: 'push' },
+  { href: '/analytics',  label: 'Analytics',           icon: BarChart2,       page: 'analytics' },
+  { href: '/settings',   label: 'Settings',            icon: Settings,        page: 'settings' },
 ];
 
-const SEC2_ITEMS = [
-  { href: '/scanner', label: 'Staff scanner',  icon: QrCode },
-  { href: '/register', label: 'Customer flow', icon: Smartphone },
-  { href: '/auth',    label: 'Login screen',   icon: LogIn },
-  { href: '#',        label: 'Help & docs',    icon: HelpCircle },
+const SEC2_ITEMS: { href: string; label: string; icon: React.ElementType; page: PageKey | null }[] = [
+  { href: '/scanner',     label: 'Staff scanner',  icon: QrCode,     page: 'scanner' },
+  { href: '/permissions', label: 'Permissions',    icon: Shield,     page: null },
+  { href: '/register',    label: 'Customer flow',  icon: Smartphone, page: null },
+  { href: '/auth',        label: 'Login screen',   icon: LogIn,      page: null },
+  { href: '#',            label: 'Help & docs',    icon: HelpCircle, page: null },
 ];
 
 export default function Sidebar({
@@ -39,6 +40,19 @@ export default function Sidebar({
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const w = mobileMode ? drawerWidth : (collapsed ? 72 : 240);
+  const decoded = typeof window !== 'undefined' ? decodeToken() : null;
+  const isSuperadmin = decoded?.is_superadmin ?? false;
+  const displayName = decoded?.name ?? 'Admin';
+  const initials = displayName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+  const visibleNav = NAV_ITEMS.filter((it) => canView(decoded, it.page));
+  const visibleSec2 = SEC2_ITEMS.filter((it) => {
+    if (it.page === null) {
+      // Permissions page: only show if superadmin or if they have any page_permissions set
+      if (it.href === '/permissions') return isSuperadmin || !decoded?.is_staff;
+      return true;
+    }
+    return canView(decoded, it.page);
+  });
 
   return (
     <aside style={{
@@ -87,7 +101,7 @@ export default function Sidebar({
         </div>
       )}
       <nav style={{ display: 'grid', gap: 2, marginTop: (collapsed && !mobileMode) ? 16 : 0 }}>
-        {NAV_ITEMS.map((it) => (
+        {visibleNav.map((it) => (
           <NavItem
             key={it.href} {...it}
             active={pathname === it.href || (it.href !== '/dashboard' && pathname.startsWith(it.href))}
@@ -103,7 +117,7 @@ export default function Sidebar({
         </div>
       )}
       <nav style={{ display: 'grid', gap: 2, marginTop: (collapsed && !mobileMode) ? 12 : 0 }}>
-        {SEC2_ITEMS.map((it) => (
+        {visibleSec2.map((it) => (
           <NavItem key={it.href} {...it} active={pathname === it.href} collapsed={collapsed && !mobileMode} />
         ))}
       </nav>
@@ -156,14 +170,16 @@ export default function Sidebar({
       }}>
         <div style={{
           width: 30, height: 30, borderRadius: 999,
-          background: '#1A1A1F', color: 'white',
+          background: isSuperadmin ? '#1D9E75' : '#1A1A1F', color: 'white',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 11, fontWeight: 600, flexShrink: 0,
-        }}>WS</div>
+        }}>{initials}</div>
         {(!collapsed || mobileMode) && (
           <div style={{ flex: 1, minWidth: 0, lineHeight: 1.2 }}>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>Woosang</div>
-            <div style={{ fontSize: 11, color: '#8A8D94' }}>Admin</div>
+            <div style={{ fontSize: 13, fontWeight: 500 }}>{displayName}</div>
+            <div style={{ fontSize: 11, color: '#8A8D94' }}>
+              {isSuperadmin ? 'Superadmin' : decoded?.is_staff ? (decoded.staff_role ?? 'Staff') : 'Owner'}
+            </div>
           </div>
         )}
       </div>
