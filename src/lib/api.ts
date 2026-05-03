@@ -248,11 +248,3 @@ export interface ApiCouponPass {
   coupons?: ApiCoupon;
   customers?: { id: string; name: string; phone: string };
 }
-deemed' | 'expired';
-  issued_at: string;
-  expires_at: string;
-  redeemed_at?: string;
-  wallet_link?: string;
-  coupons?: ApiCoupon;
-  customers?: { id: string; name: string; phone: string };
-}
