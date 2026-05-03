@@ -10,7 +10,6 @@ const PROTECTED_PREFIXES = [
   '/settings',
   '/coupons',
   '/scanner',
-  '/scan',
   '/permissions',
 ];
 
@@ -51,8 +50,6 @@ export const config = {
     '/settings/:path*',
     '/coupons/:path*',
     '/scanner/:path*',
-    '/scan/:path*',
-    '/scan',
     '/permissions/:path*',
     '/permissions',
   ],

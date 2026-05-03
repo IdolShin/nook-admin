@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { decodeToken } from '@/lib/permissions';
 
 /* ── Types ───────────────────────────────────────────────────── */
 interface CustomerData {
@@ -63,22 +61,17 @@ function StampDots({ current, goal, size = 22 }: { current: number; goal: number
 
 /* ── Page ────────────────────────────────────────────────────── */
 export default function ScanPage() {
-  const router = useRouter();
   const [state, setState] = useState<AppState>({ kind: 'idle' });
   const [input, setInput] = useState('');
   const [bizName, setBizName] = useState('');
-  const [staffName, setStaffName] = useState('');
   const [todayStamps, setTodayStamps] = useState(0);
   const [todayRedeems, setTodayRedeems] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const decoded = decodeToken();
-    if (!decoded) { router.replace('/auth'); return; }
-    setBizName(api.getBusinessName());
-    setStaffName(decoded.name || decoded.email || '');
+    setBizName(api.getBusinessName() || 'Nook');
     inputRef.current?.focus();
-  }, [router]);
+  }, []);
 
   // Auto-return after success / error
   useEffect(() => {
@@ -185,11 +178,8 @@ export default function ScanPage() {
               <div style={{ fontSize: 10, opacity: 0.3 }}>점원 스캐너</div>
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            {staffName && <div style={{ fontSize: 11, opacity: 0.3 }}>{staffName}</div>}
-            <div style={{ fontSize: 10, opacity: 0.2, marginTop: 1 }}>
-              오늘 스탬프 {todayStamps} · 리딤 {todayRedeems}
-            </div>
+          <div style={{ fontSize: 10, opacity: 0.2, textAlign: 'right' }}>
+            스탬프 {todayStamps} · 리딤 {todayRedeems}
           </div>
         </div>
 
