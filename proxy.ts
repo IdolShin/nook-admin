@@ -17,17 +17,14 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthed = request.cookies.has('nook_auth');
 
-  // /home → / (permanent redirect)
   if (pathname === '/home') {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // /auth: if already logged in → send straight to dashboard
   if (pathname === '/auth' && isAuthed) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Protected routes: no cookie → send to /auth
   const isProtected = PROTECTED_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(p + '/')
   );
