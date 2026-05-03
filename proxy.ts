@@ -10,6 +10,8 @@ const PROTECTED_PREFIXES = [
   '/settings',
   '/coupons',
   '/scanner',
+  '/scan',
+  '/permissions',
 ];
 
 export function proxy(request: NextRequest) {
@@ -49,5 +51,9 @@ export const config = {
     '/settings/:path*',
     '/coupons/:path*',
     '/scanner/:path*',
+    '/scan/:path*',
+    '/scan',
+    '/permissions/:path*',
+    '/permissions',
   ],
 };

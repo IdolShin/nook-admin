@@ -137,6 +137,12 @@ export const api = {
       method: 'POST', body: JSON.stringify(opts),
     }),
 
+  redeemStamp: (customerId: string) =>
+    req<{ success: boolean; message: string }>('/api/scan/redeem', {
+      method: 'POST',
+      body: JSON.stringify({ customer_id: customerId }),
+    }),
+
   redeemCoupon: (barcode: string) =>
     req<{ success: boolean; coupon: ApiCoupon; customer: { name: string; phone: string }; redeemed_at: string }>(
       '/api/coupons/redeem', { method: 'POST', body: JSON.stringify({ barcode }) }
@@ -235,6 +241,14 @@ export interface ApiCouponPass {
   id: string;
   barcode: string;
   status: 'active' | 'redeemed' | 'expired';
+  issued_at: string;
+  expires_at: string;
+  redeemed_at?: string;
+  wallet_link?: string;
+  coupons?: ApiCoupon;
+  customers?: { id: string; name: string; phone: string };
+}
+deemed' | 'expired';
   issued_at: string;
   expires_at: string;
   redeemed_at?: string;
