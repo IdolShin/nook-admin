@@ -105,6 +105,22 @@ export const api = {
     return data;
   },
 
+  staffLogin: async (email: string, password: string, business_id: string) => {
+    const res = await fetch(`${BASE}/api/permissions/staff-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, business_id }),
+    });
+    if (!res.ok) {
+      const msg = await res.text().catch(() => res.statusText);
+      throw new Error(msg || String(res.status));
+    }
+    const data = await (res.json() as Promise<{ token: string; business: { id: string; name: string }; staff: { id: string; name: string; role: string } }>);
+    setToken(data.token);
+    setBusinessName(data.business.name);
+    return data;
+  },
+
   cards: () => req<{ cards: ApiCard[] }>('/api/cards').then((d) => d.cards),
 
   createCard: (data: Partial<ApiCard>) =>
