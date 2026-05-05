@@ -187,7 +187,7 @@ export const api = {
       { method: 'PATCH', body: JSON.stringify(data) }
     ),
 
-  // ─── Permissions ──────────────────────────────────────────
+  // ─── Permissions ──────────────────────────────────────────────────────
   listBusinesses: () =>
     req<{ businesses: ApiBusiness[] }>('/api/permissions/businesses').then((d) => d.businesses),
 
