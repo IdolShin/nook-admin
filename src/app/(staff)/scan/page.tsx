@@ -227,13 +227,21 @@ export default function ScanPage() {
     scanningRef.current = false;
   }
 
+  function detectScanType(code: string): 'qr' | 'barcode' {
+    // UUID format (qr_code field) vs numeric barcode
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code)
+      ? 'qr'
+      : 'barcode';
+  }
+
   async function handleScanCode(code: string) {
     const trimmed = code.trim();
     if (!trimmed) return;
     stopCamera();
     setState({ kind: 'loading' });
+    const scanType = detectScanType(trimmed);
     try {
-      const res = await api.customerLookup(trimmed, 'barcode');
+      const res = await api.customerLookup(trimmed, scanType);
       setState({ kind: 'found', customer: res.customer as CustomerData, code: trimmed });
     } catch (e) {
       setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : '고객을 찾을 수 없어요') });
@@ -246,8 +254,9 @@ export default function ScanPage() {
     if (state.kind !== 'found') return;
     const { code, customer } = state;
     setState({ kind: 'acting' });
+    const scanType = detectScanType(code);
     try {
-      const res = await api.scanStamp(code, 'barcode');
+      const res = await api.scanStamp(code, scanType);
       setTodayStamps((n) => n + 1);
       setState({ kind: 'stamp_ok', customer, newStamps: res.new_stamps, goalStamps: res.goal_stamps, rewardReady: res.reward_ready });
     } catch (e) {
