@@ -211,6 +211,24 @@ export const api = {
 
   deleteStaff: (id: string) =>
     req<{ success: boolean }>(`/api/permissions/users/${id}`, { method: 'DELETE' }),
+
+  // Superadmin: manage users for any business
+  listBusinessUsers: (bizId: string) =>
+    req<{ users: ApiStaffUser[] }>(`/api/permissions/businesses/${bizId}/users`).then((d) => d.users),
+
+  createBusinessUser: (bizId: string, data: { email: string; name: string; role: string; password: string; page_permissions?: Record<string, string> }) =>
+    req<{ user: ApiStaffUser }>(`/api/permissions/businesses/${bizId}/users`, {
+      method: 'POST', body: JSON.stringify(data),
+    }).then((d) => d.user),
+
+  updateBusinessUser: (bizId: string, uid: string, data: Partial<{ name: string; role: string; page_permissions: Record<string, string>; is_active: boolean; password: string }>) =>
+    req<{ user: ApiStaffUser }>(`/api/permissions/businesses/${bizId}/users/${uid}`, {
+      method: 'PATCH', body: JSON.stringify(data),
+    }).then((d) => d.user),
+
+  deleteBusinessUser: (bizId: string, uid: string) =>
+    req<{ success: boolean }>(`/api/permissions/businesses/${bizId}/users/${uid}`, { method: 'DELETE' }),
+
 };
 
 export interface ApiBusiness {

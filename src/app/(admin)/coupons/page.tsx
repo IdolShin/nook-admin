@@ -88,10 +88,66 @@ function CouponRow({ coupon, onToggle, onIssue }: {
   onToggle: () => void;
   onIssue: () => void;
 }) {
+  const { isPhone } = useBreakpoint();
   const tm = TYPE_META[coupon.coupon_type] ?? TYPE_META.custom;
   const trm = TRIGGER_META[coupon.trigger_type] ?? TRIGGER_META.manual;
   const redemptionRate = coupon.total_issued > 0 ? Math.round((coupon.total_redeemed / coupon.total_issued) * 100) : 0;
 
+  if (isPhone) {
+    return (
+      <div style={{
+        background: 'white', borderRadius: 13,
+        border: '1px solid #EBEBEB',
+        borderLeft: `4px solid ${coupon.color}`,
+        padding: '14px 14px',
+        opacity: coupon.is_active ? 1 : 0.65,
+        transition: 'opacity 200ms',
+      }}>
+        {/* Top row: icon + title + discount */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: tm.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{tm.emoji}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.2 }}>{coupon.title}</div>
+            <div style={{ display: 'flex', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 10, fontWeight: 500, padding: '1px 6px', borderRadius: 999, background: tm.bg, color: tm.text }}>{tm.label}</span>
+              <span style={{ fontSize: 10, fontWeight: 500, padding: '1px 6px', borderRadius: 999, background: trm.bg, color: trm.text }}>{trm.label}</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: coupon.color, flexShrink: 0 }}>
+            {discountText(coupon)}
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div style={{ display: 'flex', gap: 10, fontSize: 11, color: '#8A8D94', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>
+          <span>{coupon.total_issued} issued</span>
+          <span>·</span>
+          <span>{coupon.total_redeemed} redeemed</span>
+          <span>·</span>
+          <span>{redemptionRate}%</span>
+          <span>·</span>
+          <span>{coupon.valid_days}d valid</span>
+        </div>
+
+        {/* Controls row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F5F5F5', paddingTop: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Toggle on={coupon.is_active} onChange={onToggle} />
+            <span style={{ fontSize: 12, color: '#8A8D94' }}>{coupon.is_active ? 'Active' : 'Paused'}</span>
+          </div>
+          <button onClick={onIssue} style={{
+            height: 34, padding: '0 14px', display: 'flex', alignItems: 'center', gap: 5,
+            background: '#1D9E75', color: 'white', border: 0, borderRadius: 8,
+            fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+            <Send size={13} /> Issue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout (unchanged)
   return (
     <div style={{
       background: 'white', borderRadius: 13,
@@ -102,14 +158,7 @@ function CouponRow({ coupon, onToggle, onIssue }: {
       opacity: coupon.is_active ? 1 : 0.65,
       transition: 'opacity 200ms',
     }}>
-      {/* Type icon */}
-      <div style={{
-        width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-        background: tm.bg, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', fontSize: 20,
-      }}>{tm.emoji}</div>
-
-      {/* Main info */}
+      <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: tm.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{tm.emoji}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
           <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' }}>{coupon.title}</span>
@@ -126,25 +175,16 @@ function CouponRow({ coupon, onToggle, onIssue }: {
           <span>Valid {coupon.valid_days}d</span>
         </div>
       </div>
-
-      {/* Discount value */}
       <div style={{ textAlign: 'right', minWidth: 80, flexShrink: 0 }}>
-        <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: coupon.color }}>
-          {discountText(coupon)}
-        </div>
+        <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: coupon.color }}>{discountText(coupon)}</div>
       </div>
-
-      {/* Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         <Toggle on={coupon.is_active} onChange={onToggle} />
-        <button
-          onClick={onIssue}
-          style={{
-            height: 30, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 5,
-            background: '#1D9E75', color: 'white', border: 0, borderRadius: 8,
-            fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >
+        <button onClick={onIssue} style={{
+          height: 30, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 5,
+          background: '#1D9E75', color: 'white', border: 0, borderRadius: 8,
+          fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+        }}>
           <Send size={12} /> Issue
         </button>
       </div>
