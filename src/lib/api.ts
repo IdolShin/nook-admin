@@ -181,6 +181,24 @@ export const api = {
   stats: () =>
     req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>('/api/stats'),
 
+  analytics: (bizId?: string) => {
+    const qs = bizId ? `?bizId=${bizId}` : '';
+    return req<{
+      total_customers: number;
+      new_customers_30d: number;
+      new_customers_prev: number;
+      active_cards: number;
+      total_stamps: number;
+      stamps_last_30d: number;
+      stamps_prev_30d: number;
+      total_redemptions: number;
+      redemptions_30d: number;
+      coupons_issued: number;
+      coupons_redeemed: number;
+      stamps_by_day: number[];
+    }>(`/api/analytics${qs}`);
+  },
+
   updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string }) =>
     req<{ business: { id: string; name: string; owner_email: string; plan: string } }>(
       '/api/auth/me',

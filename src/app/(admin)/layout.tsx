@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { decodeToken, canView, ALL_PAGES } from '@/lib/permissions';
+import { decodeToken, canView, ALL_PAGES, type PageKey } from '@/lib/permissions';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
 import BottomNav from '@/components/layout/BottomNav';
@@ -15,34 +15,45 @@ import {
 } from 'lucide-react';
 
 // ─── More sheet groups ────────────────────────────────────────
-const MORE_GROUPS = [
+type MoreItem = { href: string; label: string; icon: React.ElementType; page: PageKey | null };
+const MORE_GROUPS_ALL: { label: string; items: MoreItem[] }[] = [
   {
     label: 'Reports & tools',
     items: [
-      { href: '/analytics', label: 'Analytics',     icon: BarChart2 },
-      { href: '/coupons',   label: 'Coupons',        icon: Ticket },
-      { href: '/scan',      label: 'Staff scanner',  icon: QrCode },
+      { href: '/analytics', label: 'Analytics',     icon: BarChart2, page: 'analytics' },
+      { href: '/coupons',   label: 'Coupons',        icon: Ticket,    page: 'coupons' },
+      { href: '/scan',      label: 'Staff scanner',  icon: QrCode,    page: 'scanner' },
     ],
   },
   {
     label: 'Admin',
     items: [
-      { href: '/settings',  label: 'Settings',       icon: Settings },
+      { href: '/settings',  label: 'Settings',       icon: Settings,  page: null },
     ],
   },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isPhone, isTablet, isDesktop } = useBreakpoint();
+  const { isDesktop } = useBreakpoint();
   const showDrawer = !isDesktop;
-  const drawerWidth = isPhone ? 280 : 320;
+  const drawerWidth = 280;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ 'Reports & tools': true, 'Admin': true });
 
   const router = useRouter();
+
+  // Filter More groups by permissions (same logic as Sidebar)
+  const decoded = typeof window !== 'undefined' ? decodeToken() : null;
+  const MORE_GROUPS = MORE_GROUPS_ALL.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (item.page === null) return true;
+      return canView(decoded, item.page);
+    }),
+  })).filter((group) => group.items.length > 0);
 
   useEffect(() => {
     try {

@@ -1,12 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 function PhoneFrame({ children, label }: { children: React.ReactNode; label?: string }) {
+  const { isPhone } = useBreakpoint();
+  const W = isPhone ? 272 : 320;
+  const H = isPhone ? 560 : 660;
+  const BR_OUTER = isPhone ? 38 : 44;
+  const BR_INNER = isPhone ? 30 : 36;
+  const NOTCH_W = isPhone ? 82 : 96;
+  const NOTCH_H = isPhone ? 22 : 26;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
       <div style={{
-        width: 320, height: 660, borderRadius: 44, padding: 8,
+        width: W, height: H, borderRadius: BR_OUTER, padding: 8,
         background: '#0E0E12',
         boxShadow: '0 30px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05)',
         position: 'relative',
@@ -14,10 +23,10 @@ function PhoneFrame({ children, label }: { children: React.ReactNode; label?: st
         {/* Notch */}
         <div style={{
           position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)',
-          width: 96, height: 26, borderRadius: 999, background: '#0E0E12', zIndex: 5,
+          width: NOTCH_W, height: NOTCH_H, borderRadius: 999, background: '#0E0E12', zIndex: 5,
         }} />
         <div style={{
-          width: '100%', height: '100%', borderRadius: 36,
+          width: '100%', height: '100%', borderRadius: BR_INNER,
           overflow: 'hidden', background: 'white', color: '#1A1A1F',
           position: 'relative', display: 'flex', flexDirection: 'column',
         }}>
@@ -96,7 +105,7 @@ function Step1({ onNext }: { onNext: () => void }) {
   return (
     <div style={{ padding: '20px 24px 28px' }}>
       <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>Your phone number</div>
-      <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 6, lineHeight: 1.5 }}>We'll text you a 6-digit code. We never share your number.</div>
+      <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 6, lineHeight: 1.5 }}>We&apos;ll text you a 6-digit code. We never share your number.</div>
       <div style={{ marginTop: 24 }}>
         <div style={{ fontSize: 12, color: '#8A8D94', marginBottom: 6 }}>Mobile</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 50, border: '1px solid #EBEBEB', borderRadius: 12 }}>
@@ -133,7 +142,7 @@ function Step2({ onNext }: { onNext: () => void }) {
         ))}
       </div>
       <div style={{ textAlign: 'center', marginTop: 22, fontSize: 12, color: '#8A8D94' }}>
-        Didn't get it? <span style={{ color: '#085041', fontWeight: 500 }}>Resend in 0:24</span>
+        Didn&apos;t get it? <span style={{ color: '#085041', fontWeight: 500 }}>Resend in 0:24</span>
       </div>
       <button onClick={onNext} style={{ ...ctaStyle, marginTop: 28 }}>Verify</button>
     </div>
@@ -178,56 +187,155 @@ function Step4() {
           <path d="m5 12 5 5L20 7" />
         </svg>
       </div>
-      <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>You're in!</div>
+      <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>You&apos;re in!</div>
       <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 8, lineHeight: 1.5 }}>
         Your Nook Café card is now in your wallet. Show it at checkout to start earning stamps.
       </div>
       <div style={{ marginTop: 24, padding: 14, background: '#F5F6FA', borderRadius: 12, textAlign: 'left' }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#8A8D94', letterSpacing: '.06em', textTransform: 'uppercase' }}>Welcome bonus</div>
         <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>1 free stamp on us 🎉</div>
-        <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 4 }}>It's already on your card. Just 9 more to a free latte.</div>
+        <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 4 }}>It&apos;s already on your card. Just 9 more to a free latte.</div>
       </div>
     </div>
   );
 }
 
 const STEP_LABELS = ['QR landing', 'Enter phone', 'Verify', 'Add to wallet', 'Done'];
+const STEP_SHORT  = ['QR', 'Phone', 'Verify', 'Wallet', 'Done'];
+const STEPS = [Step0, Step1, Step2, Step3, Step4];
 
 export default function RegisterPage() {
   const [step, setStep] = useState(0);
+  const { isPhone } = useBreakpoint();
+  const StepComp = STEPS[step];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F5F6FA', padding: '24px 28px' }}>
+    <div style={{ minHeight: '100vh', background: '#F5F6FA', padding: isPhone ? '16px' : '24px 28px' }}>
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
-        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 18, marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div className="section-title">Customer registration flow</div>
-              <div style={{ fontSize: 12, color: '#8A8D94' }}>What customers see when they scan a Nook QR code at the counter.</div>
-            </div>
-            <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
-              {STEP_LABELS.map((s, i) => (
+
+        {/* Header card */}
+        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: isPhone ? '14px 16px' : 18, marginBottom: 20 }}>
+          <div style={{ marginBottom: 12 }}>
+            <div className="section-title" style={{ fontSize: isPhone ? 15 : undefined }}>Customer registration flow</div>
+            <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 2 }}>What customers see when they scan a Nook QR code at the counter.</div>
+          </div>
+
+          {/* Step tabs — scrollable on mobile */}
+          <div style={{
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}>
+            <div style={{
+              display: 'flex',
+              gap: 4,
+              background: '#F0F1F4',
+              borderRadius: 9,
+              padding: 3,
+              width: 'max-content',
+              minWidth: '100%',
+            }}>
+              {(isPhone ? STEP_SHORT : STEP_LABELS).map((s, i) => (
                 <button key={i} onClick={() => setStep(i)} style={{
-                  height: 26, padding: '0 10px', border: 0, borderRadius: 7,
+                  height: 28,
+                  padding: '0 10px',
+                  border: 0,
+                  borderRadius: 7,
                   background: step === i ? 'white' : 'transparent',
                   color: step === i ? '#1A1A1F' : '#5C5F66',
-                  fontSize: 12, fontWeight: step === i ? 500 : 400,
-                  cursor: 'pointer', fontFamily: 'inherit',
+                  fontSize: isPhone ? 11 : 12,
+                  fontWeight: step === i ? 600 : 400,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  whiteSpace: 'nowrap',
                   boxShadow: step === i ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                }}>{i + 1}. {s}</button>
+                  flexShrink: 0,
+                }}>
+                  {i + 1}. {s}
+                </button>
               ))}
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
-          <PhoneFrame label={`Step ${step + 1}: ${STEP_LABELS[step]}`}>
-            {step === 0 && <Step0 onNext={() => setStep(1)} />}
-            {step === 1 && <Step1 onNext={() => setStep(2)} />}
-            {step === 2 && <Step2 onNext={() => setStep(3)} />}
-            {step === 3 && <Step3 onNext={() => setStep(4)} />}
-            {step === 4 && <Step4 />}
-          </PhoneFrame>
+        {/* Phone mockup + description */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isPhone ? 'column' : 'row',
+          gap: isPhone ? 20 : 32,
+          alignItems: isPhone ? 'center' : 'flex-start',
+        }}>
+          <div style={{ flexShrink: 0 }}>
+            <PhoneFrame label={`Step ${step + 1} of ${STEP_LABELS.length}`}>
+              <StepComp onNext={() => setStep((s) => Math.min(s + 1, STEPS.length - 1))} />
+            </PhoneFrame>
+          </div>
+
+          {/* Description panel */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: isPhone ? 16 : 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
+                Step {step + 1} — {STEP_LABELS[step]}
+              </div>
+
+              {step === 0 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Customer scans the QR code on the counter or printed material and lands on this page.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Shows the loyalty card with your brand colors</li>
+                    <li>Explains the reward (e.g. free latte after 10 stamps)</li>
+                    <li>One-tap flow — no app download needed</li>
+                  </ul>
+                </>
+              )}
+              {step === 1 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Customer enters their mobile number for verification. This also becomes their unique ID.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Phone number is hashed — never stored in plain text</li>
+                    <li>Consent checkbox for marketing messages (TCPA compliant)</li>
+                    <li>US +1 shown by default, configurable per business</li>
+                  </ul>
+                </>
+              )}
+              {step === 2 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>A 6-digit OTP is sent via SMS. Customer enters it to verify ownership of the number.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Code expires in 10 minutes</li>
+                    <li>Resend available after 30 seconds</li>
+                    <li>Powered by Twilio (or Resend SMS)</li>
+                  </ul>
+                </>
+              )}
+              {step === 3 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Customer chooses to add the card to Apple Wallet or Google Wallet. Card is pre-loaded with their stamps.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Google Wallet: live — passes already working</li>
+                    <li>Apple Wallet: requires $99/yr Apple Developer account</li>
+                    <li>Pass updates automatically when stamps are added</li>
+                  </ul>
+                </>
+              )}
+              {step === 4 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Registration complete. A welcome stamp is optionally issued and the customer is ready to earn.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Welcome bonus stamp configurable per card</li>
+                    <li>Customer appears instantly in your Customers list</li>
+                    <li>Push notifications enabled if consent was given</li>
+                  </ul>
+                </>
+              )}
+
+              <div style={{ marginTop: 16, padding: '10px 14px', background: '#F5F6FA', borderRadius: 9, fontSize: 12, color: '#5C5F66' }}>
+                💡 Click the phone screen or use the tabs above to navigate between steps.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
