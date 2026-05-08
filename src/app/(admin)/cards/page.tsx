@@ -154,7 +154,7 @@ function FilterDropdown({ label, value, options, onChange }: {
 
 const PRESET_COLORS = ['#1D9E75', '#3B6BCC', '#C26B1F', '#C53A6B', '#8B5CF6', '#1A1A1F'];
 
-function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c: Card) => void }) {
+function NewCardModal({ onClose, onCreate, businessId }: { onClose: () => void; onCreate: (c: Card) => void; businessId?: string }) {
   const [name, setName] = useState('');
   const [cardType, setCardType] = useState('stamp');
   const [goalStamps, setGoalStamps] = useState(10);
@@ -177,6 +177,7 @@ function NewCardModal({ onClose, onCreate }: { onClose: () => void; onCreate: (c
         reward_desc: rewardDesc.trim() || undefined,
         color,
         is_active: true,
+        ...(businessId && businessId !== 'self' ? { business_id: businessId } : {}),
       });
       setDone(true);
       setTimeout(() => { onCreate(mapApiCard(result)); onClose(); }, 1000);
@@ -317,7 +318,7 @@ function CardTile({ card, selected, onSelect }: { card: Card; selected: boolean;
           <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 4 }}>{card.name}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#8A8D94' }}>
             <span style={{ color: card.bizColor, fontWeight: 500 }}>{card.biz}</span>
-            <span>·</span>
+            <span>{String.fromCharCode(183)}</span>
             <TypePill type={card.type} />
           </div>
         </div>
@@ -490,12 +491,26 @@ export default function CardsPage() {
   const [allCards, setAllCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [businesses, setBusinesses] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedBusinessId, setSelectedBusinessId] = useState('');
 
   useEffect(() => {
     api.cards()
       .then((cs) => { setAllCards(cs.map(mapApiCard)); })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    api.getBusinesses()
+      .then((bs) => {
+        setBusinesses(bs);
+        if (bs.length === 1) setSelectedBusinessId(bs[0].id);
+      })
+      .catch(() => {
+        // Single-business mode — enable create
+        setSelectedBusinessId('self');
+      });
   }, []);
 
   useEffect(() => {
@@ -526,9 +541,32 @@ export default function CardsPage() {
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 18 }}>
       {showModal && (
         <NewCardModal
+          businessId={selectedBusinessId}
           onClose={() => setShowModal(false)}
           onCreate={(c) => setAllCards((prev) => [c, ...prev])}
         />
+      )}
+
+      {/* Business Selector — only shown when multiple businesses exist */}
+      {businesses.length > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: '10px 16px' }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: '#5C5F66', flexShrink: 0 }}>Business</span>
+          <select
+            value={selectedBusinessId}
+            onChange={(e) => setSelectedBusinessId(e.target.value)}
+            style={{ flex: 1, height: 34, padding: '0 10px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: 'white', color: '#1A1A1F', cursor: 'pointer' }}
+          >
+            <option value="">— Select a business —</option>
+            {businesses.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      {businesses.length > 1 && !selectedBusinessId && (
+        <div style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#7C5700' }}>
+          Select a business above before creating a card.
+        </div>
       )}
 
       {/* Header */}
@@ -536,7 +574,7 @@ export default function CardsPage() {
         <div>
           <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.015em' }}>Loyalty cards</div>
           <div style={{ fontSize: 13, color: '#5C5F66' }}>
-            {loading ? 'Loading…' : `${totals.total} cards · ${totals.active} active · ${totals.issued.toLocaleString()} total issued`}
+            {loading ? 'Loading…' : `${totals.total} cards ${String.fromCharCode(183)} ${totals.active} active ${String.fromCharCode(183)} ${totals.issued.toLocaleString()} total issued`}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -544,8 +582,10 @@ export default function CardsPage() {
             <Download size={14} color="#5C5F66" /> Export
           </button>
           <button
-            onClick={() => setShowModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+            onClick={() => (selectedBusinessId || businesses.length === 0) && setShowModal(true)}
+            disabled={businesses.length > 1 && !selectedBusinessId}
+            title={businesses.length > 1 && !selectedBusinessId ? 'Select a business first' : undefined}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', background: (businesses.length > 1 && !selectedBusinessId) ? '#C8CACE' : '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: (businesses.length > 1 && !selectedBusinessId) ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
           >
             <Plus size={14} /> New card
           </button>

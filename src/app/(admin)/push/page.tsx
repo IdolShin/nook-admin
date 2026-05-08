@@ -14,12 +14,12 @@ const AUDIENCES = [
 ];
 
 const TEMPLATES = [
-  { t: 'Welcome new customer',   b: 'Hey {name}, welcome to {business}! Your first stamp is on us 🎉' },
+  { t: 'Welcome new customer',   b: 'Hey {name}, welcome to {business}! Your first stamp is on us \u{1F389}' },
   { t: 'Win-back lapsing',       b: 'We miss you, {name}. Come back this week for 15% off.' },
-  { t: 'Reward unlocked',        b: '🎁 You\'ve earned a free {reward}! Show this card to redeem.' },
+  { t: 'Reward unlocked',        b: '\u{1F381} You\'ve earned a free {reward}! Show this card to redeem.' },
   { t: 'New product drop',       b: 'Just launched at {business}: come check it out.' },
   { t: 'Birthday treat',         b: 'Happy birthday, {name}! Free {reward} on us today only.' },
-  { t: 'Weekend boost',          b: 'Double stamps all weekend. See you soon ☕' },
+  { t: 'Weekend boost',          b: 'Double stamps all weekend. See you soon \u2615' },
 ];
 
 function Seg({ tabs, active, setActive }: { tabs: string[]; active: string; setActive: (t: string) => void }) {
@@ -83,7 +83,7 @@ export default function PushPage() {
     setSendResult('');
     try {
       const res = await api.broadcast(title, body);
-      setSendResult(`Sent · ${res.web_push_sent} push · ${res.wallet_updated} wallets updated`);
+      setSendResult(`Sent ${String.fromCharCode(183)} ${res.web_push_sent} push ${String.fromCharCode(183)} ${res.wallet_updated} wallets updated`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Send failed';
       try { setSendResult(`Error: ${JSON.parse(msg).error ?? msg}`); }
@@ -212,7 +212,7 @@ export default function PushPage() {
               <div style={{ background: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(10px)', borderRadius: 14, padding: 12, color: 'white' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <div style={{ width: 18, height: 18, borderRadius: 4, background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white' }}>n</div>
-                  <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>WALLET · NOOK</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>WALLET {String.fromCharCode(183)} NOOK</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.55 }}>now</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{title || 'Title'}</div>

@@ -293,7 +293,7 @@ export default function AuthPage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
               <div style={{ width: 28, height: 28, borderRadius: 999, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>JK</div>
-              <div style={{ fontSize: 12, opacity: 0.85 }}>Jisoo K. · Owner, Nook Café</div>
+              <div style={{ fontSize: 12, opacity: 0.85 }}>Jisoo K. {String.fromCharCode(183)} Owner, Nook Café</div>
             </div>
           </div>
         </div>}

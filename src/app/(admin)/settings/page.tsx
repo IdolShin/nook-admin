@@ -252,7 +252,7 @@ function BizCard({ biz }: { biz: ApiBusiness }) {
             )}
           </div>
           <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 3 }}>
-            {biz.owner_email} · Joined {joinedDate} · {months === 0 ? 'Less than a month' : `${months} month${months !== 1 ? 's' : ''} active`}
+            {biz.owner_email} {String.fromCharCode(183)} Joined {joinedDate} {String.fromCharCode(183)} {months === 0 ? 'Less than a month' : `${months} month${months !== 1 ? 's' : ''} active`}
           </div>
         </div>
         <button
@@ -490,8 +490,8 @@ export default function SettingsPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#E8F7F2', borderRadius: 10, marginTop: 8 }}>
               <div style={{ flex: 1, lineHeight: 1.4 }}>
-                <div style={{ fontWeight: 500, color: '#085041' }}>Trial · 14 days left</div>
-                <div style={{ fontSize: 12, color: '#085041', opacity: 0.8 }}>Pro is $79/mo per business · unlimited cards, Apple Wallet, coupon system.</div>
+                <div style={{ fontWeight: 500, color: '#085041' }}>Trial {String.fromCharCode(183)} 14 days left</div>
+                <div style={{ fontSize: 12, color: '#085041', opacity: 0.8 }}>Pro is $79/mo per business {String.fromCharCode(183)} unlimited cards, Apple Wallet, coupon system.</div>
               </div>
             </div>
             <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>

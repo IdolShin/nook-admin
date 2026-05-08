@@ -193,7 +193,7 @@ function Step4() {
       </div>
       <div style={{ marginTop: 24, padding: 14, background: '#F5F6FA', borderRadius: 12, textAlign: 'left' }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#8A8D94', letterSpacing: '.06em', textTransform: 'uppercase' }}>Welcome bonus</div>
-        <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>1 free stamp on us 🎉</div>
+        <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>1 free stamp on us {'\u{1F389}'}</div>
         <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 4 }}>It&apos;s already on your card. Just 9 more to a free latte.</div>
       </div>
     </div>
@@ -331,13 +331,4 @@ export default function RegisterPage() {
                 </>
               )}
 
-              <div style={{ marginTop: 16, padding: '10px 14px', background: '#F5F6FA', borderRadius: 9, fontSize: 12, color: '#5C5F66' }}>
-                💡 Click the phone screen or use the tabs above to navigate between steps.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+   

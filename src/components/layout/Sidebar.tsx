@@ -146,7 +146,7 @@ export default function Sidebar({
           background: 'linear-gradient(135deg, #E8F7F2 0%, #D8F0E5 100%)',
           borderRadius: 12,
         }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#085041' }}>Trial · 14 days left</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#085041' }}>Trial {String.fromCharCode(183)} 14 days left</div>
           <div style={{ fontSize: 11, color: '#085041', opacity: 0.75, marginTop: 4, lineHeight: 1.4 }}>
             Unlock unlimited cards & Apple Wallet on Pro.
           </div>

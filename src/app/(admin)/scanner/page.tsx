@@ -131,7 +131,7 @@ function StampSuccessView({ data, onBack }: { data: StampResult | null; onBack: 
         {data?.rewardReady ? 'Reward earned!' : 'Stamp added'}
       </div>
       <div style={{ fontSize: 14, opacity: 0.65, marginTop: 6 }}>
-        {name} · <span style={{ fontFamily: 'var(--font-mono)' }}>{stamps}/{goal}</span>
+        {name} {String.fromCharCode(183)} <span style={{ fontFamily: 'var(--font-mono)' }}>{stamps}/{goal}</span>
       </div>
       <div style={{ display: 'flex', gap: 5, marginTop: 18 }}>
         {Array.from({ length: goal }).map((_, i) => (
@@ -144,7 +144,7 @@ function StampSuccessView({ data, onBack }: { data: StampResult | null; onBack: 
       </div>
       {data?.rewardReady && (
         <div style={{ marginTop: 12, padding: '6px 14px', borderRadius: 999, background: 'rgba(29,158,117,0.2)', color: '#7DD9B5', fontSize: 12 }}>
-          🎁 Reward ready to redeem
+          {'\u{1F381}'} Reward ready to redeem
         </div>
       )}
       <div style={{ marginTop: 20, fontSize: 12, opacity: 0.5 }}>Auto-returning to scanner in 4s</div>
@@ -156,7 +156,7 @@ function StampSuccessView({ data, onBack }: { data: StampResult | null; onBack: 
 function StampCustomerView() {
   const cards = [
     { n: 'Coffee lovers', p: 6, max: 10, type: 'Stamp', note: null },
-    { n: 'Welcome bonus', p: null, max: null, type: 'Coupon', note: 'Free pastry · expires May 14' },
+    { n: 'Welcome bonus', p: null, max: null, type: 'Coupon', note: 'Free pastry ${String.fromCharCode(183)} expires May 14' },
   ];
   return (
     <div style={{ display: 'flex', gap: 16, height: 'calc(100% - 50px)' }}>
@@ -165,7 +165,7 @@ function StampCustomerView() {
           <div style={{ width: 56, height: 56, borderRadius: 999, background: '#1D9E75', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 600, flexShrink: 0 }}>MK</div>
           <div style={{ flex: 1, lineHeight: 1.3 }}>
             <div style={{ fontSize: 20, fontWeight: 600 }}>Min-jae Kim</div>
-            <div style={{ fontSize: 12, opacity: 0.55, fontFamily: 'var(--font-mono)' }}>+1 201 555 0142 · Member since Mar 2026</div>
+            <div style={{ fontSize: 12, opacity: 0.55, fontFamily: 'var(--font-mono)' }}>+1 201 555 0142 {String.fromCharCode(183)} Member since Mar 2026</div>
             <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
               <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'rgba(194,107,31,0.18)', color: '#E0A560', fontWeight: 500 }}>● VIP</span>
               <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)' }}>38 stamps</span>
@@ -304,7 +304,7 @@ function CouponSuccessView({ data, onBack }: { data: CouponResult | null; onBack
         </svg>
       </div>
       <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 22 }}>Coupon redeemed</div>
-      <div style={{ fontSize: 14, opacity: 0.65, marginTop: 6 }}>{data?.customerName ?? '—'} · {data?.couponTitle ?? '—'}</div>
+      <div style={{ fontSize: 14, opacity: 0.65, marginTop: 6 }}>{data?.customerName ?? '—'} {String.fromCharCode(183)} {data?.couponTitle ?? '—'}</div>
       <div style={{ marginTop: 20, fontSize: 12, opacity: 0.5 }}>Auto-returning to scanner in 4s</div>
       <button onClick={onBack} style={{ marginTop: 12, fontSize: 12, background: 'none', border: 0, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontFamily: 'inherit' }}>Return now</button>
     </div>
@@ -489,7 +489,7 @@ export default function ScannerPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 24, height: 24, borderRadius: 7, background: '#1D9E75', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13 }}>n</div>
-                <div style={{ fontSize: 13 }}>Nook Café · <span style={{ opacity: 0.5 }}>Counter</span></div>
+                <div style={{ fontSize: 13 }}>Nook Café {String.fromCharCode(183)} <span style={{ opacity: 0.5 }}>Counter</span></div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {/* Mode toggle */}

@@ -1,6 +1,6 @@
 export const businesses = [
   { id: "all",     name: "All businesses", short: "ALL", color: "#1D9E75", customers: 284 },
-  { id: "nook",    name: "Nook Café",      short: "NC",  color: "#1D9E75", customers: 128, emoji: "☕" },
+  { id: "nook",    name: "Nook Café",      short: "NC",  color: "#1D9E75", customers: 128, emoji: String.fromCharCode(0x2615) },
   { id: "kook",    name: "Kook 미용실",     short: "K",   color: "#3B6BCC", customers: 76,  emoji: "✂️" },
   { id: "fortlee", name: "Fort Lee Gym",   short: "FL",  color: "#C26B1F", customers: 53,  emoji: "💪" },
   { id: "kbbq",    name: "Korean BBQ",     short: "KB",  color: "#C53A6B", customers: 27,  emoji: "🥩" },
@@ -33,20 +33,20 @@ export const bizActivity = [
 ];
 
 export const activity = [
-  { type: "stamp",  who: "Min-jae K.",  biz: "Nook Café",    when: "2 min ago",  detail: "+1 stamp · 7/10" },
+  { type: "stamp",  who: "Min-jae K.",  biz: "Nook Café",    when: "2 min ago",  detail: "+1 stamp " + String.fromCharCode(183) + " 7/10" },
   { type: "redeem", who: "Sarah Chen",  biz: "Korean BBQ",   when: "8 min ago",  detail: "Redeemed: Free entrée" },
-  { type: "signup", who: "David P.",    biz: "Fort Lee Gym", when: "14 min ago", detail: "New customer · Wallet added" },
-  { type: "stamp",  who: "Hye-jin L.",  biz: "Kook 미용실",   when: "22 min ago", detail: "+1 stamp · 3/8" },
+  { type: "signup", who: "David P.",    biz: "Fort Lee Gym", when: "14 min ago", detail: "New customer " + String.fromCharCode(183) + " Wallet added" },
+  { type: "stamp",  who: "Hye-jin L.",  biz: "Kook 미용실",   when: "22 min ago", detail: "+1 stamp " + String.fromCharCode(183) + " 3/8" },
   { type: "push",   who: "—",           biz: "Nook Café",    when: "31 min ago", detail: "Sent to 128 customers" },
   { type: "redeem", who: "Marco V.",    biz: "Nook Café",    when: "47 min ago", detail: "Redeemed: Free latte" },
-  { type: "stamp",  who: "Yu-jin S.",   biz: "Kook 미용실",   when: "1h ago",     detail: "+1 stamp · 5/8" },
-  { type: "signup", who: "Olivia R.",   biz: "Korean BBQ",   when: "2h ago",     detail: "New customer · Wallet added" },
+  { type: "stamp",  who: "Yu-jin S.",   biz: "Kook 미용실",   when: "1h ago",     detail: "+1 stamp " + String.fromCharCode(183) + " 5/8" },
+  { type: "signup", who: "Olivia R.",   biz: "Korean BBQ",   when: "2h ago",     detail: "New customer " + String.fromCharCode(183) + " Wallet added" },
 ];
 
 export const scheduledPush = [
   { biz: "Nook Café",    title: "Weekend special: 2x stamps",          when: "Tomorrow, 9:00 AM", reach: 128, status: "scheduled" },
   { biz: "Korean BBQ",   title: "We miss you — 10% off this week",     when: "May 2, 11:00 AM",   reach: 27,  status: "scheduled" },
-  { biz: "Fort Lee Gym", title: "New class drop · Saturday boot camp", when: "May 3, 7:00 AM",    reach: 53,  status: "draft" },
+  { biz: "Fort Lee Gym", title: "New class drop " + String.fromCharCode(183) + " Saturday boot camp", when: "May 3, 7:00 AM",    reach: 53,  status: "draft" },
 ];
 
 export const cards = [

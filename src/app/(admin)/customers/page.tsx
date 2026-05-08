@@ -3,11 +3,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { customerStatusMeta } from '@/lib/utils';
-import { api, type ApiCustomer, type ApiCouponPass } from '@/lib/api';
+import { api, type ApiCustomer, type ApiCouponPass, type ApiCoupon } from '@/lib/api';
 import { toast } from '@/lib/toast';
-import { Search, Download, Send, Gift, X, Ticket } from 'lucide-react';
+import { Search, Download, Send, Gift, X, Ticket, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import BottomSheet from '@/components/ui/BottomSheet';
+import ResponsiveModal from '@/components/ui/ResponsiveModal';
 
 type CustomerStatus = 'vip' | 'active' | 'new' | 'at-risk';
 
@@ -83,7 +84,88 @@ const PASS_STATUS: Record<string, { label: string; bg: string; fg: string }> = {
   expired:  { label: 'Expired',  bg: '#FBE2EC', fg: '#9C2848' },
 };
 
-function CustomerDetail({ customer, onClose, onSendPush }: { customer: Customer; onClose: () => void; onSendPush?: () => void }) {
+/* ─── Coupon Picker Modal ───────────────────────────────────── */
+
+function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose: () => void }) {
+  const [coupons, setCoupons] = useState<ApiCoupon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [issuing, setIssuing] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.coupons()
+      .then((cs) => setCoupons(cs.filter((c) => c.is_active)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleIssue = async (couponId: string) => {
+    setIssuing(couponId);
+    try {
+      await api.issueCoupon(couponId, { customer_ids: [customer.id], send_push: true });
+      setDone(couponId);
+      setTimeout(onClose, 1400);
+    } catch (e: unknown) {
+      toast(e instanceof Error ? e.message : 'Failed to send', 'error');
+      setIssuing(null);
+    }
+  };
+
+  return (
+    <ResponsiveModal isOpen onClose={onClose} title={`쿠폰 발송 — ${customer.name}`}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '32px 0', color: '#8A8D94', fontSize: 13 }}>Loading…</div>
+        ) : coupons.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <Ticket size={28} color="#EBEBEB" style={{ margin: '0 auto 10px' }} />
+            <div style={{ fontSize: 14, fontWeight: 600 }}>No active coupons</div>
+            <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>Create a coupon on the Coupons page first.</div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {coupons.map((coupon) => {
+              const isSent = done === coupon.id;
+              const isProcessing = issuing === coupon.id;
+              return (
+                <div key={coupon.id} style={{
+                  padding: '12px 14px',
+                  border: `1px solid ${isSent ? '#1D9E75' : '#EBEBEB'}`,
+                  borderRadius: 10,
+                  background: isSent ? '#E8F7F2' : 'white',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{coupon.title}</div>
+                    <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 2 }}>
+                      {coupon.description || coupon.coupon_type} {String.fromCharCode(183)} {coupon.valid_days}일 유효
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleIssue(coupon.id)}
+                    disabled={!!issuing || !!done}
+                    style={{
+                      height: 32, padding: '0 14px', flexShrink: 0,
+                      background: isSent ? '#1D9E75' : '#085041',
+                      color: 'white', border: 'none', borderRadius: 8,
+                      fontSize: 12, fontWeight: 600,
+                      cursor: (isProcessing || !!done) ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit', opacity: isProcessing ? 0.6 : 1,
+                    }}
+                  >
+                    {isSent ? '✓ 발송됨' : isProcessing ? '…' : '발송'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </ResponsiveModal>
+  );
+}
+
+function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { customer: Customer; onClose: () => void; onSendPush?: () => void; onSendCoupon?: () => void }) {
   const visits = [3, 5, 4, 6, 7, 5, 8, 6, 7, 9, 8, 10];
   const [activeTab, setActiveTab] = useState<'activity' | 'coupons'>('activity');
   const [passes, setPasses] = useState<ApiCouponPass[]>([]);
@@ -156,7 +238,7 @@ function CustomerDetail({ customer, onClose, onSendPush }: { customer: Customer;
           <>
             <div style={{ marginTop: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 12, fontWeight: 500 }}>Visits · 12 weeks</span>
+                <span style={{ fontSize: 12, fontWeight: 500 }}>Visits {String.fromCharCode(183)} 12 weeks</span>
                 <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{visits.reduce((a, b) => a + b, 0)} total</span>
               </div>
               <div style={{ display: 'flex', gap: 3, height: 40, alignItems: 'flex-end' }}>
@@ -203,7 +285,7 @@ function CustomerDetail({ customer, onClose, onSendPush }: { customer: Customer;
                       <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 999, background: meta.bg, color: meta.fg }}>{meta.label}</span>
                     </div>
                     <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 3, fontFamily: 'var(--font-mono)' }}>
-                      {p.barcode} · Exp {expiryDate}
+                      {p.barcode} {String.fromCharCode(183)} Exp {expiryDate}
                     </div>
                     {p.redeemed_at && (
                       <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 2 }}>
@@ -214,10 +296,10 @@ function CustomerDetail({ customer, onClose, onSendPush }: { customer: Customer;
                 );
               })
             )}
-            <button style={{
+            <button onClick={onSendCoupon} style={{
               width: '100%', height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-              border: '1px dashed #EBEBEB', borderRadius: 8, background: 'transparent',
-              cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', color: '#5C5F66', marginTop: 4,
+              border: '1px dashed #1D9E75', borderRadius: 8, background: 'transparent',
+              cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', color: '#1D9E75', marginTop: 4, fontWeight: 500,
             }}>
               <Ticket size={13} /> Send coupon
             </button>
@@ -245,6 +327,14 @@ export default function CustomersPage() {
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [selected, setSelected] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCouponPicker, setShowCouponPicker] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'stamps' | 'lastVisit' | 'status'>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (col: typeof sortBy) => {
+    if (sortBy === col) setSortDir((d) => d === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(col); setSortDir('asc'); }
+  };
 
   useEffect(() => {
     api.customers()
@@ -257,6 +347,28 @@ export default function CustomersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleExportCSV = () => {
+    const headers = ['Name', 'Phone', 'Status', 'Stamps', 'Joined', 'Last Visit'];
+    const csvRows = [
+      headers.join(','),
+      ...rows.map((c) => [
+        `"${c.name.replace(/"/g, '""')}"`,
+        `"${c.phone}"`,
+        c.status,
+        c.totalStamps,
+        `"${c.joined}"`,
+        `"${c.lastVisit}"`,
+      ].join(',')),
+    ];
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `customers-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const segs = [
     { id: 'all',     label: 'All',            count: allCustomers.length },
     { id: 'vip',     label: 'VIP',            count: allCustomers.filter((c) => c.status === 'vip').length },
@@ -265,22 +377,42 @@ export default function CustomersPage() {
     { id: 'multi',   label: 'Multi-business', count: allCustomers.filter((c) => c.biz.length > 1).length },
   ];
 
-  const rows = useMemo(() => allCustomers.filter((c) => {
-    if (q && !c.name.toLowerCase().includes(q.toLowerCase()) && !c.phone.includes(q)) return false;
-    if (seg === 'all') return true;
-    if (seg === 'multi') return c.biz.length > 1;
-    return c.status === seg;
-  }), [q, seg, allCustomers]);
+  const rows = useMemo(() => {
+    const filtered = allCustomers.filter((c) => {
+      if (q && !c.name.toLowerCase().includes(q.toLowerCase()) && !c.phone.includes(q)) return false;
+      if (seg === 'all') return true;
+      if (seg === 'multi') return c.biz.length > 1;
+      return c.status === seg;
+    });
+    const STATUS_ORDER: Record<string, number> = { vip: 0, active: 1, new: 2, 'at-risk': 3 };
+    return [...filtered].sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === 'name')      cmp = a.name.localeCompare(b.name);
+      else if (sortBy === 'stamps')    cmp = a.totalStamps - b.totalStamps;
+      else if (sortBy === 'status')    cmp = (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
+      else if (sortBy === 'lastVisit') cmp = a.lastVisit.localeCompare(b.lastVisit);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [q, seg, allCustomers, sortBy, sortDir]);
 
   const vipCount    = allCustomers.filter((c) => c.status === 'vip').length;
   const newCount    = allCustomers.filter((c) => c.status === 'new').length;
   const atRiskCount = allCustomers.filter((c) => c.status === 'at-risk').length;
 
   const thStyle: React.CSSProperties = { padding: '12px 16px', textAlign: 'left', fontWeight: 500, fontSize: 11, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '0.04em', background: '#FAFAFB' };
+
+  const SortIcon = ({ col }: { col: typeof sortBy }) => {
+    if (sortBy !== col) return <ChevronsUpDown size={11} style={{ opacity: 0.35, marginLeft: 3 }} />;
+    return sortDir === 'asc' ? <ArrowUp size={11} style={{ color: '#1D9E75', marginLeft: 3 }} /> : <ArrowDown size={11} style={{ color: '#1D9E75', marginLeft: 3 }} />;
+  };
+  const thBtn: React.CSSProperties = { background: 'none', border: 0, padding: 0, fontFamily: 'inherit', fontWeight: 500, fontSize: 11, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer', display: 'flex', alignItems: 'center' };
   const tdStyle: React.CSSProperties = { padding: '12px 16px', verticalAlign: 'middle' };
 
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
+      {showCouponPicker && selected && (
+        <CouponPickerModal customer={selected} onClose={() => setShowCouponPicker(false)} />
+      )}
       {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         <KPI label="Total customers" value={allCustomers.length.toString()} delta={`${allCustomers.length} total`} up />
@@ -292,113 +424,4 @@ export default function CustomersPage() {
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 10px', background: '#F5F6FA', borderRadius: 8, flex: '1 1 280px', minWidth: 220 }}>
-          <Search size={14} color="#8A8D94" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, phone…"
-            style={{ flex: 1, border: 0, background: 'transparent', outline: 'none', fontSize: 13, fontFamily: 'inherit' }} />
-        </div>
-        <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
-          {segs.map((s) => (
-            <button key={s.id} onClick={() => setSeg(s.id)} style={{
-              height: 26, padding: '0 10px', border: 0, borderRadius: 7,
-              background: seg === s.id ? 'white' : 'transparent',
-              color: seg === s.id ? '#1A1A1F' : '#5C5F66',
-              fontSize: 12, fontWeight: seg === s.id ? 500 : 400,
-              cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: seg === s.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
-              {s.label}
-              <span style={{ fontSize: 10, color: '#8A8D94' }}>{s.count}</span>
-            </button>
-          ))}
-        </div>
-        <div style={{ flex: 1 }} />
-        <button onClick={() => router.push('/push')} style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-          <Send size={13} color="#5C5F66" /> Message segment
-        </button>
-        <button style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-          <Download size={13} color="#5C5F66" /> Export CSV
-        </button>
-      </div>
-
-      {/* Body */}
-      <div style={{ display: 'grid', gridTemplateColumns: (selected && !isMobile) ? '1fr 380px' : '1fr', gap: 16, alignItems: 'start' }}>
-        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
-          {loading ? (
-            <div style={{ padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading customers…</div>
-          ) : rows.length === 0 && !q ? (
-            <div style={{ padding: 48, textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 600 }}>No customers yet</div>
-              <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>Customers appear when they register a loyalty card.</div>
-            </div>
-          ) : (
-          <div className="table-scroll">
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Customer</th>
-                <th style={thStyle}>Status</th>
-                <th style={thStyle}>Businesses</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Cards</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Stamps</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Spend</th>
-                <th style={thStyle}>Last visit</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((c) => {
-                const isSel = selected?.id === c.id;
-                return (
-                  <tr key={c.id} onClick={() => setSelected(c)} style={{
-                    borderTop: '1px solid #F0F0F2',
-                    background: isSel ? '#E8F7F2' : 'transparent',
-                    cursor: 'pointer', transition: 'background 100ms',
-                  }}
-                    onMouseEnter={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = '#FAFAFB'; }}
-                    onMouseLeave={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                  >
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: 999, background: c.color, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>{c.initials}</div>
-                        <div style={{ lineHeight: 1.3 }}>
-                          <div style={{ fontWeight: 500 }}>{c.name}</div>
-                          <div style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{c.phone}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={tdStyle}><StatusPill status={c.status} /></td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {c.biz.map((b, i) => (
-                          <span key={i} style={{ fontSize: 11, padding: '1px 7px', background: '#F0F1F4', borderRadius: 999 }}>{b}</span>
-                        ))}
-                      </div>
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{c.cards}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{c.totalStamps}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>${c.spend}</td>
-                    <td style={{ ...tdStyle, color: '#8A8D94' }}>{c.lastVisit}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          </div>
-          )}
-        </div>
-        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
-      </div>
-
-      {isMobile && (
-        <BottomSheet
-          isOpen={!!selected}
-          onClose={() => setSelected(null)}
-          bottomOffset="calc(60px + env(safe-area-inset-bottom))"
-          maxHeight="82vh"
-        >
-          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
-        </BottomSheet>
-      )}
-    </div>
-  );
-}
+          <Search size={14} color="#8A8D

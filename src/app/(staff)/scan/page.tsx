@@ -21,7 +21,10 @@ type AppState =
   | { kind: 'acting' }
   | { kind: 'stamp_ok'; customer: CustomerData; newStamps: number; goalStamps: number; rewardReady: boolean }
   | { kind: 'redeem_ok'; customer: CustomerData }
+  | { kind: 'coupon_ok'; barcode: string }
   | { kind: 'error'; message: string };
+
+type ScanMode = 'stamp' | 'coupon';
 
 declare class BarcodeDetector {
   constructor(opts?: { formats: string[] });
@@ -83,6 +86,7 @@ export default function ScanPage() {
   const [cameraError, setCameraError] = useState('');
   const [manualMode, setManualMode] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+  const [scanMode, setScanMode] = useState<ScanMode>('stamp');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -103,7 +107,7 @@ export default function ScanPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (state.kind === 'stamp_ok' || state.kind === 'redeem_ok') {
+    if (state.kind === 'stamp_ok' || state.kind === 'redeem_ok' || state.kind === 'coupon_ok') {
       const t = setTimeout(reset, 3500);
       return () => clearTimeout(t);
     }
@@ -239,6 +243,20 @@ export default function ScanPage() {
     if (!trimmed) return;
     stopCamera();
     setState({ kind: 'loading' });
+
+    // 쿠폰 모드: 바코드 직접 리딤
+    if (scanMode === 'coupon') {
+      try {
+        await api.redeemCoupon(trimmed);
+        setTodayRedeems((n) => n + 1);
+        setState({ kind: 'coupon_ok', barcode: trimmed });
+      } catch (e) {
+        setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : '쿠폰을 찾을 수 없어요') });
+      }
+      return;
+    }
+
+    // 스탬프 모드: 고객 조회 후 스탬프/리딤
     const scanType = detectScanType(trimmed);
     try {
       const res = await api.customerLookup(trimmed, scanType);
@@ -296,23 +314,42 @@ export default function ScanPage() {
 
         {/* Top bar */}
         <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '14px 20px 12px', paddingTop: 'max(14px, env(safe-area-inset-top, 14px))',
           borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 9, background: '#1D9E75',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: 16, flexShrink: 0,
-            }}>n</div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{bizName || 'Nook'}</div>
-              <div style={{ fontSize: 10, opacity: 0.3 }}>점원 스캐너</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <div style={{
+                width: 30, height: 30, borderRadius: 9, background: '#1D9E75',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 800, fontSize: 16, flexShrink: 0,
+              }}>n</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{bizName || 'Nook'}</div>
+                <div style={{ fontSize: 10, opacity: 0.3 }}>점원 스캐너</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 10, opacity: 0.2, textAlign: 'right' }}>
+              스탬프 {todayStamps} {String.fromCharCode(183)} 리딤 {todayRedeems}
             </div>
           </div>
-          <div style={{ fontSize: 10, opacity: 0.2, textAlign: 'right' }}>
-            스탬프 {todayStamps} · 리딤 {todayRedeems}
+          {/* 스탬프 / 쿠폰 모드 토글 */}
+          <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 10, padding: 3 }}>
+            {(['stamp', 'coupon'] as ScanMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => { setScanMode(m); reset(); }}
+                style={{
+                  flex: 1, height: 30, border: 0, borderRadius: 8,
+                  background: scanMode === m ? (m === 'coupon' ? '#C26B1F' : '#1D9E75') : 'transparent',
+                  color: scanMode === m ? 'white' : 'rgba(255,255,255,0.4)',
+                  fontSize: 12, fontWeight: scanMode === m ? 600 : 400,
+                  cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s',
+                }}
+              >
+                {m === 'stamp' ? '\u{1F3AF} 스탬프' : '\u{1F39F} 쿠폰'}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -457,7 +494,7 @@ export default function ScanPage() {
                     <div>
                       <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>{c.name}</div>
                       <div style={{ display: 'inline-flex', alignItems: 'center', marginTop: 6, padding: '3px 11px', borderRadius: 999, background: visits > 0 ? 'rgba(29,158,117,0.18)' : 'rgba(255,255,255,0.06)', color: visits > 0 ? '#7DD9B5' : 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 600 }}>
-                        {visits === 0 ? '첫 방문 🎉' : `${visits}번째 방문`}
+                        {visits === 0 ? '첫 방문 \u{1F389}' : `${visits}번째 방문`}
                       </div>
                     </div>
                   </div>
@@ -471,7 +508,7 @@ export default function ScanPage() {
                     <StampDots current={c.current_stamps} goal={c.goal_stamps} />
                     {canRedeem && (
                       <div style={{ marginTop: 14, padding: '9px 14px', borderRadius: 10, background: 'rgba(29,158,117,0.15)', color: '#7DD9B5', fontSize: 13, fontWeight: 500, textAlign: 'center' }}>
-                        🎁 {c.card.reward_desc} — 리워드 사용 가능!
+                        {'\u{1F381}'} {c.card.reward_desc} — 리워드 사용 가능!
                       </div>
                     )}
                   </div>
@@ -479,7 +516,7 @@ export default function ScanPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
                   {canRedeem && (
-                    <button onClick={handleRedeemReward} style={{ width: '100%', padding: '17px', border: 'none', borderRadius: 15, background: 'linear-gradient(135deg, #1D9E75, #085041)', color: 'white', fontSize: 17, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em' }}>🎁 리워드 사용하기</button>
+                    <button onClick={handleRedeemReward} style={{ width: '100%', padding: '17px', border: 'none', borderRadius: 15, background: 'linear-gradient(135deg, #1D9E75, #085041)', color: 'white', fontSize: 17, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em' }}>{'\u{1F381}'} 리워드 사용하기</button>
                   )}
                   <button onClick={handleAddStamp} style={{ width: '100%', padding: '17px', border: canRedeem ? '1px solid rgba(255,255,255,0.10)' : 'none', borderRadius: 15, background: canRedeem ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #1D9E75, #085041)', color: 'white', fontSize: 17, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em' }}>+ 스탬프 추가</button>
                 </div>
@@ -494,9 +531,9 @@ export default function ScanPage() {
                 <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' }}>{state.rewardReady ? '🎉 리워드 획득!' : '스탬프 추가!'}</div>
-                <div style={{ fontSize: 14, opacity: 0.4, marginTop: 7 }}>{state.customer.name} · {state.newStamps}/{state.goalStamps}</div>
-                {state.rewardReady && <div style={{ display: 'inline-block', marginTop: 12, padding: '7px 16px', borderRadius: 999, background: 'rgba(29,158,117,0.2)', color: '#7DD9B5', fontSize: 13 }}>🎁 {state.customer.card.reward_desc}</div>}
+                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' }}>{state.rewardReady ? '\u{1F389} 리워드 획득!' : '스탬프 추가!'}</div>
+                <div style={{ fontSize: 14, opacity: 0.4, marginTop: 7 }}>{state.customer.name} {String.fromCharCode(183)} {state.newStamps}/{state.goalStamps}</div>
+                {state.rewardReady && <div style={{ display: 'inline-block', marginTop: 12, padding: '7px 16px', borderRadius: 999, background: 'rgba(29,158,117,0.2)', color: '#7DD9B5', fontSize: 13 }}>{'\u{1F381}'} {state.customer.card.reward_desc}</div>}
               </div>
               <StampDots current={state.newStamps} goal={state.goalStamps} />
               <div style={{ fontSize: 12, opacity: 0.28 }}>3초 후 자동 복귀...</div>
@@ -507,29 +544,6 @@ export default function ScanPage() {
           {/* REDEEM OK */}
           {state.kind === 'redeem_ok' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-              <div style={{ width: 90, height: 90, borderRadius: '50%', background: 'rgba(194,107,31,0.18)', color: '#E0A560', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 20px rgba(194,107,31,0.06)', fontSize: 44 }}>🎁</div>
+              <div style={{ width: 90, height: 90, borderRadius: '50%', background: 'rgba(194,107,31,0.18)', color: '#E0A560', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 20px rgba(194,107,31,0.06)', fontSize: 44 }}>{'\u{1F381}'}</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' }}>리워드 사용 완료!</div>
-                <div style={{ fontSize: 14, opacity: 0.4, marginTop: 7 }}>{state.customer.name}</div>
-                <div style={{ fontSize: 13, opacity: 0.3, marginTop: 4 }}>{state.customer.card.reward_desc}</div>
-              </div>
-              <div style={{ fontSize: 12, opacity: 0.28 }}>3초 후 자동 복귀...</div>
-              <button onClick={reset} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>지금 돌아가기</button>
-            </div>
-          )}
-
-          {/* ERROR */}
-          {state.kind === 'error' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
-              <div style={{ width: 74, height: 74, borderRadius: '50%', background: 'rgba(197,58,107,0.18)', color: '#E07090', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 9l-6 6M9 9l6 6" /></svg>
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: '#E07090', textAlign: 'center', padding: '0 20px' }}>{state.message}</div>
-              <button onClick={reset} style={{ padding: '13px 30px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 13, background: 'transparent', color: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15 }}>다시 스캔</button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' 

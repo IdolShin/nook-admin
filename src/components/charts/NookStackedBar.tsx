@@ -21,8 +21,8 @@ export default function NookStackedBar({
               </span>
             </div>
             <div style={{ height: 8, borderRadius: 999, background: '#F0F0F2', display: 'flex', overflow: 'hidden' }}>
-              <div title={`Stamps · ${d.stamps}`} style={{ width: `${stampPct}%`, background: d.color, transition: 'width 400ms ease' }} />
-              <div title={`Redemptions · ${d.redemptions}`} style={{ width: `${redeemPct}%`, background: d.color, opacity: 0.32, transition: 'width 400ms ease' }} />
+              <div title={`Stamps ${String.fromCharCode(183)} ${d.stamps}`} style={{ width: `${stampPct}%`, background: d.color, transition: 'width 400ms ease' }} />
+              <div title={`Redemptions ${String.fromCharCode(183)} ${d.redemptions}`} style={{ width: `${redeemPct}%`, background: d.color, opacity: 0.32, transition: 'width 400ms ease' }} />
             </div>
           </div>
         );

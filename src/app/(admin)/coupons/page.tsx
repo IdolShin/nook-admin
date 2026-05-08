@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { api, type ApiCoupon } from '@/lib/api';
+import { toast } from '@/lib/toast';
 import { Plus, X, ChevronRight, Send, Gift, Zap, Calendar, Users, ToggleLeft, ToggleRight, RefreshCw } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
@@ -24,11 +25,11 @@ const RECENT_ACTIVITY = [
 
 // ─── Helpers ──────────────────────────────────────────────────
 const TYPE_META: Record<string, { emoji: string; label: string; bg: string; text: string }> = {
-  percent:   { emoji: '🏷️',  label: '% Discount', bg: '#E8F7F2', text: '#085041' },
+  percent:   { emoji: '\u{1F3F7}\uFE0F',  label: '% Discount', bg: '#E8F7F2', text: '#085041' },
   fixed:     { emoji: '💵',  label: '$ Off',      bg: '#E2ECFB', text: '#1F4E94' },
-  bogo:      { emoji: '🎁',  label: 'BOGO',       bg: '#FBEFD9', text: '#8C5A11' },
-  free_item: { emoji: '☕',  label: 'Free Item',  bg: '#F0F1F4', text: '#5C5F66' },
-  review:    { emoji: '⭐',  label: 'Review',     bg: '#FBE2EC', text: '#9C2848' },
+  bogo:      { emoji: '\u{1F381}',  label: 'BOGO',       bg: '#FBEFD9', text: '#8C5A11' },
+  free_item: { emoji: '\u2615',  label: 'Free Item',  bg: '#F0F1F4', text: '#5C5F66' },
+  review:    { emoji: '\u2B50',  label: 'Review',     bg: '#FBE2EC', text: '#9C2848' },
   custom:    { emoji: '✨',  label: 'Custom',     bg: '#F5F6FA', text: '#5C5F66' },
 };
 
@@ -41,11 +42,11 @@ const TRIGGER_META: Record<string, { label: string; bg: string; text: string }> 
 };
 
 const COUPON_TYPE_OPTIONS = [
-  { type: 'percent',   emoji: '🏷️', label: '% Discount', desc: 'Take N% off any purchase' },
+  { type: 'percent',   emoji: '\u{1F3F7}\uFE0F', label: '% Discount', desc: 'Take N% off any purchase' },
   { type: 'fixed',     emoji: '💵', label: '$ Off',      desc: 'Fixed dollar amount off' },
-  { type: 'bogo',      emoji: '🎁', label: 'BOGO',       desc: 'Buy one, get one free' },
-  { type: 'free_item', emoji: '☕', label: 'Free Item',  desc: 'Specific free item reward' },
-  { type: 'review',    emoji: '⭐', label: 'Google Review', desc: 'Reward for leaving a review' },
+  { type: 'bogo',      emoji: '\u{1F381}', label: 'BOGO',       desc: 'Buy one, get one free' },
+  { type: 'free_item', emoji: '\u2615', label: 'Free Item',  desc: 'Specific free item reward' },
+  { type: 'review',    emoji: '\u2B50', label: 'Google Review', desc: 'Reward for leaving a review' },
   { type: 'custom',    emoji: '✨', label: 'Custom',     desc: 'Write your own offer' },
 ];
 
@@ -56,7 +57,7 @@ function discountText(c: ApiCoupon) {
   if (c.coupon_type === 'fixed')     return `$${c.discount_value} off`;
   if (c.coupon_type === 'free_item') return `Free ${c.free_item_name || 'item'}`;
   if (c.coupon_type === 'bogo')      return 'BOGO';
-  if (c.coupon_type === 'review')    return '⭐ Review';
+  if (c.coupon_type === 'review')    return '\u2B50 Review';
   return c.title;
 }
 
@@ -121,11 +122,11 @@ function CouponRow({ coupon, onToggle, onIssue }: {
         {/* Stats row */}
         <div style={{ display: 'flex', gap: 10, fontSize: 11, color: '#8A8D94', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>
           <span>{coupon.total_issued} issued</span>
-          <span>·</span>
+          <span>{String.fromCharCode(183)}</span>
           <span>{coupon.total_redeemed} redeemed</span>
-          <span>·</span>
+          <span>{String.fromCharCode(183)}</span>
           <span>{redemptionRate}%</span>
-          <span>·</span>
+          <span>{String.fromCharCode(183)}</span>
           <span>{coupon.valid_days}d valid</span>
         </div>
 
@@ -208,6 +209,7 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [sendPush, setSendPush] = useState(true);
   const [sendEmail, setSendEmail] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [createError, setCreateError] = useState('');
   const [result, setResult] = useState<{ issued: number } | null>(null);
   const { isPhone } = useBreakpoint();
 
@@ -217,7 +219,9 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
     : TYPE_META[couponType]?.label || 'Coupon';
 
   async function handleCreate() {
+    if (!title.trim()) { setCreateError('Coupon title is required'); return; }
     setSaving(true);
+    setCreateError('');
     try {
       const coupon = await api.createCoupon({
         title, description, coupon_type: couponType,
@@ -232,7 +236,9 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
       setResult({ issued: res.issued });
       onCreated(coupon);
     } catch (e) {
-      console.error(e);
+      const msg = e instanceof Error ? e.message : 'Failed to create coupon';
+      setCreateError(msg);
+      toast(msg, 'error');
     } finally {
       setSaving(false);
     }
@@ -276,7 +282,7 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>Coupon created & issued</div>
-            <div style={{ fontSize: 14, color: '#5C5F66', marginTop: 6 }}>Sent to {result.issued} customers · passes now in their wallets</div>
+            <div style={{ fontSize: 14, color: '#5C5F66', marginTop: 6 }}>Sent to {result.issued} customers {String.fromCharCode(183)} passes now in their wallets</div>
             <button onClick={onClose} style={{ marginTop: 24, height: 44, padding: '0 24px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
           </div>
         ) : step === 1 ? (
@@ -418,17 +424,22 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 
       {/* Footer */}
       {!result && (
-        <div style={{
-          padding: isPhone ? '12px 20px' : '14px 24px',
-          borderTop: '1px solid #F0F0F2',
-          display: 'flex',
-          flexDirection: isPhone ? 'column-reverse' : 'row',
-          justifyContent: 'space-between',
-          alignItems: isPhone ? 'stretch' : 'center',
-          gap: isPhone ? 8 : 0,
-          flexShrink: 0,
-          paddingBottom: isPhone ? 'max(12px, env(safe-area-inset-bottom))' : undefined,
-        }}>
+        <div style={{ flexShrink: 0 }}>
+          {createError && (
+            <div style={{ margin: '0 24px', padding: '10px 14px', background: '#FBE2EC', borderRadius: 8, fontSize: 12, color: '#9C2848' }}>
+              {createError}
+            </div>
+          )}
+          <div style={{
+            padding: isPhone ? '12px 20px' : '14px 24px',
+            borderTop: '1px solid #F0F0F2',
+            display: 'flex',
+            flexDirection: isPhone ? 'column-reverse' : 'row',
+            justifyContent: 'space-between',
+            alignItems: isPhone ? 'stretch' : 'center',
+            gap: isPhone ? 8 : 0,
+            paddingBottom: isPhone ? 'max(12px, env(safe-area-inset-bottom))' : undefined,
+          }}>
           <button
             onClick={() => step > 1 ? setStep(step - 1) : onClose()}
             style={{ height: isPhone ? 48 : 34, padding: '0 14px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}
@@ -460,6 +471,7 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
               <Send size={13} /> {saving ? 'Creating…' : 'Create & issue'}
             </button>
           )}
+          </div>
         </div>
       )}
     </ResponsiveModal>
@@ -470,14 +482,21 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
 function IssuePanel({ coupon, onClose, onDone }: { coupon: ApiCoupon; onClose: () => void; onDone: () => void }) {
   const [issuing, setIssuing] = useState(false);
   const [result, setResult] = useState<{ issued: number; skipped: number } | null>(null);
+  const [issueError, setIssueError] = useState('');
   const { isPhone } = useBreakpoint();
 
   async function handleIssue() {
     setIssuing(true);
+    setIssueError('');
     try {
       const res = await api.issueCoupon(coupon.id, { send_push: true });
       setResult({ issued: res.issued, skipped: res.skipped });
-    } catch { /* keep UI open */ }
+      onDone();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to issue coupon';
+      setIssueError(msg);
+      toast(msg, 'error');
+    }
     setIssuing(false);
   }
 
@@ -491,12 +510,17 @@ function IssuePanel({ coupon, onClose, onDone }: { coupon: ApiCoupon; onClose: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
               </div>
               <div style={{ fontSize: 18, fontWeight: 700 }}>Issued!</div>
-              <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>{result.issued} passes sent · {result.skipped} skipped (already had pass)</div>
-              <button onClick={() => { onDone(); onClose(); }} style={{ marginTop: 18, height: 44, padding: '0 20px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
+              <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>{result.issued} passes sent {String.fromCharCode(183)} {result.skipped} skipped (already had pass)</div>
+              <button onClick={onClose} style={{ marginTop: 18, height: 44, padding: '0 20px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
             </div>
           ) : (
             <>
               <div style={{ fontSize: 13, color: '#5C5F66', marginBottom: 20, lineHeight: 1.5 }}>Issue <strong>{coupon.title}</strong> to all customers who don&apos;t already have an active pass.</div>
+              {issueError && (
+                <div style={{ padding: '10px 14px', background: '#FBE2EC', borderRadius: 8, fontSize: 12, color: '#9C2848', marginBottom: 12 }}>
+                  {issueError}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: isPhone ? 'column' : 'row', gap: 8 }}>
                 <button onClick={onClose} style={{ flex: 1, height: isPhone ? 48 : 38, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Cancel</button>
                 <button onClick={handleIssue} disabled={issuing} style={{ flex: 1, height: isPhone ? 48 : 38, padding: '0 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: issuing ? '#8A8D94' : '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: issuing ? 'default' : 'pointer', fontFamily: 'inherit' }}>

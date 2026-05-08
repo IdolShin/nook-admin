@@ -47,6 +47,7 @@ export interface ApiCard {
   color: string;
   is_active: boolean;
   created_at: string;
+  business_id?: string;
 }
 
 export interface ApiCustomer {
@@ -181,29 +182,23 @@ export const api = {
   stats: () =>
     req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>('/api/stats'),
 
-  analytics: (bizId?: string) => {
-    const qs = bizId ? `?bizId=${bizId}` : '';
-    return req<{
-      total_customers: number;
-      new_customers_30d: number;
-      new_customers_prev: number;
-      active_cards: number;
-      total_stamps: number;
-      stamps_last_30d: number;
-      stamps_prev_30d: number;
-      total_redemptions: number;
-      redemptions_30d: number;
-      coupons_issued: number;
-      coupons_redeemed: number;
-      stamps_by_day: number[];
-    }>(`/api/analytics${qs}`);
-  },
-
   updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string }) =>
     req<{ business: { id: string; name: string; owner_email: string; plan: string } }>(
       '/api/auth/me',
       { method: 'PATCH', body: JSON.stringify(data) }
     ),
+
+  getBusinesses: async (): Promise<Array<{ id: string; name: string }>> => {
+    const token = getToken();
+    const res = await fetch(`${BASE}/api/businesses`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Failed to fetch businesses');
+    return res.json();
+  },
 
   // ─── Permissions ──────────────────────────────────────────────────────
   listBusinesses: () =>
@@ -230,7 +225,6 @@ export const api = {
   deleteStaff: (id: string) =>
     req<{ success: boolean }>(`/api/permissions/users/${id}`, { method: 'DELETE' }),
 
-  // Superadmin: manage users for any business
   listBusinessUsers: (bizId: string) =>
     req<{ users: ApiStaffUser[] }>(`/api/permissions/businesses/${bizId}/users`).then((d) => d.users),
 
