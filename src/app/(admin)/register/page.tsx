@@ -56,7 +56,7 @@ function MiniCard({ w = 200, h = 124 }: { w?: number; h?: number }) {
       boxShadow: '0 12px 28px rgba(15,77,56,0.28)',
     }}>
       <div style={{ position: 'absolute', right: -8, bottom: -22, fontSize: 110, opacity: 0.12, fontWeight: 700, lineHeight: 1 }}>N</div>
-      <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.1em', opacity: 0.85 }}>NOOK CAFÃ</div>
+      <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.1em', opacity: 0.85 }}>NOOK CAFÉ</div>
       <div style={{ fontSize: 14, fontWeight: 600, marginTop: 6 }}>Coffee lovers</div>
       <div style={{ fontSize: 9, opacity: 0.85, marginTop: 1 }}>Free latte after 10 stamps</div>
       <div style={{ position: 'absolute', bottom: 12, left: 14, display: 'flex', gap: 4 }}>
@@ -81,10 +81,10 @@ function Step0({ onNext }: { onNext: () => void }) {
         <MiniCard />
       </div>
       <div style={{ textAlign: 'center', padding: '0 4px' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.1em', color: '#1D9E75', textTransform: 'uppercase' }}>Nook CafÃ©</div>
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.1em', color: '#1D9E75', textTransform: 'uppercase' }}>Nook Café</div>
         <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 6 }}>Get your loyalty card</div>
         <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 8, lineHeight: 1.5 }}>
-          Earn a free latte after 10 stamps. Lives right inside your wallet â no app to download.
+          Earn a free latte after 10 stamps. Lives right inside your wallet — no app to download.
         </div>
       </div>
       <div style={{ marginTop: 24, padding: 14, background: '#F5F6FA', borderRadius: 12, fontSize: 12, color: '#5C5F66', display: 'grid', gap: 8 }}>
@@ -109,13 +109,13 @@ function Step1({ onNext }: { onNext: () => void }) {
       <div style={{ marginTop: 24 }}>
         <div style={{ fontSize: 12, color: '#8A8D94', marginBottom: 6 }}>Mobile</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 50, border: '1px solid #EBEBEB', borderRadius: 12 }}>
-          <span style={{ fontSize: 14, color: '#5C5F66', fontFamily: 'var(--font-mono)' }}>ðºð¸ +1</span>
+          <span style={{ fontSize: 14, color: '#5C5F66', fontFamily: 'var(--font-mono)' }}>🇺🇸 +1</span>
           <input value={v} onChange={(e) => setV(e.target.value)} placeholder="(201) 555-0142"
             style={{ flex: 1, border: 0, outline: 0, fontSize: 16, fontFamily: 'inherit', letterSpacing: '0.5px' }} />
         </div>
       </div>
       <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 16, lineHeight: 1.5 }}>
-        By continuing, you agree to receive transactional and promotional messages from Nook CafÃ©. Reply STOP anytime.
+        By continuing, you agree to receive transactional and promotional messages from Nook Café. Reply STOP anytime.
       </div>
       <button onClick={onNext} style={{ ...ctaStyle, marginTop: 22 }}>Send code</button>
     </div>
@@ -189,7 +189,7 @@ function Step4() {
       </div>
       <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>You&apos;re in!</div>
       <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 8, lineHeight: 1.5 }}>
-        Your Nook CafÃ© card is now in your wallet. Show it at checkout to start earning stamps.
+        Your Nook Café card is now in your wallet. Show it at checkout to start earning stamps.
       </div>
       <div style={{ marginTop: 24, padding: 14, background: '#F5F6FA', borderRadius: 12, textAlign: 'left' }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#8A8D94', letterSpacing: '.06em', textTransform: 'uppercase' }}>Welcome bonus</div>
@@ -220,7 +220,7 @@ export default function RegisterPage() {
             <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 2 }}>What customers see when they scan a Nook QR code at the counter.</div>
           </div>
 
-          {/* Step tabs â scrollable on mobile */}
+          {/* Step tabs — scrollable on mobile */}
           <div style={{
             overflowX: 'auto',
             overflowY: 'hidden',
@@ -277,7 +277,7 @@ export default function RegisterPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: isPhone ? 16 : 20 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
-                Step {step + 1} â {STEP_LABELS[step]}
+                Step {step + 1} — {STEP_LABELS[step]}
               </div>
 
               {step === 0 && (
@@ -286,7 +286,7 @@ export default function RegisterPage() {
                   <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
                     <li>Shows the loyalty card with your brand colors</li>
                     <li>Explains the reward (e.g. free latte after 10 stamps)</li>
-                    <li>One-tap flow â no app download needed</li>
+                    <li>One-tap flow — no app download needed</li>
                   </ul>
                 </>
               )}
@@ -294,7 +294,7 @@ export default function RegisterPage() {
                 <>
                   <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Customer enters their mobile number for verification. This also becomes their unique ID.</div>
                   <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
-                    <li>Phone number is hashed â never stored in plain text</li>
+                    <li>Phone number is hashed — never stored in plain text</li>
                     <li>Consent checkbox for marketing messages (TCPA compliant)</li>
                     <li>US +1 shown by default, configurable per business</li>
                   </ul>
@@ -314,7 +314,7 @@ export default function RegisterPage() {
                 <>
                   <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Customer chooses to add the card to Apple Wallet or Google Wallet. Card is pre-loaded with their stamps.</div>
                   <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
-                    <li>Google Wallet: live â passes already working</li>
+                    <li>Google Wallet: live — passes already working</li>
                     <li>Apple Wallet: requires $99/yr Apple Developer account</li>
                     <li>Pass updates automatically when stamps are added</li>
                   </ul>
@@ -332,7 +332,7 @@ export default function RegisterPage() {
               )}
 
               <div style={{ marginTop: 16, padding: '10px 14px', background: '#F5F6FA', borderRadius: 9, fontSize: 12, color: '#5C5F66' }}>
-                ð¡ Click the phone screen or use the tabs above to navigate between steps.
+                💡 Click the phone screen or use the tabs above to navigate between steps.
               </div>
             </div>
           </div>
