@@ -68,6 +68,23 @@ export interface BroadcastResult {
   failed: number;
 }
 
+export interface ApiAnalytics {
+  total_customers: number;
+  new_customers_30d: number;
+  new_customers_prev: number;
+  active_cards: number;
+  total_stamps: number;
+  stamps_last_30d: number;
+  stamps_prev_30d: number;
+  total_redemptions: number;
+  redemptions_30d: number;
+  coupons_issued: number;
+  coupons_redeemed: number;
+  stamps_by_day: number[];
+  stamps_daily_30d?: number[];
+  redemptions_daily_30d?: number[];
+}
+
 export const api = {
   getToken,
   getBusinessName,
@@ -182,6 +199,9 @@ export const api = {
   stats: () =>
     req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>('/api/stats'),
 
+  analytics: (bizId?: string) =>
+    req<ApiAnalytics>(`/api/analytics${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),
+
   updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string }) =>
     req<{ business: { id: string; name: string; owner_email: string; plan: string } }>(
       '/api/auth/me',
@@ -200,7 +220,6 @@ export const api = {
     return res.json();
   },
 
-  // ─── Permissions ──────────────────────────────────────────────────────
   listBusinesses: () =>
     req<{ businesses: ApiBusiness[] }>('/api/permissions/businesses').then((d) => d.businesses),
 
