@@ -43,7 +43,7 @@ function mapCustomer(c: ApiCustomer, i: number): Customer {
     color: AVATAR_COLORS[i % AVATAR_COLORS.length],
     phone: c.phone,
     joined: new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    biz: [api.getBusinessName() || 'Nook Café'],
+    biz: [api.getBusinessName() || 'Nook CafÃ©'],
     cards: 1,
     totalStamps: stamps,
     lastVisit: daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : `${daysSince}d ago`,
@@ -84,7 +84,7 @@ const PASS_STATUS: Record<string, { label: string; bg: string; fg: string }> = {
   expired:  { label: 'Expired',  bg: '#FBE2EC', fg: '#9C2848' },
 };
 
-/* ─── Coupon Picker Modal ───────────────────────────────────── */
+/* âââ Coupon Picker Modal âââââââââââââââââââââââââââââââââââââ */
 
 function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose: () => void }) {
   const [coupons, setCoupons] = useState<ApiCoupon[]>([]);
@@ -112,10 +112,10 @@ function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose:
   };
 
   return (
-    <ResponsiveModal isOpen onClose={onClose} title={`쿠폰 발송 — ${customer.name}`}>
+    <ResponsiveModal isOpen onClose={onClose} title={`ì¿ í° ë°ì¡ â ${customer.name}`}>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: '#8A8D94', fontSize: 13 }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: '#8A8D94', fontSize: 13 }}>Loadingâ¦</div>
         ) : coupons.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 0' }}>
             <Ticket size={28} color="#EBEBEB" style={{ margin: '0 auto 10px' }} />
@@ -138,7 +138,7 @@ function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose:
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{coupon.title}</div>
                     <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 2 }}>
-                      {coupon.description || coupon.coupon_type} {String.fromCharCode(183)} {coupon.valid_days}일 유효
+                      {coupon.description || coupon.coupon_type} {String.fromCharCode(183)} {coupon.valid_days}ì¼ ì í¨
                     </div>
                   </div>
                   <button
@@ -153,7 +153,7 @@ function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose:
                       fontFamily: 'inherit', opacity: isProcessing ? 0.6 : 1,
                     }}
                   >
-                    {isSent ? '✓ 발송됨' : isProcessing ? '…' : '발송'}
+                    {isSent ? 'â ë°ì¡ë¨' : isProcessing ? 'â¦' : 'ë°ì¡'}
                   </button>
                 </div>
               );
@@ -267,7 +267,7 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { custo
         {activeTab === 'coupons' && (
           <div style={{ marginTop: 16 }}>
             {passesLoading ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 12, color: '#8A8D94' }}>Loading…</div>
+              <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 12, color: '#8A8D94' }}>Loadingâ¦</div>
             ) : passes.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
                 <Ticket size={28} color="#EBEBEB" style={{ margin: '0 auto 8px' }} />
@@ -424,4 +424,113 @@ export default function CustomersPage() {
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 10px', background: '#F5F6FA', borderRadius: 8, flex: '1 1 280px', minWidth: 220 }}>
-          <Search size={14} color="#8A8D
+          <Search size={14} color="#8A8D94" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, phoneâ¦"
+            style={{ flex: 1, border: 0, background: 'transparent', outline: 'none', fontSize: 13, fontFamily: 'inherit' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
+          {segs.map((s) => (
+            <button key={s.id} onClick={() => setSeg(s.id)} style={{
+              height: 26, padding: '0 10px', border: 0, borderRadius: 7,
+              background: seg === s.id ? 'white' : 'transparent',
+              color: seg === s.id ? '#1A1A1F' : '#5C5F66',
+              fontSize: 12, fontWeight: seg === s.id ? 500 : 400,
+              cursor: 'pointer', fontFamily: 'inherit',
+              boxShadow: seg === s.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              {s.label}
+              <span style={{ fontSize: 10, color: '#8A8D94' }}>{s.count}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{ flex: 1 }} />
+        <button onClick={() => router.push('/push')} style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+          <Send size={13} color="#5C5F66" /> Message segment
+        </button>
+        <button style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+          <Download size={13} color="#5C5F66" /> Export CSV
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{ display: 'grid', gridTemplateColumns: (selected && !isMobile) ? '1fr 380px' : '1fr', gap: 16, alignItems: 'start' }}>
+        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
+          {loading ? (
+            <div style={{ padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading customersâ¦</div>
+          ) : rows.length === 0 && !q ? (
+            <div style={{ padding: 48, textAlign: 'center' }}>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>No customers yet</div>
+              <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>Customers appear when they register a loyalty card.</div>
+            </div>
+          ) : (
+          <div className="table-scroll">
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr>
+                <th style={thStyle}>Customer</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Businesses</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Cards</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Stamps</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Spend</th>
+                <th style={thStyle}>Last visit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((c) => {
+                const isSel = selected?.id === c.id;
+                return (
+                  <tr key={c.id} onClick={() => setSelected(c)} style={{
+                    borderTop: '1px solid #F0F0F2',
+                    background: isSel ? '#E8F7F2' : 'transparent',
+                    cursor: 'pointer', transition: 'background 100ms',
+                  }}
+                    onMouseEnter={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = '#FAFAFB'; }}
+                    onMouseLeave={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  >
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 999, background: c.color, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>{c.initials}</div>
+                        <div style={{ lineHeight: 1.3 }}>
+                          <div style={{ fontWeight: 500 }}>{c.name}</div>
+                          <div style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{c.phone}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={tdStyle}><StatusPill status={c.status} /></td>
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {c.biz.map((b, i) => (
+                          <span key={i} style={{ fontSize: 11, padding: '1px 7px', background: '#F0F1F4', borderRadius: 999 }}>{b}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{c.cards}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{c.totalStamps}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>${c.spend}</td>
+                    <td style={{ ...tdStyle, color: '#8A8D94' }}>{c.lastVisit}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          </div>
+          )}
+        </div>
+        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
+      </div>
+
+      {isMobile && (
+        <BottomSheet
+          isOpen={!!selected}
+          onClose={() => setSelected(null)}
+          bottomOffset="calc(60px + env(safe-area-inset-bottom))"
+          maxHeight="82vh"
+        >
+          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
+        </BottomSheet>
+      )}
+    </div>
+  );
+}
