@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '@/lib/api';
 
-/* ── Types ───────────────────────────────────────────────────── */
+/* ââ Types âââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 interface CustomerData {
   id: string;
   name: string;
@@ -36,7 +36,7 @@ declare function jsQR(
   options?: { inversionAttempts?: string }
 ): { data: string } | null;
 
-/* ── Helpers ─────────────────────────────────────────────────── */
+/* ââ Helpers âââââââââââââââââââââââââââââââââââââââââââââââââââ */
 function initials(name: string) {
   return name.trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?';
 }
@@ -58,7 +58,7 @@ function loadScript(src: string): Promise<void> {
   });
 }
 
-/* ── Stamp dots ──────────────────────────────────────────────── */
+/* ââ Stamp dots ââââââââââââââââââââââââââââââââââââââââââââââââ */
 function StampDots({ current, goal, size = 22 }: { current: number; goal: number; size?: number }) {
   const cap = Math.min(goal, 12);
   return (
@@ -76,7 +76,7 @@ function StampDots({ current, goal, size = 22 }: { current: number; goal: number
   );
 }
 
-/* ── Page ────────────────────────────────────────────────────── */
+/* ââ Page ââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 export default function ScanPage() {
   const [state, setState] = useState<AppState>({ kind: 'idle' });
   const [input, setInput] = useState('');
@@ -156,9 +156,9 @@ export default function ScanPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes('Permission') || msg.includes('denied') || msg.includes('NotAllowed') || msg.includes('NotFoundError')) {
-        setCameraError('카메라 권한이 거부됐어요.\n브라우저 설정에서 카메라 권한을 허용해주세요.');
+        setCameraError('ì¹´ë©ë¼ ê¶íì´ ê±°ë¶ëì´ì.\në¸ë¼ì°ì  ì¤ì ìì ì¹´ë©ë¼ ê¶íì íì©í´ì£¼ì¸ì.');
       } else {
-        setCameraError('카메라를 열 수 없어요.\n수동 입력을 사용해주세요.');
+        setCameraError('ì¹´ë©ë¼ë¥¼ ì´ ì ìì´ì.\nìë ìë ¥ì ì¬ì©í´ì£¼ì¸ì.');
       }
       setManualMode(true);
     }
@@ -244,25 +244,25 @@ export default function ScanPage() {
     stopCamera();
     setState({ kind: 'loading' });
 
-    // 쿠폰 모드: 바코드 직접 리딤
+    // ì¿ í° ëª¨ë: ë°ì½ë ì§ì  ë¦¬ë¤
     if (scanMode === 'coupon') {
       try {
         await api.redeemCoupon(trimmed);
         setTodayRedeems((n) => n + 1);
         setState({ kind: 'coupon_ok', barcode: trimmed });
       } catch (e) {
-        setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : '쿠폰을 찾을 수 없어요') });
+        setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : 'ì¿ í°ì ì°¾ì ì ìì´ì') });
       }
       return;
     }
 
-    // 스탬프 모드: 고객 조회 후 스탬프/리딤
+    // ì¤í¬í ëª¨ë: ê³ ê° ì¡°í í ì¤í¬í/ë¦¬ë¤
     const scanType = detectScanType(trimmed);
     try {
       const res = await api.customerLookup(trimmed, scanType);
       setState({ kind: 'found', customer: res.customer as CustomerData, code: trimmed });
     } catch (e) {
-      setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : '고객을 찾을 수 없어요') });
+      setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : 'ê³ ê°ì ì°¾ì ì ìì´ì') });
     }
   }
 
@@ -278,7 +278,7 @@ export default function ScanPage() {
       setTodayStamps((n) => n + 1);
       setState({ kind: 'stamp_ok', customer, newStamps: res.new_stamps, goalStamps: res.goal_stamps, rewardReady: res.reward_ready });
     } catch (e) {
-      setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : '스탬프 추가 실패') });
+      setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : 'ì¤í¬í ì¶ê° ì¤í¨') });
     }
   }
 
@@ -291,7 +291,7 @@ export default function ScanPage() {
       setTodayRedeems((n) => n + 1);
       setState({ kind: 'redeem_ok', customer });
     } catch (e) {
-      setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : '리딤 실패') });
+      setState({ kind: 'error', message: tryParseError(e instanceof Error ? e.message : 'ë¦¬ë¤ ì¤í¨') });
     }
   }
 
@@ -326,14 +326,14 @@ export default function ScanPage() {
               }}>n</div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{bizName || 'Nook'}</div>
-                <div style={{ fontSize: 10, opacity: 0.3 }}>점원 스캐너</div>
+                <div style={{ fontSize: 10, opacity: 0.3 }}>ì ì ì¤ìºë</div>
               </div>
             </div>
             <div style={{ fontSize: 10, opacity: 0.2, textAlign: 'right' }}>
-              스탬프 {todayStamps} {String.fromCharCode(183)} 리딤 {todayRedeems}
+              ì¤í¬í {todayStamps} {String.fromCharCode(183)} ë¦¬ë¤ {todayRedeems}
             </div>
           </div>
-          {/* 스탬프 / 쿠폰 모드 토글 */}
+          {/* ì¤í¬í / ì¿ í° ëª¨ë í ê¸ */}
           <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 10, padding: 3 }}>
             {(['stamp', 'coupon'] as ScanMode[]).map((m) => (
               <button
@@ -347,7 +347,7 @@ export default function ScanPage() {
                   cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s',
                 }}
               >
-                {m === 'stamp' ? '\u{1F3AF} 스탬프' : '\u{1F39F} 쿠폰'}
+                {m === 'stamp' ? '\u{1F3AF} ì¤í¬í' : '\u{1F39F} ì¿ í°'}
               </button>
             ))}
           </div>
@@ -382,6 +382,7 @@ export default function ScanPage() {
                       ].map((s, i) => (
                         <div key={i} style={{ position: 'absolute', width: 28, height: 28, borderRadius: 4, animation: 'cornerPulse 2s ease-in-out infinite', ...s }} />
                       ))}
+                                          ))}
                       {cameraReady && (
                         <div style={{
                           position: 'absolute', left: 4, right: 4, height: 2,
@@ -401,9 +402,9 @@ export default function ScanPage() {
                     </div>
                     <div style={{ marginTop: 22, textAlign: 'center' }}>
                       <div style={{ fontSize: 15, fontWeight: 600, opacity: 0.9 }}>
-                        {cameraReady ? 'QR / 바코드를 프레임 안에' : '카메라 시작 중...'}
+                        {cameraReady ? 'QR / ë°ì½ëë¥¼ íë ì ìì' : 'ì¹´ë©ë¼ ìì ì¤...'}
                       </div>
-                      {cameraReady && <div style={{ fontSize: 12, opacity: 0.4, marginTop: 5 }}>자동으로 인식됩니다</div>}
+                      {cameraReady && <div style={{ fontSize: 12, opacity: 0.4, marginTop: 5 }}>ìëì¼ë¡ ì¸ìë©ëë¤</div>}
                     </div>
                   </div>
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', display: 'flex', justifyContent: 'center' }}>
@@ -414,20 +415,20 @@ export default function ScanPage() {
                         color: 'rgba(255,255,255,0.7)', borderRadius: 999, padding: '9px 22px',
                         fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                       }}
-                    >✏️ 수동 입력</button>
+                    >âï¸ ìë ìë %</button>
                   </div>
                 </div>
               ) : (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 24, padding: '0 20px' }}>
                   {cameraError ? (
                     <div style={{ textAlign: 'center', padding: '0 10px' }}>
-                      <div style={{ fontSize: 36, marginBottom: 12 }}>📷</div>
+                      <div style={{ fontSize: 36, marginBottom: 12 }}>ð·</div>
                       <div style={{ fontSize: 13, opacity: 0.4, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{cameraError}</div>
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>수동 입력</div>
-                      <div style={{ fontSize: 13, opacity: 0.35, marginTop: 6 }}>바코드 번호를 직접 입력하세요</div>
+                      <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>ìë ìë %</div>
+                      <div style={{ fontSize: 13, opacity: 0.35, marginTop: 6 }}>ë°ì½ë ë²í¸ë¥¼ ì§ì  ìë ¥íì¸ì</div>
                     </div>
                   )}
                   <div style={{ position: 'relative' }}>
@@ -436,7 +437,7 @@ export default function ScanPage() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleManualScan()}
-                      placeholder="바코드 번호 입력..."
+                      placeholder="ë°ì½ë ë²í¸ ìë %..."
                       autoComplete="off"
                       inputMode="numeric"
                       style={{
@@ -462,7 +463,7 @@ export default function ScanPage() {
                     <button onClick={() => { setManualMode(false); setInput(''); startCamera(); }} style={{
                       background: 'none', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)',
                       borderRadius: 12, padding: '11px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-                    }}>📷 카메라로 돌아가기</button>
+                    }}>ð· ì¹´ë©ë¼ë¡ ëìê°ê¸°</button>
                   )}
                 </div>
               )}
@@ -473,7 +474,7 @@ export default function ScanPage() {
           {(state.kind === 'loading' || state.kind === 'acting') && (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 20 }}>
               <div style={{ width: 52, height: 52, borderRadius: '50%', border: '3px solid rgba(29,158,117,0.15)', borderTop: '3px solid #1D9E75', animation: 'spin 0.75s linear infinite' }} />
-              <div style={{ fontSize: 14, opacity: 0.38 }}>{state.kind === 'loading' ? '고객 확인 중...' : '처리 중...'}</div>
+              <div style={{ fontSize: 14, opacity: 0.38 }}>{state.kind === 'loading' ? 'ê³ ê° íì¸ ì¤...' : 'ì²ë¦¬ ì¤...'}</div>
             </div>
           )}
 
@@ -486,7 +487,7 @@ export default function ScanPage() {
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden', padding: '16px 20px' }}>
                 <button onClick={reset} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 0, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, padding: '4px 0', flexShrink: 0 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-                  취소
+                  ì·¨ì
                 </button>
                 <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.07)', padding: 22, flex: 1, overflowY: 'auto' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22 }}>
@@ -494,7 +495,7 @@ export default function ScanPage() {
                     <div>
                       <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>{c.name}</div>
                       <div style={{ display: 'inline-flex', alignItems: 'center', marginTop: 6, padding: '3px 11px', borderRadius: 999, background: visits > 0 ? 'rgba(29,158,117,0.18)' : 'rgba(255,255,255,0.06)', color: visits > 0 ? '#7DD9B5' : 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 600 }}>
-                        {visits === 0 ? '첫 방문 \u{1F389}' : `${visits}번째 방문`}
+                        {visits === 0 ? 'ì²« ë°©ë¬¸ \u{1F389}' : `${visits}ë²ì§¸ ë°©ë¬¸`}
                       </div>
                     </div>
                   </div>
@@ -508,17 +509,17 @@ export default function ScanPage() {
                     <StampDots current={c.current_stamps} goal={c.goal_stamps} />
                     {canRedeem && (
                       <div style={{ marginTop: 14, padding: '9px 14px', borderRadius: 10, background: 'rgba(29,158,117,0.15)', color: '#7DD9B5', fontSize: 13, fontWeight: 500, textAlign: 'center' }}>
-                        {'\u{1F381}'} {c.card.reward_desc} — 리워드 사용 가능!
+                        {'\u{1F381}'} {c.card.reward_desc} â ë¦¬ìë ì¬ì© ê°ë¥!
                       </div>
                     )}
                   </div>
-                  {c.rewards_earned > 0 && <div style={{ marginTop: 10, fontSize: 11, opacity: 0.22, textAlign: 'center' }}>누적 리워드 {c.rewards_earned}회 사용</div>}
+                  {c.rewards_earned > 0 && <div style={{ marginTop: 10, fontSize: 11, opacity: 0.22, textAlign: 'center' }}>ëì  ë¦¬ìë {c.rewards_earned}í ì¬ì©</div>}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
                   {canRedeem && (
-                    <button onClick={handleRedeemReward} style={{ width: '100%', padding: '17px', border: 'none', borderRadius: 15, background: 'linear-gradient(135deg, #1D9E75, #085041)', color: 'white', fontSize: 17, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em' }}>{'\u{1F381}'} 리워드 사용하기</button>
+                    <button onClick={handleRedeemReward} style={{ width: '100%', padding: '17px', border: 'none', borderRadius: 15, background: 'linear-gradient(135deg, #1D9E75, #085041)', color: 'white', fontSize: 17, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em' }}>{'\u{1F381}'} ë¦¬ìë ì¬ì©íê¸°</button>
                   )}
-                  <button onClick={handleAddStamp} style={{ width: '100%', padding: '17px', border: canRedeem ? '1px solid rgba(255,255,255,0.10)' : 'none', borderRadius: 15, background: canRedeem ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #1D9E75, #085041)', color: 'white', fontSize: 17, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em' }}>+ 스탬프 추가</button>
+                  <button onClick={handleAddStamp} style={{ width: '100%', padding: '17px', border: canRedeem ? '1px solid rgba(255,255,255,0.10)' : 'none', borderRadius: 15, background: canRedeem ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #1D9E75, #085041)', color: 'white', fontSize: 17, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.01em' }}>+ ì¤í¬í ì¶ê°</button>
                 </div>
               </div>
             );
@@ -531,13 +532,13 @@ export default function ScanPage() {
                 <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' }}>{state.rewardReady ? '\u{1F389} 리워드 획득!' : '스탬프 추가!'}</div>
+                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' }}>{state.rewardReady ? '\u{1F389} ë¦¬ìë ìë!' : 'ì¤í¬í ì¶ê°!'}</div>
                 <div style={{ fontSize: 14, opacity: 0.4, marginTop: 7 }}>{state.customer.name} {String.fromCharCode(183)} {state.newStamps}/{state.goalStamps}</div>
                 {state.rewardReady && <div style={{ display: 'inline-block', marginTop: 12, padding: '7px 16px', borderRadius: 999, background: 'rgba(29,158,117,0.2)', color: '#7DD9B5', fontSize: 13 }}>{'\u{1F381}'} {state.customer.card.reward_desc}</div>}
               </div>
               <StampDots current={state.newStamps} goal={state.goalStamps} />
-              <div style={{ fontSize: 12, opacity: 0.28 }}>3초 후 자동 복귀...</div>
-              <button onClick={reset} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, marginTop: -12 }}>지금 돌아가기</button>
+              <div style={{ fontSize: 12, opacity: 0.28 }}>3ì´ í ìë ë³µê·...</div>
+              <button onClick={reset} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, marginTop: -12 }}>ì§ê¸ ëìê°ê¸°</button>
             </div>
           )}
 
@@ -546,4 +547,42 @@ export default function ScanPage() {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
               <div style={{ width: 90, height: 90, borderRadius: '50%', background: 'rgba(194,107,31,0.18)', color: '#E0A560', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 20px rgba(194,107,31,0.06)', fontSize: 44 }}>{'\u{1F381}'}</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' 
+                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' }}>ë¦¬ìë ì¬ì© ìë£!</div>
+                <div style={{ fontSize: 14, opacity: 0.4, marginTop: 7 }}>{state.customer.name}</div>
+                <div style={{ fontSize: 13, opacity: 0.3, marginTop: 4 }}>{state.customer.card.reward_desc}</div>
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.28 }}>3ì´ í ìë ë³µê·...</div>
+              <button onClick={reset} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>ì§ê¸ ëìê°ê¸°</button>
+            </div>
+          )}
+
+
+          {/* COUPON OK */}
+          {state.kind === 'coupon_ok' && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+              <div style={{ width: 90, height: 90, borderRadius: '50%', background: 'rgba(29,158,117,0.18)', color: '#7DD9B5', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 20px rgba(29,158,117,0.06)' }}>
+                <svg width='42' height='42' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><path d='m5 12 5 5L20 7' /></svg>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em' }}>{'ð«'} ì¿ í° ì¬ì© ìë£!</div>
+                <div style={{ fontSize: 14, opacity: 0.4, marginTop: 7 }}>ë°ì½ë: {state.barcode}</div>
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.28 }}>3ì´ í ìë ë³µê·...</div>
+              <button onClick={reset} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>ì§ê¸ ëìê°ê¸°</button>
+            </div>
+          )}
+          {/* ERROR */}
+          {state.kind === 'error' && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+              <div style={{ width: 74, height: 74, borderRadius: '50%', background: 'rgba(197,58,107,0.18)', color: '#E07090', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 9l-6 6M9 9l6 6" /></svg>
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#E07090', textAlign: 'center', padding: '0 20px' }}>{state.message}</div>
+              <button onClick={reset} style={{ padding: '13px 30px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 13, background: 'transparent', color: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15 }}>ë¤ì ì¤ìº</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
