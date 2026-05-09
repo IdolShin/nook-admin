@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Nook",
   },
 };
@@ -55,18 +55,18 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         {/* PWA / iOS */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Nook" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="h-full antialiased">
+      <body className="h-full antialiased" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <SplashScreen />
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         {children}
         <InstallPrompt />
         <script
           dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')});}`,
+            __html: `if('serviceWorker'in navigator{window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}}`,
           }}
         />
       </body>
