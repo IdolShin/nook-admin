@@ -26,7 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nook — Loyalty Platform",
+  title: "Nook â Loyalty Platform",
   description: "Digital loyalty card platform for modern businesses",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -42,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${sora.variable} ${jetbrainsMono.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} ${sora.variable} ${jetbrainsMono.variable} h-full font-sans`}>
       <head>
         {/* Charset must be first to prevent UTF-8 mojibake */}
         <meta charSet="utf-8" />
@@ -59,14 +59,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Nook" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="h-full antialiased" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <body className="h-full antialiased font-sans" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <SplashScreen />
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         {children}
         <InstallPrompt />
         <script
           dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker'in navigator{window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}}`,
+            __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}`,
           }}
         />
       </body>
