@@ -573,4 +573,26 @@ export default function SplashScreen() {
             </div>
             <span className="nk-ripple nk-r1" />
             <span className="nk-ripple nk-r2" />
-         
+          </div>
+          <div className="nk-word">
+            <div className="nk-lockup">
+              <span>Nook</span>
+              <span className="nk-wallet">Wallet</span>
+            </div>
+            <div className="nk-sub">Customers, Always Connected</div>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="nk-loader">
+          <div className="nk-bar" />
+        </div>
+
+        {/* Footer */}
+        <div className="nk-powered">
+          Powered by <b>Nook</b>
+        </div>
+      </div>
+    </>
+  );
+}
