@@ -161,7 +161,7 @@ onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#F5F
 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
 >
 <Globe size={15} color="#8A8D94" />
-{(!collapsed || mobileMode) && <span>ííì´ì§</span>}
+{(!collapsed || mobileMode) && <span>홈페이지</span>}
 </Link>
 </div>
 
