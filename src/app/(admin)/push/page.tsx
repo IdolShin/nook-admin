@@ -117,7 +117,7 @@ export default function PushPage() {
             </FormSection>
 
             <FormSection title="Audience" hint={`${reach} customers will receive this`}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: 8 }}>
                 {AUDIENCES.map((a) => (
                   <button key={a.id} onClick={() => setAudience(a.id)} style={{
                     border: `1px solid ${audience === a.id ? '#1D9E75' : '#EBEBEB'}`,
