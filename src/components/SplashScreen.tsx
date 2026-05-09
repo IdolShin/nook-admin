@@ -4,9 +4,12 @@ import React, { useEffect, useState } from 'react';
 const SPLASH_CSS = `
   .nk-splash {
     position: fixed;
-    inset: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     width: 100%;
     height: 100%;
+    height: 100dvh;
+    min-height: 100%;
+    min-height: 100dvh;
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -59,7 +62,7 @@ const SPLASH_CSS = `
     top: 50%;
     width: 300px;
     height: 190px;
-    transform: translate(-50%, calc(-50% - 6px));
+    transform: translate(-50%, calc(-50% - 55px));
     z-index: 2;
     pointer-events: none;
   }
@@ -279,7 +282,7 @@ const SPLASH_CSS = `
     flex-direction: column;
     align-items: center;
     gap: 22px;
-    transform: translateY(120px);
+    transform: translateY(75px);
   }
   .nk-markwrap {
     position: relative;
@@ -523,11 +526,20 @@ export default function SplashScreen() {
   const [phase, setPhase] = useState<'show' | 'fade' | 'gone'>('show');
 
   useEffect(() => {
+    // Match status bar / notch color to splash background on mobile
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const prevColor = metaTheme?.getAttribute('content') ?? null;
+    if (metaTheme) metaTheme.setAttribute('content', '#0c1714');
+
     const t1 = setTimeout(() => setPhase('fade'), 700);
-    const t2 = setTimeout(() => setPhase('gone'), 1300);
+    const t2 = setTimeout(() => {
+      setPhase('gone');
+      if (metaTheme && prevColor) metaTheme.setAttribute('content', prevColor);
+    }, 1300);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      if (metaTheme && prevColor) metaTheme.setAttribute('content', prevColor);
     };
   }, []);
 
@@ -561,26 +573,4 @@ export default function SplashScreen() {
             </div>
             <span className="nk-ripple nk-r1" />
             <span className="nk-ripple nk-r2" />
-          </div>
-          <div className="nk-word">
-            <div className="nk-lockup">
-              <span>Nook</span>
-              <span className="nk-wallet">Wallet</span>
-            </div>
-            <div className="nk-sub">Customers, Always Connected</div>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="nk-loader">
-          <div className="nk-bar" />
-        </div>
-
-        {/* Footer */}
-        <div className="nk-powered">
-          Powered by <b>Nook</b>
-        </div>
-      </div>
-    </>
-  );
-}
+          </d
