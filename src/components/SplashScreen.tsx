@@ -62,7 +62,7 @@ const SPLASH_CSS = `
     top: 50%;
     width: 300px;
     height: 190px;
-    transform: translate(-50%, calc(-50% - 105px));
+    transform: translate(-50%, calc(-50% - 205px));
     z-index: 2;
     pointer-events: none;
   }
@@ -125,7 +125,7 @@ const SPLASH_CSS = `
   .nk-c2 {
     background:
       radial-gradient(120% 90% at -10% 0%, rgba(255,255,255,0.10), transparent 55%),
-      linear-gradient(140deg, #16855F 0$ 	3c5a40 100%);
+      linear-gradient(140deg, #16855F 0%, #0c5a40 100%);
     transform: translate(20px, 14px) rotate(6deg);
     opacity: .96;
     animation: nk-floatB 8s ease-in-out infinite;
@@ -282,7 +282,7 @@ const SPLASH_CSS = `
     flex-direction: column;
     align-items: center;
     gap: 22px;
-    transform: translateY(15px);
+    transform: translateY(-105px);
   }
   .nk-markwrap {
     position: relative;
@@ -531,11 +531,11 @@ export default function SplashScreen() {
     const prevColor = metaTheme?.getAttribute('content') ?? null;
     if (metaTheme) metaTheme.setAttribute('content', '#0c1714');
 
-    const t1 = setTimeout(() => setPhase('fade'), 1500);
+    const t1 = setTimeout(() => setPhase('fade'), 1200);
     const t2 = setTimeout(() => {
       setPhase('gone');
       if (metaTheme && prevColor) metaTheme.setAttribute('content', prevColor);
-    }, 2200);
+    }, 1900);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -573,4 +573,4 @@ export default function SplashScreen() {
             </div>
             <span className="nk-ripple nk-r1" />
             <span className="nk-ripple nk-r2" />
-          <
+         
