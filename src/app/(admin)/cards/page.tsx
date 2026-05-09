@@ -348,8 +348,36 @@ function CardTile({ card, selected, onSelect }: { card: Card; selected: boolean;
 }
 
 function CardsTable({ rows, selectedId, onSelect }: { rows: Card[]; selectedId: string | null; onSelect: (c: Card) => void }) {
+  const { isPhone } = useBreakpoint();
   const thStyle: React.CSSProperties = { padding: '12px 14px', textAlign: 'left', fontWeight: 500, fontSize: 11, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '0.04em' };
   const tdStyle: React.CSSProperties = { padding: '12px 14px', verticalAlign: 'middle' };
+  if (isPhone) {
+    return (
+      <div style={{ display: 'grid', gap: 8 }}>
+        {rows.map((c) => (
+          <div key={c.id} onClick={() => onSelect(c)} style={{
+            background: 'white', borderRadius: 12,
+            border: `1px solid ${selectedId === c.id ? '#1D9E75' : '#EBEBEB'}`,
+            padding: '12px 14px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <div style={{ width: 40, height: 26, borderRadius: 6, background: `linear-gradient(135deg, ${c.gradient[0]}, ${c.gradient[1]})`, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+              <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap' }}>
+                <TypePill type={c.type} />
+                <StatusPill status={c.status} />
+              </div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{c.issued}</div>
+              <div style={{ fontSize: 11, color: '#8A8D94' }}>issued</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
       <div className="table-scroll">
