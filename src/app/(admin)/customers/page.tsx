@@ -425,7 +425,7 @@ export default function CustomersPage() {
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 10px', background: '#F5F6FA', borderRadius: 8, flex: '1 1 280px', minWidth: 220 }}>
           <Search size={14} color="#8A8D94" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, phoneâ¦"
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, phone..."
             style={{ flex: 1, border: 0, background: 'transparent', outline: 'none', fontSize: 13, fontFamily: 'inherit' }} />
         </div>
         <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
