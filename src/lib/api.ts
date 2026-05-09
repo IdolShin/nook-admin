@@ -155,7 +155,7 @@ export const api = {
   broadcast: (title: string, body: string) =>
     req<BroadcastResult>('/api/push/broadcast', {
       method: 'POST',
-      body: JSON.stringify({ message: `${title} — ${body}` }),
+      body: JSON.stringify({ message: `${title} â ${body}` }),
     }),
 
   coupons: () => req<{ coupons: ApiCoupon[] }>('/api/coupons').then((d) => d.coupons),
@@ -202,11 +202,29 @@ export const api = {
   analytics: (bizId?: string) =>
     req<ApiAnalytics>(`/api/analytics${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),
 
-  updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string }) =>
+  updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string; phone?: string; address?: string }) =>
     req<{ business: { id: string; name: string; owner_email: string; plan: string } }>(
       '/api/auth/me',
       { method: 'PATCH', body: JSON.stringify(data) }
     ),
+
+  registerCustomer: async (data: { card_id: string; name: string; phone: string; consent_push?: boolean; consent_points?: boolean }): Promise<{ customer: ApiCustomer }> => {
+    const res = await fetch(`${BASE}/api/customers/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        consent_push: true,
+        consent_points: true,
+        ...data,
+      }),
+    });
+    if (!res.ok) {
+      let msg = res.statusText;
+      try { const j = await res.json(); msg = j.error ?? j.message ?? msg; } catch (_) {}
+      throw new Error(msg);
+    }
+    return res.json();
+  },
 
   getBusinesses: async (): Promise<Array<{ id: string; name: string }>> => {
     const token = getToken();
@@ -284,32 +302,4 @@ export interface ApiStaffUser {
 
 export interface ApiCoupon {
   id: string;
-  title: string;
-  description?: string;
-  coupon_type: string;
-  discount_value?: number;
-  free_item_name?: string;
-  terms?: string;
-  trigger_type: string;
-  trigger_config?: Record<string, unknown>;
-  max_redemptions?: number;
-  total_issued: number;
-  total_redeemed: number;
-  valid_days: number;
-  expires_at?: string;
-  is_active: boolean;
-  color: string;
-  created_at: string;
-}
-
-export interface ApiCouponPass {
-  id: string;
-  barcode: string;
-  status: 'active' | 'redeemed' | 'expired';
-  issued_at: string;
-  expires_at: string;
-  redeemed_at?: string;
-  wallet_link?: string;
-  coupons?: ApiCoupon;
-  customers?: { id: string; name: string; phone: string };
-}
+  
