@@ -39,16 +39,15 @@
   --radius-btn:   8px;
   --radius-badge: 9999px;
 
-  /* Fonts â SF Pro Display (Apple) on Apple devices, fallback elsewhere */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-               "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  /* Fonts */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 }
 
-/* ââ Safe area insets (notch / Dynamic Island / home indicator) â */
+/* Safe area insets (notch / Dynamic Island / home indicator) */
 :root {
   --safe-top:    env(safe-area-inset-top, 0px);
-  --safe-bottom: ent(safe-area-inset-bottom, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left:   env(safe-area-inset-left, 0px);
   --safe-right:  env(safe-area-inset-right, 0px);
 }
@@ -64,9 +63,6 @@ body {
   font-size: 13px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "kern" 1, "liga" 1;
-  /* Prevent iOS text size inflate on rotation */
   -webkit-text-size-adjust: 100%;
 }
 
@@ -80,21 +76,19 @@ body {
   ::-webkit-scrollbar { width: 0; height: 0; }
 }
 
-/* ââ Touch targets: all interactive elements â¥ 44Ã44px on mobile â */
+/* Touch targets: all interactive elements >= 44x44px on mobile */
 @media (max-width: 743px) {
   button, a, [role="button"] {
     min-height: 44px;
     min-width: 44px;
   }
-  /* Override for inline icon-only buttons that should stay compact */
   button.icon-sm, a.icon-sm { min-height: 36px; min-width: 36px; }
 }
 
-/* ââ Horizontally scrollable table wrapper ââ */
+/* Horizontally scrollable table wrapper */
 .table-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  /* Ensure the table inside has minimum width to prevent squish */
 }
 .table-scroll table {
   min-width: 560px;
@@ -141,7 +135,7 @@ body {
 }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 
-/* ââ Modal / bottom sheet ââ */
+/* Modal / bottom sheet */
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
@@ -150,3 +144,14 @@ body {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+body.modal-open { overflow: hidden; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 48;
+  animation: backdropIn 180ms ease;
+}
+.slide-up { animation: slideUp 280ms cubic-bezier(0.4,0,0.2,1) both; }
