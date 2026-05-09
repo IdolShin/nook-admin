@@ -83,6 +83,8 @@ setDrawerOpen(false);
 setMoreOpen(false);
 }, [pathname]);
 
+const bottomNavH = showDrawer ? 'calc(56px + env(safe-area-inset-bottom, 0px))' : '0px';
+
 // Lock body scroll when mobile drawer is open.
 // We set overflow:hidden on body but do NOT set touchAction:none (that blocks sidebar scroll too).
 // The sidebar itself has overscrollBehavior:contain which prevents chain scrolling.
@@ -100,7 +102,6 @@ document.body.style.overflow = '';
 };
 }, [showDrawer, drawerOpen, bottomNavH]);
 
-const bottomNavH = showDrawer ? 'calc(56px + env(safe-area-inset-bottom, 0px))' : '0px';
 
 function toggleGroup(label: string) {
 setExpandedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
