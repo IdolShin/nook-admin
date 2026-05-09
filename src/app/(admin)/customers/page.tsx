@@ -43,7 +43,7 @@ function mapCustomer(c: ApiCustomer, i: number): Customer {
     color: AVATAR_COLORS[i % AVATAR_COLORS.length],
     phone: c.phone,
     joined: new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    biz: [api.getBusinessName() || 'Nook CafÃ©'],
+    biz: [api.getBusinessName() || 'Nook Café'],
     cards: 1,
     totalStamps: stamps,
     lastVisit: daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : `${daysSince}d ago`,
