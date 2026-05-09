@@ -45,8 +45,8 @@ const journeyFrames: JourneyFrame[] = [
       kind: 'stamp',
       filled: 1,
       total: 10,
-      ttl: { ko: '\u2615 스탬프 1/10 적립 완료', en: '\u2615 Stamp 1/10 added' },
-      body: { ko: 'Nook Café \u00B7 방문해주셔서 감사합니다', en: 'Nook Café \u00B7 Thanks for visiting' },
+      ttl: { ko: '☕ 스탬프 1/10 적립 완료', en: '☕ Stamp 1/10 added' },
+      body: { ko: 'Nook Café · 방문해주셔서 감사합니다', en: 'Nook Café · Thanks for visiting' },
     },
   },
   {
@@ -63,13 +63,13 @@ const journeyFrames: JourneyFrame[] = [
       kind: 'stamp',
       filled: 6,
       total: 10,
-      ttl: { ko: '\u2615 스탬프 6/10', en: '\u2615 Stamp 6/10' },
-      body: { ko: '4번만 더 오시면 무료 음료 \u{1F389}', en: '4 more visits for a free drink \u{1F389}' },
+      ttl: { ko: '☕ 스탬프 6/10', en: '☕ Stamp 6/10' },
+      body: { ko: '4번만 더 오시면 무료 음료 🎉', en: '4 more visits for a free drink 🎉' },
     },
   },
   {
     time: '—',
-    date: { ko: '한 달 후 \u00B7 6월 24일', en: 'A month later \u00B7 June 24' },
+    date: { ko: '한 달 후 · 6월 24일', en: 'A month later · June 24' },
     bg: 'evening',
     tag: { ko: '이탈 위험', en: 'AT RISK' },
     h: { ko: '4주째 발길이 끊어짐', en: 'Four quiet weeks' },
@@ -95,7 +95,7 @@ const journeyFrames: JourneyFrame[] = [
     },
     notif: {
       kind: 'push',
-      ttl: { ko: '\u{1F381} 보고싶어요, 민재님!', en: '\u{1F381} We miss you, Min-jae!' },
+      ttl: { ko: '🎁 보고싶어요, 민재님!', en: '🎁 We miss you, Min-jae!' },
       body: { ko: '이번 주 오시면 모든 음료 2배 스탬프', en: 'Visit this week, get 2× stamps on any drink' },
     },
   },
@@ -114,8 +114,8 @@ const journeyFrames: JourneyFrame[] = [
       filled: 8,
       total: 10,
       justFilled: 8,
-      ttl: { ko: '\u2615 스탬프 +2 (2배 적립!)', en: '\u2615 Stamp +2 (2× bonus!)' },
-      body: { ko: '8/10 \u00B7 다시 와주셔서 감사합니다 \u2764\uFE0F', en: '8/10 \u00B7 Thanks for coming back \u2764\uFE0F' },
+      ttl: { ko: '☕ 스탬프 +2 (2배 적립!)', en: '☕ Stamp +2 (2× bonus!)' },
+      body: { ko: '8/10 · 다시 와주셔서 감사합니다 ❤️', en: '8/10 · Thanks for coming back ❤️' },
     },
   },
   {
@@ -130,7 +130,7 @@ const journeyFrames: JourneyFrame[] = [
     },
     notif: {
       kind: 'reward',
-      ttl: { ko: '\u{1F389} 무료 음료 획득!', en: '\u{1F389} Free drink earned!' },
+      ttl: { ko: '🎉 무료 음료 획득!', en: '🎉 Free drink earned!' },
       body: { ko: '지금 카운터에서 바코드 보여주세요', en: 'Show your barcode at the counter' },
     },
   },
@@ -424,7 +424,7 @@ export default function Homepage() {
         <div className="hero-grid">
           <div>
             <div className="eyebrow">
-              {t('Apple Wallet \u00B7 Google Wallet 지원', 'Apple Wallet \u00B7 Google Wallet supported', lang)}
+              {t('Apple Wallet · Google Wallet 지원', 'Apple Wallet · Google Wallet supported', lang)}
             </div>
             <h1 className="h1">
               {lang === 'ko' ? (
@@ -466,7 +466,7 @@ export default function Homepage() {
             <div className="hero-checks">
               <span>{t('✓ 앱 설치 없음', '✓ No app install', lang)}</span>
               <span>{t('✓ 10분 셋업', '✓ 10-min setup', lang)}</span>
-              <span>✓ Apple {'\u00B7'} Google Wallet</span>
+              <span>✓ Apple · Google Wallet</span>
             </div>
           </div>
 
@@ -481,9 +481,9 @@ export default function Homepage() {
                   <div className="notif">
                     <div className="notif-head">
                       <SmallLogoMark size={14} />
-                      <span>{t('NOOK \u00B7 지금', 'NOOK \u00B7 now', lang)}</span>
+                      <span>{t('NOOK · 지금', 'NOOK · now', lang)}</span>
                     </div>
-                    <div className="notif-title">{t('\u2615 스탬프 8/10 완료!', '\u2615 8/10 stamps!', lang)}</div>
+                    <div className="notif-title">{t('☕ 스탬프 8/10 완료!', '☕ 8/10 stamps!', lang)}</div>
                     <div className="notif-body">
                       {t('한 번만 더 오시면 무료 음료예요', 'One more visit for a free drink', lang)}
                     </div>
@@ -509,7 +509,7 @@ export default function Homepage() {
                     WALLET
                   </div>
                   <div className="wallet-card">
-                    <div className="biz">NOOK CAFÉ {'\u00B7'} FORT LEE</div>
+                    <div className="biz">NOOK CAFÉ · FORT LEE</div>
                     <div className="ttl">{t('커피 단골카드', 'Coffee Lovers Card', lang)}</div>
                     <div className="sub">{t('10잔 모으면 한 잔 무료', 'Free drink after 10 stamps', lang)}</div>
                     <div className="stamp-row">
@@ -551,9 +551,9 @@ export default function Homepage() {
                   <div className="notif">
                     <div className="notif-head">
                       <SmallLogoMark size={14} />
-                      <span>{t('NOOK \u00B7 쿠폰 도착', 'NOOK \u00B7 Coupon', lang)}</span>
+                      <span>{t('NOOK · 쿠폰 도착', 'NOOK · Coupon', lang)}</span>
                     </div>
-                    <div className="notif-title">{t('\u{1F381} 음료 50% 할인', '\u{1F381} 50% off drinks', lang)}</div>
+                    <div className="notif-title">{t('🎁 음료 50% 할인', '🎁 50% off drinks', lang)}</div>
                     <div className="notif-body">
                       {t('오늘만! 월렛에서 확인해주세요', 'Today only — check your wallet', lang)}
                     </div>
@@ -576,7 +576,7 @@ export default function Homepage() {
                 94<small style={{ fontSize: 22 }}>%</small>
               </div>
               <div className="lbl">{t('푸시 알림 수신율', 'Push notification delivery', lang)}</div>
-              <div className="delta">{t('SMS\u00B7이메일보다 압도적', 'Far above SMS / email', lang)}</div>
+              <div className="delta">{t('SMS·이메일보다 압도적', 'Far above SMS / email', lang)}</div>
             </div>
             <div
               className="stat-card"
@@ -668,7 +668,7 @@ export default function Homepage() {
                 </div>
               </div>
               <div className="row gap-2" style={{ marginBottom: 6 }}>
-                <span style={{ fontSize: 24 }}>{'\u{1F4F1}'}</span>
+                <span style={{ fontSize: 24 }}>📱</span>
                 <span
                   style={{
                     fontSize: 11,
@@ -684,7 +684,7 @@ export default function Homepage() {
               <h3>{t('항상 휴대폰에 있는 적립카드', 'Always in their phone wallet', lang)}</h3>
               <p>
                 {t(
-                  '종이 쿠폰은 잃어버리고, 플라스틱 카드는 집에 두고 옵니다. Nook 카드는 Apple\u00B7Google Wallet에 저장되어 언제나 함께합니다.',
+                  '종이 쿠폰은 잃어버리고, 플라스틱 카드는 집에 두고 옵니다. Nook 카드는 Apple·Google Wallet에 저장되어 언제나 함께합니다.',
                   'Paper coupons get lost. Plastic cards get forgotten. Nook cards live in Apple & Google Wallet — always with your customer.',
                   lang
                 )}
@@ -723,10 +723,10 @@ export default function Homepage() {
                     }}
                   >
                     <SmallLogoMark size={14} />
-                    <span>{t('NOOK \u00B7 지금', 'NOOK \u00B7 now', lang)}</span>
+                    <span>{t('NOOK · 지금', 'NOOK · now', lang)}</span>
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>
-                    {t('비 오는 화요일 \u2615', 'Rainy Tuesday \u2615', lang)}
+                    {t('비 오는 화요일 ☕', 'Rainy Tuesday ☕', lang)}
                   </div>
                   <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2 }}>
                     {t('오늘 오시면 +2 스탬프', 'Visit today, get +2 stamps', lang)}
@@ -734,7 +734,7 @@ export default function Homepage() {
                 </div>
               </div>
               <div className="row gap-2" style={{ marginBottom: 6 }}>
-                <span style={{ fontSize: 24 }}>{'\u{1F514}'}</span>
+                <span style={{ fontSize: 24 }}>🔔</span>
                 <span
                   style={{
                     fontSize: 11,
@@ -807,7 +807,7 @@ export default function Homepage() {
                 </div>
               </div>
               <div className="row gap-2" style={{ marginBottom: 6 }}>
-                <span style={{ fontSize: 24 }}>{'\u{1F39F}'}️</span>
+                <span style={{ fontSize: 24 }}>🎟️</span>
                 <span
                   style={{
                     fontSize: 11,
@@ -871,7 +871,7 @@ export default function Homepage() {
               <h3>{t('방문마다 스탬프', 'Stamp every visit', lang)}</h3>
               <p>
                 {t(
-                  '직원이 폰\u00B7태블릿으로 손님 QR을 스캔하면 자동 적립 + 손님 폰에 알림.',
+                  '직원이 폰·태블릿으로 손님 QR을 스캔하면 자동 적립 + 손님 폰에 알림.',
                   'Staff scans the customer\'s QR — stamp added, notification sent.',
                   lang
                 )}
@@ -911,29 +911,29 @@ export default function Homepage() {
 
           <div className="features-grid">
             <div className="feat reveal">
-              <div className="ico">{'\u{1F3F7}\uFE0F'}</div>
-              <h3>{t('스탬프\u00B7쿠폰\u00B7캐시백 카드', 'Stamp \u00B7 Coupon \u00B7 Cashback', lang)}</h3>
+              <div className="ico">🏷️</div>
+              <h3>{t('스탬프·쿠폰·캐시백 카드', 'Stamp · Coupon · Cashback', lang)}</h3>
               <p>
                 {t(
-                  '업종에 맞는 카드 타입을 선택. 스탬프, 금액\u00B7% 할인, 무료 메뉴까지.',
+                  '업종에 맞는 카드 타입을 선택. 스탬프, 금액·% 할인, 무료 메뉴까지.',
                   'Pick the right card for your business: stamps, $ off, % off, or free items.',
                   lang
                 )}
               </p>
             </div>
             <div className="feat reveal" style={{ transitionDelay: '60ms' }}>
-              <div className="ico">{'\u{1F514}'}</div>
+              <div className="ico">🔔</div>
               <h3>{t('무료 푸시 알림', 'Free push notifications', lang)}</h3>
               <p>
                 {t(
-                  'SMS 비용 없이 전체\u00B7세그먼트 고객에게 발송. 잠금화면에 바로 표시됩니다.',
+                  'SMS 비용 없이 전체·세그먼트 고객에게 발송. 잠금화면에 바로 표시됩니다.',
                   'Send to all or segments — free. Right on their lock screen.',
                   lang
                 )}
               </p>
             </div>
             <div className="feat reveal" style={{ transitionDelay: '120ms' }}>
-              <div className="ico">{'\u{1F39F}'}️</div>
+              <div className="ico">🎟️</div>
               <h3>{t('스마트 할인 쿠폰', 'Smart coupons', lang)}</h3>
               <p>
                 {t(
@@ -955,7 +955,7 @@ export default function Homepage() {
               </p>
             </div>
             <div className="feat reveal" style={{ transitionDelay: '120ms' }}>
-              <div className="ico">{'\u2B50'}</div>
+              <div className="ico">⭐</div>
               <h3>{t('구글 리뷰 이벤트', 'Google review rewards', lang)}</h3>
               <p>
                 {t(
@@ -966,7 +966,7 @@ export default function Homepage() {
               </p>
             </div>
             <div className="feat reveal" style={{ transitionDelay: '180ms' }}>
-              <div className="ico">{'\u{1F4CA}'}</div>
+              <div className="ico">📊</div>
               <h3>{t('실시간 고객 현황', 'Real-time analytics', lang)}</h3>
               <p>
                 {t(
@@ -1082,8 +1082,8 @@ export default function Homepage() {
             </h2>
             <p className="section-sub" style={{ margin: '16px auto 0' }}>
               {t(
-                '신용카드 불필요 \u00B7 언제든지 취소 가능 \u00B7 10분 안에 시작',
-                'No credit card \u00B7 Cancel anytime \u00B7 Setup in 10 minutes',
+                '신용카드 불필요 · 언제든지 취소 가능 · 10분 안에 시작',
+                'No credit card · Cancel anytime · Setup in 10 minutes',
                 lang
               )}
             </p>
@@ -1123,7 +1123,7 @@ export default function Homepage() {
                 {t('안정적으로 운영하는 매장', 'Growing businesses', lang)}
               </div>
               <ul>
-                <li>{t('적립카드 3종 (스탬프 \u00B7 할인쿠폰 \u00B7 이벤트쿠폰)', '3 cards (Stamp \u00B7 Discount \u00B7 Event)', lang)}</li>
+                <li>{t('적립카드 3종 (스탬프 · 할인쿠폰 · 이벤트쿠폰)', '3 cards (Stamp · Discount · Event)', lang)}</li>
                 <li>{t('고객 500명까지', 'Up to 500 customers', lang)}</li>
                 <li>Apple + Google Wallet</li>
                 <li>{t('푸시 알림 주 1회', '1 push notification / week', lang)}</li>
@@ -1145,7 +1145,7 @@ export default function Homepage() {
               <div className="name">{t('프리미엄', 'Premium', lang)}</div>
               <div className="price">$119<small> /mo</small></div>
               <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4 }}>
-                {t('여러 지점\u00B7프랜차이즈', 'Multi-location \u00B7 franchise', lang)}
+                {t('여러 지점·프랜차이즈', 'Multi-location · franchise', lang)}
               </div>
               <ul>
                 <li>{t('적립카드 무제한 (커스터마이징)', 'Unlimited cards (custom design)', lang)}</li>
@@ -1191,7 +1191,7 @@ export default function Homepage() {
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>Sarah K.</div>
                   <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                    {t('카페 사장 \u00B7 Fort Lee', 'Café owner \u00B7 Fort Lee', lang)}
+                    {t('카페 사장 · Fort Lee', 'Café owner · Fort Lee', lang)}
                   </div>
                 </div>
               </div>
@@ -1209,7 +1209,7 @@ export default function Homepage() {
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>Ji-yeon P.</div>
                   <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                    {t('네일샵 사장 \u00B7 Palisades Park', 'Nail salon owner \u00B7 Palisades Park', lang)}
+                    {t('네일샵 사장 · Palisades Park', 'Nail salon owner · Palisades Park', lang)}
                   </div>
                 </div>
               </div>
@@ -1227,7 +1227,7 @@ export default function Homepage() {
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>David C.</div>
                   <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                    {t('레스토랑 사장 \u00B7 Fort Lee', 'Restaurant owner \u00B7 Fort Lee', lang)}
+                    {t('레스토랑 사장 · Fort Lee', 'Restaurant owner · Fort Lee', lang)}
                   </div>
                 </div>
               </div>
@@ -1250,7 +1250,7 @@ export default function Homepage() {
               <summary>{t('손님이 앱을 다운받아야 하나요?', 'Do customers need to download an app?', lang)}</summary>
               <p>
                 {t(
-                  '아니요. Apple Wallet \u00B7 Google Wallet은 모든 폰에 기본 내장되어 있어요. 앱 설치, 회원가입 모두 필요 없습니다.',
+                  '아니요. Apple Wallet · Google Wallet은 모든 폰에 기본 내장되어 있어요. 앱 설치, 회원가입 모두 필요 없습니다.',
                   'No. Apple Wallet and Google Wallet come built into every phone. No app, no account signup needed.',
                   lang
                 )}
@@ -1274,7 +1274,7 @@ export default function Homepage() {
               </summary>
               <p>
                 {t(
-                  'Nook 스캐너 웹앱을 직원 폰\u00B7태블릿에 띄워두세요. 손님 카드의 QR을 비추면 자동 적립.',
+                  'Nook 스캐너 웹앱을 직원 폰·태블릿에 띄워두세요. 손님 카드의 QR을 비추면 자동 적립.',
                   'Open the Nook Scanner web app on a staff phone or tablet. Aim at the customer\'s QR — stamp added automatically.',
                   lang
                 )}
@@ -1300,7 +1300,7 @@ export default function Homepage() {
               </summary>
               <p>
                 {t(
-                  '네. 대시보드에서 전체\u00B7매장별\u00B7세그먼트별로 한 번에 푸시를 발송할 수 있습니다. 무료입니다.',
+                  '네. 대시보드에서 전체·매장별·세그먼트별로 한 번에 푸시를 발송할 수 있습니다. 무료입니다.',
                   'Yes. From the dashboard send to all, by store, or by segment — free of charge.',
                   lang
                 )}
@@ -1387,8 +1387,8 @@ export default function Homepage() {
             </div>
             <div style={{ fontSize: 13, opacity: 0.75, marginTop: 16 }}>
               {t(
-                '10분 셋업 \u00B7 첫 1년 약정 후 월 단위 전환',
-                '10-min setup \u00B7 1-year initial term, then month-to-month',
+                '10분 셋업 · 첫 1년 약정 후 월 단위 전환',
+                '10-min setup · 1-year initial term, then month-to-month',
                 lang
               )}
             </div>
@@ -1566,7 +1566,7 @@ export default function Homepage() {
                   <div
                     style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-3)', marginTop: 14 }}
                   >
-                    {t('24시간 안에 회신드립니다 \u00B7 스팸 없음', 'We reply within 24 hours \u00B7 No spam', lang)}
+                    {t('24시간 안에 회신드립니다 · 스팸 없음', 'We reply within 24 hours · No spam', lang)}
                   </div>
                 </form>
               ) : (
@@ -1584,7 +1584,7 @@ export default function Homepage() {
                   </div>
                   <h4>{t('문의가 전송되었습니다!', 'Message sent!', lang)}</h4>
                   <p>
-                    {t('24시간 안에 답변드릴게요. 감사합니다 \u2615', "We'll get back to you within 24 hours. Thank you \u2615", lang)}
+                    {t('24시간 안에 답변드릴게요. 감사합니다 ☕', "We'll get back to you within 24 hours. Thank you ☕", lang)}
                   </p>
                 </div>
               )}
