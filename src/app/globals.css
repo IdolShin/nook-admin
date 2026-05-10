@@ -6,11 +6,11 @@
   --color-accent-light: #E8F7F2;
   --color-accent-dark:  #085041;
 
-  /* Surface palette */
-  --color-bg:          #F5F6FA;
+  /* Surface palette — green-tinted for sophistication */
+  --color-bg:          #EDF3EF;
   --color-surface:     #FFFFFF;
-  --color-border:      #EBEBEB;
-  --color-border-soft: #F0F0F2;
+  --color-border:      #D4E6DB;
+  --color-border-soft: #E2EDE6;
 
   /* Text scale */
   --color-text:   #1A1A1F;
@@ -39,12 +39,13 @@
   --radius-btn:   8px;
   --radius-badge: 9999px;
 
-  /* Fonts */
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  /* Fonts — Inter first so it works everywhere, SF Pro on Apple devices */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+               "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 }
 
-/* Safe area insets (notch / Dynamic Island / home indicator) */
+/* ── Safe area insets (notch / Dynamic Island / home indicator) ─ */
 :root {
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -63,6 +64,9 @@ body {
   font-size: 13px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1;
+  /* Prevent iOS text size inflate on rotation */
   -webkit-text-size-adjust: 100%;
 }
 
@@ -76,19 +80,21 @@ body {
   ::-webkit-scrollbar { width: 0; height: 0; }
 }
 
-/* Touch targets: all interactive elements >= 44x44px on mobile */
+/* ── Touch targets: all interactive elements ≥ 44×44px on mobile ─ */
 @media (max-width: 743px) {
   button, a, [role="button"] {
     min-height: 44px;
     min-width: 44px;
   }
+  /* Override for inline icon-only buttons that should stay compact */
   button.icon-sm, a.icon-sm { min-height: 36px; min-width: 36px; }
 }
 
-/* Horizontally scrollable table wrapper */
+/* ── Horizontally scrollable table wrapper ── */
 .table-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  /* Ensure the table inside has minimum width to prevent squish */
 }
 .table-scroll table {
   min-width: 560px;
@@ -135,7 +141,7 @@ body {
 }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 
-/* Modal / bottom sheet */
+/* ── Modal / bottom sheet ── */
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
