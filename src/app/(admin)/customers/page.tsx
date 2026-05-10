@@ -112,10 +112,10 @@ function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose:
   };
 
   return (
-    <ResponsiveModal isOpen onClose={onClose} title={`ì¿ í° ë°ì¡ â ${customer.name}`}>
+    <ResponsiveModal isOpen onClose={onClose} title={`ì¿ í° ë°ì¡ — ${customer.name}`}>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: '#8A8D94', fontSize: 13 }}>Loadingâ¦</div>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: '#8A8D94', fontSize: 13 }}>Loading…</div>
         ) : coupons.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 0' }}>
             <Ticket size={28} color="#EBEBEB" style={{ margin: '0 auto 10px' }} />
@@ -153,7 +153,7 @@ function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose:
                       fontFamily: 'inherit', opacity: isProcessing ? 0.6 : 1,
                     }}
                   >
-                    {isSent ? 'â ë°ì¡ë¨' : isProcessing ? 'â¦' : 'ë°ì¡'}
+                    {isSent ? 'â ë°ì¡ë¨' : isProcessing ? '…' : 'ë°ì¡'}
                   </button>
                 </div>
               );
@@ -267,7 +267,7 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { custo
         {activeTab === 'coupons' && (
           <div style={{ marginTop: 16 }}>
             {passesLoading ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 12, color: '#8A8D94' }}>Loadingâ¦</div>
+              <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 12, color: '#8A8D94' }}>Loading…</div>
             ) : passes.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
                 <Ticket size={28} color="#EBEBEB" style={{ margin: '0 auto 8px' }} />
@@ -457,7 +457,7 @@ export default function CustomersPage() {
       <div style={{ display: 'grid', gridTemplateColumns: (selected && !isMobile) ? '1fr 380px' : '1fr', gap: 16, alignItems: 'start' }}>
         <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
           {loading ? (
-            <div style={{ padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading customersâ¦</div>
+            <div style={{ padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading customers…</div>
           ) : rows.length === 0 && !q ? (
             <div style={{ padding: 48, textAlign: 'center' }}>
               <div style={{ fontSize: 16, fontWeight: 600 }}>No customers yet</div>
