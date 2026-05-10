@@ -5,7 +5,7 @@ import { Search, ChevronDown, Plus, Menu, Bell, AlertTriangle, X } from 'lucide-
 import { businesses } from '@/lib/data';
 
 const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
-  '/dashboard':  { t: 'Dashboard',          s: "Welcome back, Woosang â here's what's happening across your businesses.", cta: 'New card' },
+  '/dashboard':  { t: 'Dashboard',          s: "Welcome back, Woosang — here's what's happening across your businesses.", cta: 'New card' },
   '/cards':      { t: 'Loyalty cards',      s: 'Design, manage, and track every card across your businesses.', cta: 'New card' },
   '/coupons':    { t: 'Coupons',            s: 'Create, issue, and track coupon passes for your customers.', cta: 'New coupon' },
   '/customers':  { t: 'Customers',          s: "Everyone who's added one of your cards to their wallet.", cta: 'Add customer' },
@@ -173,8 +173,8 @@ export default function Topbar({
         display: 'flex', alignItems: 'center', gap: 8,
       }}>
         <Search size={15} />
-        <span style={{ fontSize: 13, flex: 1 }}>Search customers, cardsâ¦</span>
-        <span style={{ fontSize: 11, padding: '1px 5px', border: '1px solid #EBEBEB', borderRadius: 4, color: '#8A8D94', background: 'white' }}>âK</span>
+        <span style={{ fontSize: 13, flex: 1 }}>Search customers, cards…</span>
+        <span style={{ fontSize: 11, padding: '1px 5px', border: '1px solid #EBEBEB', borderRadius: 4, color: '#8A8D94', background: 'white' }}>⌘K</span>
       </div>
 
       <div style={{ position: 'relative' }}>
