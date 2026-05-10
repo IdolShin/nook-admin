@@ -109,6 +109,7 @@ Manage
 <NavItem key={it.href} {...it}
 active={pathname === it.href || (it.href !== '/dashboard' && pathname.startsWith(it.href))}
 collapsed={collapsed && !mobileMode}
+mobile={mobileMode}
 />
 ))}
 </nav>
@@ -139,7 +140,7 @@ width: '100%', marginTop: 2,
 {(moreOpen || (collapsed && !mobileMode)) && (
 <nav style={{ display: 'grid', gap: 0 }}>
 {visibleSec2.map((it) => (
-<NavItem key={it.href} {...it} active={pathname === it.href || pathname.startsWith(it.href)} collapsed={collapsed && !mobileMode} />
+<NavItem key={it.href} {...it} active={pathname === it.href || pathname.startsWith(it.href)} collapsed={collapsed && !mobileMode} mobile={mobileMode} />
 ))}
 </nav>
 )}
@@ -161,7 +162,7 @@ onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#F5F
 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
 >
 <Globe size={15} color="#8A8D94" />
-{(!collapsed || mobileMode) && <span>홈페이지</span>}
+{(!collapsed || mobileMode) && <span>ííì´ì§</span>}
 </Link>
 </div>
 
@@ -224,26 +225,20 @@ onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
 );
 }
 
-function NavItem({ href, label, icon: Icon, active, collapsed }: {
-href: string; label: string; icon: React.ElementType; active: boolean; collapsed: boolean;
+function NavItem({ href, label, icon: Icon, active, collapsed, mobile }: {
+href: string; label: string; icon: React.ElementType; active: boolean; collapsed: boolean; mobile?: boolean;
 }) {
 return (
 <Link href={href} title={collapsed ? label : undefined} style={{
-display: 'flex', alignItems: 'center', gap: 8,
-padding: collapsed ? '6px' : '6px 10px',
+display: 'flex', alignItems: 'center', gap: mobile ? 10 : 8,
+padding: collapsed ? '6px' : mobile ? '10px 14px' : '6px 10px',
 justifyContent: collapsed ? 'center' : 'flex-start',
-borderRadius: 7,
+borderRadius: 8,
 background: active ? '#E8F7F2' : 'transparent',
 color: active ? '#085041' : '#5C5F66',
-fontSize: 13, fontWeight: active ? 500 : 400,
+fontSize: mobile ? 15 : 13, fontWeight: active ? 500 : 400,
 textDecoration: 'none', transition: 'background 120ms',
-minHeight: 34,
+minHeight: mobile ? 46 : 34,
 }}
 onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = '#F5F6FA'; }}
 onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
->
-<Icon size={16} color={active ? '#1D9E75' : '#5C5F66'} />
-{!collapsed && <span style={{ flex: 1 }}>{label}</span>}
-</Link>
-);
-}
