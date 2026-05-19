@@ -4,22 +4,17 @@ function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('nook_token');
 }
-
 function setToken(token: string): void {
   localStorage.setItem('nook_token', token);
   if (typeof document !== 'undefined') {
     document.cookie = 'nook_auth=1; path=/; max-age=604800; SameSite=Lax';
   }
 }
-
 function getBusinessName(): string {
   if (typeof window === 'undefined') return '';
   return localStorage.getItem('nook_biz') ?? '';
 }
-
-function setBusinessName(name: string): void {
-  localStorage.setItem('nook_biz', name);
-}
+function setBusinessName(name: string): void { localStorage.setItem('nook_biz', name); }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken();
@@ -38,296 +33,96 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export interface ApiCard {
-  id: string;
-  name: string;
-  card_type: string;
-  goal_stamps: number;
-  reward_desc: string;
-  color: string;
-  is_active: boolean;
-  created_at: string;
-  business_id?: string;
-}
-
-export interface ApiCustomer {
-  id: string;
-  name: string;
-  phone: string;
-  card_id: string;
-  business_id: string;
-  wallet_type?: string;
-  total_stamps?: number;
-  created_at: string;
-}
-
-export interface BroadcastResult {
-  total_customers: number;
-  web_push_sent: number;
-  wallet_updated: number;
-  failed: number;
-}
-
-export interface ApiAnalytics {
-  total_customers: number;
-  new_customers_30d: number;
-  new_customers_prev: number;
-  active_cards: number;
-  total_stamps: number;
-  stamps_last_30d: number;
-  stamps_prev_30d: number;
-  total_redemptions: number;
-  redemptions_30d: number;
-  coupons_issued: number;
-  coupons_redeemed: number;
-  stamps_by_day: number[];
-  stamps_daily_30d?: number[];
-  redemptions_daily_30d?: number[];
-}
+export interface ApiCard { id: string; name: string; card_type: string; goal_stamps: number; reward_desc: string; color: string; is_active: boolean; created_at: string; business_id?: string; }
+export interface ApiCustomer { id: string; name: string; phone: string; card_id: string; business_id: string; wallet_type?: string; total_stamps?: number; created_at: string; }
+export interface BroadcastResult { total_customers: number; web_push_sent: number; wallet_updated: number; failed: number; }
+export interface ApiAnalytics { total_customers: number; new_customers_30d: number; new_customers_prev: number; active_cards: number; total_stamps: number; stamps_last_30d: number; stamps_prev_30d: number; total_redemptions: number; redemptions_30d: number; coupons_issued: number; coupons_redeemed: number; stamps_by_day: number[]; stamps_daily_30d?: number[]; redemptions_daily_30d?: number[]; }
+export interface ApiReviewConfig { enabled: boolean; reward_type: 'stamp' | 'coupon'; stamp_count: number; coupon_id: string | null; days_to_wait: number; }
+export interface ApiReviewPublic { google_review_url: string; reward_enabled: boolean; days_to_wait: number; reward_type: 'stamp' | 'coupon'; stamp_count: number | null; }
 
 export const api = {
   getToken,
   getBusinessName,
 
   logout: () => {
-    localStorage.removeItem('nook_token');
-    localStorage.removeItem('nook_biz');
-    if (typeof document !== 'undefined') {
-      document.cookie = 'nook_auth=; path=/; max-age=0';
-    }
+    localStorage.removeItem('nook_token'); localStorage.removeItem('nook_biz');
+    if (typeof document !== 'undefined') document.cookie = 'nook_auth=; path=/; max-age=0';
   },
 
   googleLogin: async (id_token: string) => {
-    const res = await fetch(`${BASE}/api/auth/google`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_token }),
-    });
-    if (!res.ok) {
-      const msg = await res.text().catch(() => res.statusText);
-      throw new Error(msg || String(res.status));
-    }
+    const res = await fetch(`${BASE}/api/auth/google`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_token }) });
+    if (!res.ok) { const msg = await res.text().catch(() => res.statusText); throw new Error(msg || String(res.status)); }
     const data = await (res.json() as Promise<{ token: string; business: { id: string; name: string } }>);
-    setToken(data.token);
-    setBusinessName(data.business.name);
-    return data;
+    setToken(data.token); setBusinessName(data.business.name); return data;
   },
 
   login: async (email: string, password: string) => {
-    const data = await req<{ token: string; business: { id: string; name: string } }>(
-      '/api/auth/login',
-      { method: 'POST', body: JSON.stringify({ email, password }) }
-    );
-    setToken(data.token);
-    setBusinessName(data.business.name);
-    return data;
+    const data = await req<{ token: string; business: { id: string; name: string } }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    setToken(data.token); setBusinessName(data.business.name); return data;
   },
 
   staffLogin: async (email: string, password: string, business_id: string) => {
-    const res = await fetch(`${BASE}/api/permissions/staff-login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, business_id }),
-    });
-    if (!res.ok) {
-      const msg = await res.text().catch(() => res.statusText);
-      throw new Error(msg || String(res.status));
-    }
+    const res = await fetch(`${BASE}/api/permissions/staff-login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, business_id }) });
+    if (!res.ok) { const msg = await res.text().catch(() => res.statusText); throw new Error(msg || String(res.status)); }
     const data = await (res.json() as Promise<{ token: string; business: { id: string; name: string }; staff: { id: string; name: string; role: string } }>);
-    setToken(data.token);
-    setBusinessName(data.business.name);
-    return data;
+    setToken(data.token); setBusinessName(data.business.name); return data;
   },
 
   cards: () => req<{ cards: ApiCard[] }>('/api/cards').then((d) => d.cards),
-
-  createCard: (data: Partial<ApiCard>) =>
-    req<{ card: ApiCard }>('/api/cards', { method: 'POST', body: JSON.stringify(data) }).then((d) => d.card),
-
-  updateCard: (id: string, data: Partial<ApiCard>) =>
-    req<{ card: ApiCard }>(`/api/cards/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.card),
-
-  cardStats: (id: string) =>
-    req<{ total_customers: number; total_stamps: number; total_redeems: number }>(`/api/cards/${id}/stats`),
-
+  createCard: (data: Partial<ApiCard>) => req<{ card: ApiCard }>('/api/cards', { method: 'POST', body: JSON.stringify(data) }).then((d) => d.card),
+  updateCard: (id: string, data: Partial<ApiCard>) => req<{ card: ApiCard }>(`/api/cards/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.card),
+  cardStats: (id: string) => req<{ total_customers: number; total_stamps: number; total_redeems: number }>(`/api/cards/${id}/stats`),
   customers: () => req<{ customers: ApiCustomer[] }>('/api/customers').then((d) => d.customers),
-
-  broadcast: (title: string, body: string) =>
-    req<BroadcastResult>('/api/push/broadcast', {
-      method: 'POST',
-      body: JSON.stringify({ message: `${title} â ${body}` }),
-    }),
-
+  broadcast: (title: string, body: string) => req<BroadcastResult>('/api/push/broadcast', { method: 'POST', body: JSON.stringify({ message: `${title} — ${body}` }) }),
   coupons: () => req<{ coupons: ApiCoupon[] }>('/api/coupons').then((d) => d.coupons),
-
-  createCoupon: (data: Partial<ApiCoupon>) =>
-    req<{ coupon: ApiCoupon }>('/api/coupons', { method: 'POST', body: JSON.stringify(data) }).then((d) => d.coupon),
-
-  updateCoupon: (id: string, data: Partial<ApiCoupon>) =>
-    req<{ coupon: ApiCoupon }>(`/api/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.coupon),
-
-  issueCoupon: (id: string, opts: { customer_ids?: string[]; send_push?: boolean; send_email?: boolean }) =>
-    req<{ issued: number; skipped: number; total: number }>(`/api/coupons/${id}/issue`, {
-      method: 'POST', body: JSON.stringify(opts),
-    }),
-
-  redeemStamp: (customerId: string) =>
-    req<{ success: boolean; message: string }>('/api/scan/redeem', {
-      method: 'POST',
-      body: JSON.stringify({ customer_id: customerId }),
-    }),
-
-  redeemCoupon: (barcode: string) =>
-    req<{ success: boolean; coupon: ApiCoupon; customer: { name: string; phone: string }; redeemed_at: string }>(
-      '/api/coupons/redeem', { method: 'POST', body: JSON.stringify({ barcode }) }
-    ),
-
-  couponPasses: (customerId: string) =>
-    req<{ passes: ApiCouponPass[] }>(`/api/coupons/passes/${customerId}`).then((d) => d.passes),
-
-  scanStamp: (code: string, scanType: 'qr' | 'barcode' = 'barcode') =>
-    req<{ success: boolean; customer_name: string; new_stamps: number; goal_stamps: number; reward_ready: boolean; message: string }>(
-      '/api/scan',
-      { method: 'POST', body: JSON.stringify({ code, scan_type: scanType }) }
-    ),
-
-  customerLookup: (code: string, type: 'qr' | 'barcode' = 'barcode') =>
-    req<{ customer: { id: string; name: string; wallet_type: string; card: { name: string; goal_stamps: number; reward_desc: string }; current_stamps: number; goal_stamps: number; rewards_earned: number } }>(
-      `/api/customers/lookup?code=${encodeURIComponent(code)}&type=${type}`
-    ),
-
-  stats: () =>
-    req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>('/api/stats'),
-
-  analytics: (bizId?: string) =>
-    req<ApiAnalytics>(`/api/analytics${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),
-
-  updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string; phone?: string; address?: string }) =>
-    req<{ business: { id: string; name: string; owner_email: string; plan: string } }>(
-      '/api/auth/me',
-      { method: 'PATCH', body: JSON.stringify(data) }
-    ),
+  createCoupon: (data: Partial<ApiCoupon>) => req<{ coupon: ApiCoupon }>('/api/coupons', { method: 'POST', body: JSON.stringify(data) }).then((d) => d.coupon),
+  updateCoupon: (id: string, data: Partial<ApiCoupon>) => req<{ coupon: ApiCoupon }>(`/api/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.coupon),
+  issueCoupon: (id: string, opts: { customer_ids?: string[]; send_push?: boolean; send_email?: boolean }) => req<{ issued: number; skipped: number; total: number }>(`/api/coupons/${id}/issue`, { method: 'POST', body: JSON.stringify(opts) }),
+  redeemStamp: (customerId: string) => req<{ success: boolean; message: string }>('/api/scan/redeem', { method: 'POST', body: JSON.stringify({ customer_id: customerId }) }),
+  redeemCoupon: (barcode: string) => req<{ success: boolean; coupon: ApiCoupon; customer: { name: string; phone: string }; redeemed_at: string }>('/api/coupons/redeem', { method: 'POST', body: JSON.stringify({ barcode }) }),
+  couponPasses: (customerId: string) => req<{ passes: ApiCouponPass[] }>(`/api/coupons/passes/${customerId}`).then((d) => d.passes),
+  scanStamp: (code: string, scanType: 'qr' | 'barcode' = 'barcode') => req<{ success: boolean; customer_name: string; new_stamps: number; goal_stamps: number; reward_ready: boolean; message: string }>('/api/scan', { method: 'POST', body: JSON.stringify({ code, scan_type: scanType }) }),
+  customerLookup: (code: string, type: 'qr' | 'barcode' = 'barcode') => req<{ customer: { id: string; name: string; wallet_type: string; card: { name: string; goal_stamps: number; reward_desc: string }; current_stamps: number; goal_stamps: number; rewards_earned: number } }>(`/api/customers/lookup?code=${encodeURIComponent(code)}&type=${type}`),
+  stats: () => req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>('/api/stats'),
+  analytics: (bizId?: string) => req<ApiAnalytics>(`/api/analytics${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),
+  updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string; phone?: string; address?: string }) => req<{ business: { id: string; name: string; owner_email: string; plan: string } }>('/api/auth/me', { method: 'PATCH', body: JSON.stringify(data) }),
 
   registerCustomer: async (data: { card_id: string; name: string; phone: string; consent_push?: boolean; consent_points?: boolean }): Promise<{ customer: ApiCustomer }> => {
-    const res = await fetch(`${BASE}/api/customers/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        consent_push: true,
-        consent_points: true,
-        ...data,
-      }),
-    });
-    if (!res.ok) {
-      let msg = res.statusText;
-      try { const j = await res.json(); msg = j.error ?? j.message ?? msg; } catch (_) {}
-      throw new Error(msg);
-    }
+    const res = await fetch(`${BASE}/api/customers/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consent_push: true, consent_points: true, ...data }) });
+    if (!res.ok) { let msg = res.statusText; try { const j = await res.json(); msg = j.error ?? j.message ?? msg; } catch (_) {} throw new Error(msg); }
     return res.json();
   },
 
   getBusinesses: async (): Promise<Array<{ id: string; name: string }>> => {
     const token = getToken();
-    const res = await fetch(`${BASE}/api/businesses`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    const res = await fetch(`${BASE}/api/businesses`, { headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
     if (!res.ok) throw new Error('Failed to fetch businesses');
     return res.json();
   },
 
-  listBusinesses: () =>
-    req<{ businesses: ApiBusiness[] }>('/api/permissions/businesses').then((d) => d.businesses),
+  listBusinesses: () => req<{ businesses: ApiBusiness[] }>('/api/permissions/businesses').then((d) => d.businesses),
+  updateBusinessPermissions: (id: string, page_permissions: Record<string, string>) => req<{ business: ApiBusiness }>(`/api/permissions/businesses/${id}`, { method: 'PATCH', body: JSON.stringify({ page_permissions }) }).then((d) => d.business),
+  listStaff: () => req<{ users: ApiStaffUser[] }>('/api/permissions/users').then((d) => d.users),
+  createStaff: (data: { email: string; name: string; role: string; password: string; page_permissions?: Record<string, string> }) => req<{ user: ApiStaffUser }>('/api/permissions/users', { method: 'POST', body: JSON.stringify(data) }).then((d) => d.user),
+  updateStaff: (id: string, data: Partial<{ name: string; role: string; page_permissions: Record<string, string>; is_active: boolean; password: string }>) => req<{ user: ApiStaffUser }>(`/api/permissions/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.user),
+  deleteStaff: (id: string) => req<{ success: boolean }>(`/api/permissions/users/${id}`, { method: 'DELETE' }),
+  listBusinessUsers: (bizId: string) => req<{ users: ApiStaffUser[] }>(`/api/permissions/businesses/${bizId}/users`).then((d) => d.users),
+  createBusinessUser: (bizId: string, data: { email: string; name: string; role: string; password: string; page_permissions?: Record<string, string> }) => req<{ user: ApiStaffUser }>(`/api/permissions/businesses/${bizId}/users`, { method: 'POST', body: JSON.stringify(data) }).then((d) => d.user),
+  updateBusinessUser: (bizId: string, uid: string, data: Partial<{ name: string; role: string; page_permissions: Record<string, string>; is_active: boolean; password: string }>) => req<{ user: ApiStaffUser }>(`/api/permissions/businesses/${bizId}/users/${uid}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.user),
+  deleteBusinessUser: (bizId: string, uid: string) => req<{ success: boolean }>(`/api/permissions/businesses/${bizId}/users/${uid}`, { method: 'DELETE' }),
 
-  updateBusinessPermissions: (id: string, page_permissions: Record<string, string>) =>
-    req<{ business: ApiBusiness }>(`/api/permissions/businesses/${id}`, {
-      method: 'PATCH', body: JSON.stringify({ page_permissions }),
-    }).then((d) => d.business),
-
-  listStaff: () =>
-    req<{ users: ApiStaffUser[] }>('/api/permissions/users').then((d) => d.users),
-
-  createStaff: (data: { email: string; name: string; role: string; password: string; page_permissions?: Record<string, string> }) =>
-    req<{ user: ApiStaffUser }>('/api/permissions/users', {
-      method: 'POST', body: JSON.stringify(data),
-    }).then((d) => d.user),
-
-  updateStaff: (id: string, data: Partial<{ name: string; role: string; page_permissions: Record<string, string>; is_active: boolean; password: string }>) =>
-    req<{ user: ApiStaffUser }>(`/api/permissions/users/${id}`, {
-      method: 'PATCH', body: JSON.stringify(data),
-    }).then((d) => d.user),
-
-  deleteStaff: (id: string) =>
-    req<{ success: boolean }>(`/api/permissions/users/${id}`, { method: 'DELETE' }),
-
-  listBusinessUsers: (bizId: string) =>
-    req<{ users: ApiStaffUser[] }>(`/api/permissions/businesses/${bizId}/users`).then((d) => d.users),
-
-  createBusinessUser: (bizId: string, data: { email: string; name: string; role: string; password: string; page_permissions?: Record<string, string> }) =>
-    req<{ user: ApiStaffUser }>(`/api/permissions/businesses/${bizId}/users`, {
-      method: 'POST', body: JSON.stringify(data),
-    }).then((d) => d.user),
-
-  updateBusinessUser: (bizId: string, uid: string, data: Partial<{ name: string; role: string; page_permissions: Record<string, string>; is_active: boolean; password: string }>) =>
-    req<{ user: ApiStaffUser }>(`/api/permissions/businesses/${bizId}/users/${uid}`, {
-      method: 'PATCH', body: JSON.stringify(data),
-    }).then((d) => d.user),
-
-  deleteBusinessUser: (bizId: string, uid: string) =>
-    req<{ success: boolean }>(`/api/permissions/businesses/${bizId}/users/${uid}`, { method: 'DELETE' }),
-
+  // Google Review Rewards
+  getReviewConfig: () => req<{ google_review_url: string; review_reward_config: ApiReviewConfig }>('/api/reviews/config'),
+  updateReviewConfig: (data: { google_review_url?: string; review_reward_config?: Partial<ApiReviewConfig> }) => req<{ google_review_url: string; review_reward_config: ApiReviewConfig }>('/api/reviews/config', { method: 'PATCH', body: JSON.stringify(data) }),
+  getReviewPublic: (businessId: string) => req<ApiReviewPublic>(`/api/reviews/public/${encodeURIComponent(businessId)}`),
+  initiateReview: async (customerId: string, businessId: string): Promise<{ success: boolean; reward_at: string; days_to_wait: number; message: string }> => {
+    const res = await fetch(`${BASE}/api/reviews/initiate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customer_id: customerId, business_id: businessId }) });
+    if (!res.ok) { let msg = res.statusText; try { const j = await res.json(); msg = j.error ?? j.message ?? msg; } catch (_) {} throw new Error(msg); }
+    return res.json();
+  },
 };
 
-export interface ApiBusiness {
-  id: string;
-  name: string;
-  owner_email: string;
-  plan: string;
-  is_superadmin: boolean;
-  page_permissions: Record<string, string> | null;
-  created_at: string;
-}
-
-export interface ApiStaffUser {
-  id: string;
-  email: string;
-  name: string;
-  role: 'viewer' | 'editor' | 'admin';
-  page_permissions: Record<string, string>;
-  is_active: boolean;
-  created_at: string;
-}
-
-export interface ApiCoupon {
-  id: string;
-  title: string;
-  description?: string;
-  coupon_type: string;
-  discount_value?: number;
-  free_item_name?: string;
-  terms?: string;
-  trigger_type: string;
-  trigger_config?: Record<string, unknown>;
-  max_redemptions?: number;
-  total_issued: number;
-  total_redeemed: number;
-  valid_days: number;
-  expires_at?: string;
-  is_active: boolean;
-  color: string;
-  created_at: string;
-}
-
-export interface ApiCouponPass {
-  id: string;
-  barcode: string;
-  status: 'active' | 'redeemed' | 'expired';
-  issued_at: string;
-  expires_at: string;
-  redeemed_at?: string;
-  wallet_link?: string;
-  coupons?: ApiCoupon;
-  customers?: { id: string; name: string; phone: string };
-}
+export interface ApiBusiness { id: string; name: string; owner_email: string; plan: string; is_superadmin: boolean; page_permissions: Record<string, string> | null; created_at: string; }
+export interface ApiStaffUser { id: string; email: string; name: string; role: 'viewer' | 'editor' | 'admin'; page_permissions: Record<string, string>; is_active: boolean; created_at: string; }
+export interface ApiCoupon { id: string; title: string; description?: string; coupon_type: string; discount_value?: number; free_item_name?: string; terms?: string; trigger_type: string; trigger_config?: Record<string, unknown>; max_redemptions?: number; total_issued: number; total_redeemed: number; valid_days: number; expires_at?: string; is_active: boolean; color: string; created_at: string; }
+export interface ApiCouponPass { id: string; barcode: string; status: 'active' | 'redeemed' | 'expired'; issued_at: string; expires_at: string; redeemed_at?: string; wallet_link?: string; coupons?: ApiCoupon; customers?: { id: string; name: string; phone: string }; }
