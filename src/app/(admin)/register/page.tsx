@@ -412,4 +412,130 @@ function RegisterPageInner() {
 
   const STEP_NODES: React.ReactNode[] = [
     <Step0 key={0} onNext={advance} />,
-    <Step1 key={1} name={name} phone={phone} loading={loading} er
+    <Step1 key={1} name={name} phone={phone} loading={loading} error={regError}
+      onNameChange={setName} onPhoneChange={setPhone} onNext={handleRegister} />,
+    <Step2 key={2} onNext={advance} />,
+    <Step3 key={3} onNext={advance} />,
+    <Step4 key={4} onNext={reviewCfg ? advance : undefined} hasReview={!!reviewCfg} />,
+    reviewCfg
+      ? <Step5 key={5} reviewCfg={reviewCfg} customerId={customerId} businessId={businessId} />
+      : <Step4 key={5} />,
+  ];
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#F5F6FA', padding: isPhone ? '16px' : '24px 28px' }}>
+      <div style={{ maxWidth: 860, margin: '0 auto' }}>
+
+        {/* Header card */}
+        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: isPhone ? '14px 16px' : 18, marginBottom: 20 }}>
+          <div style={{ marginBottom: 12 }}>
+            <div className="section-title" style={{ fontSize: isPhone ? 15 : undefined }}>Customer registration flow</div>
+            <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 2 }}>
+              What customers see when they scan a Nook QR code.
+              {cardId && <span style={{ marginLeft: 6, color: '#1D9E75', fontFamily: 'var(--font-mono)' }}>card: {cardId.slice(0, 8)}\u2026</span>}
+            </div>
+          </div>
+
+          {/* Step tabs */}
+          <div style={{ overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div style={{ display: 'flex', gap: 4, background: '#F0F1F4', borderRadius: 9, padding: 3, width: 'max-content', minWidth: '100%' }}>
+              {isPhone ? STEP_SHORT : STEP_LABELS}.map((s, i) => (
+                <button key={i} onClick={() => setStep(i)} style={{
+                  height: 28, padding: '0 10px', border: 0, borderRadius:7,
+                  background: step === i ? 'white' : 'transparent',
+                  color: step === i ? '#1A1A1F' : '#5C5F66',
+                  fontSize: isPhone ? 11 : 12, fontWeight: step === i ? 600: 400,
+                  cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+                  boyShadow: step === i ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', flexShrink: 0,
+                }}>{i + 1}. {s}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Phone mockup + description */}
+        <div style={{ display: 'flex', flexDirection: isPhone ? 'column' : 'row', gap: isPhone ? 20 : 32, alignItems: isPhone ? 'center' : 'flex-start' }}>
+          <div style={{ flexShrink: 0 }}>
+            <PhoneFrame label={`Step ${step + 1} of ${STEP_LABELS.length}`}>
+              {STEP_NODES[step]}
+            </PhoneFrame>
+          </div>
+
+          {/* Description panel */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: isPhone ? 16 : 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
+                Step {step + 1} --- {STEP_LABELS[step]}
+              </div>
+              {step === 0 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Customer scans the QR code and lands on the welcome screen.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Shows the loyalty card with your brand colors</li>
+                    <li>Explains the reward (e.g. free latte after 10 stamps)</li>
+                    <li>One-tap flow --- no app download needed</li>
+                  </ul>
+                </>
+              )}
+              {step === 1 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Customer enters their name and phone number. This creates their account and links it to your card.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Calls <code style={{ background: '#F5F6FA', padding: '1px 5px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 12 }}>POST /api/customers/register</code></li>
+                    <li>card_id read from the QR code URL param</li>
+                    <li>Customer appears instantly in your Customers list</li>
+                  </ul>
+                  {cardId === null && (
+                    <div style={{ marginTop: 10, padding: '10px 14px', background: '#FBEFD9', borderRadius: 9, fontSize: 12, color: '#C26B1F' }}>
+                      No card_id in URL. Add <code style={{ fontFamily: 'var(--font-mono)' }}]?card_id=YOUR_CARD_ID</code> to test the real API call.
+                    </div>
+                  )}
+                </>
+              )}
+              {step === 2 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>A 6-digit OTP is sent via SMS for phone verification.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Code expires in 10 minutes</li>
+                    <li>Resend available after 30 seconds</li>
+                    <li>Powered by Twilio (or Resend SMS)</li>
+                  </ul>
+                </>
+              )}
+              {step === 3 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Customer adds the card to Apple or Google Wallet.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Google Wallet: live --- passes already working</li>
+                    <li>Apple Wallet: requires $99/yr Apple Developer account</li>
+                    <li>Pass updates automatically when stamps are added</li>
+                  </ul>
+                </>
+              )}
+              {step === 4 && (
+                <>
+                  <div style={{ fontSize: 14, lineHeight: 1.6, color: '#1A1A1F' }}>Registration complete. Customer is ready to earn stamps.</div>
+                  <ul style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.8, marginTop: 10, paddingLeft: 18 }}>
+                    <li>Welcome bonus stamp configurable per card</li>
+                    <li>Customer appears instantly in your Customers list</li>
+                    <li>Push notifications enabled if consent was given</li>
+                  </ul>
+                </>
+              )}              <div style={{ marginTop: 16, padding: '10px 14px', background: '#F5F6FA', borderRadius: 9, fontSize: 12, color: '#5C5F66' }}>
+                \u1f4a1 Use the tabs above to navigate. Step 2 makes a real API call when card_id is in the URL.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageInner />
+    </Suspense>
+  );
+}
