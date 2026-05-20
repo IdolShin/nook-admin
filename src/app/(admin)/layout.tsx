@@ -10,7 +10,7 @@ import Toast from '@/components/ui/Toast';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import Link from 'next/link';
 import {
-BarChart2, Ticket, QrCode, Settings, X,
+BarChart2, Settings, BookOpen, X,
 ChevronDown, ChevronRight,
 } from 'lucide-react';
 
@@ -18,17 +18,16 @@ ChevronDown, ChevronRight,
 type MoreItem = { href: string; label: string; icon: React.ElementType; page: PageKey | null };
 const MORE_GROUPS_ALL: { label: string; items: MoreItem[] }[] = [
 {
-label: 'Reports & tools',
+label: 'Insights',
 items: [
 { href: '/analytics', label: 'Analytics', icon: BarChart2, page: 'analytics' },
-{ href: '/coupons', label: 'Coupons', icon: Ticket, page: 'coupons' },
-{ href: '/scan', label: 'Staff scanner', icon: QrCode, page: 'scanner' },
 ],
 },
 {
 label: 'Admin',
 items: [
-{ href: '/settings', label: 'Settings', icon: Settings, page: null },
+{ href: '/settings', label: 'Settings',   icon: Settings, page: null },
+{ href: '/register', label: 'How to use', icon: BookOpen, page: null },
 ],
 },
 ];
@@ -41,7 +40,7 @@ const drawerWidth = 280;
 
 const [drawerOpen, setDrawerOpen] = useState(false);
 const [moreOpen, setMoreOpen] = useState(false);
-const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ 'Reports & tools': true, 'Admin': true });
+const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ 'Insights': true, 'Admin': true });
 
 const router = useRouter();
 
@@ -83,7 +82,7 @@ setDrawerOpen(false);
 setMoreOpen(false);
 }, [pathname]);
 
-const bottomNavH = showDrawer ? 'calc(56px + env(safe-area-inset-bottom, 0px))' : '0px';
+const bottomNavH = showDrawer ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : '0px';
 
 // Lock body scroll when mobile drawer is open.
 // We set overflow:hidden on body but do NOT set touchAction:none (that blocks sidebar scroll too).
@@ -92,16 +91,15 @@ useEffect(() => {
 if (showDrawer && drawerOpen) {
 document.body.style.overflow = 'hidden';
 // Also freeze the main scroll container via a class
-document.getElementById('admin-main')?.setAttribute('style', 'overflow:hidden;flex:1;background:#F5F6FA;padding-bottom:' + bottomNavH);
+document.getElementById('admin-main')?.setAttribute('style', 'overflow:hidden;flex:1;background:#F5F7F6;padding-bottom:' + bottomNavH);
 } else {
 document.body.style.overflow = '';
-document.getElementById('admin-main')?.setAttribute('style', 'overflow:auto;flex:1;background:#F5F6FA;padding-bottom:' + bottomNavH);
+document.getElementById('admin-main')?.setAttribute('style', 'overflow:auto;flex:1;background:#F5F7F6;padding-bottom:' + bottomNavH);
 }
 return () => {
 document.body.style.overflow = '';
 };
 }, [showDrawer, drawerOpen, bottomNavH]);
-
 
 function toggleGroup(label: string) {
 setExpandedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -128,7 +126,7 @@ boxShadow: drawerOpen ? '4px 0 32px rgba(0,0,0,0.18)' : 'none',
 
 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 <Topbar pathname={pathname} isMobile={showDrawer} onMenuClick={() => setDrawerOpen(true)} />
-<main id="admin-main" style={{ flex: 1, overflow: 'auto', background: '#F5F6FA', paddingBottom: bottomNavH }}>
+<main id="admin-main" style={{ flex: 1, overflow: 'auto', background: '#F5F7F6', paddingBottom: bottomNavH }}>
 {children}
 </main>
 </div>
@@ -142,7 +140,7 @@ boxShadow: drawerOpen ? '4px 0 32px rgba(0,0,0,0.18)' : 'none',
 <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.45)' }} />
 )}
 
-{/* More bottom sheet â grouped accordion */}
+{/* More bottom sheet — grouped accordion */}
 {showDrawer && (
 <div style={{
 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
@@ -158,64 +156,4 @@ boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
 </div>
 
 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 12px' }}>
-<div style={{ fontSize: 16, fontWeight: 600 }}>More</div>
-<button onClick={() => setMoreOpen(false)} style={{
-border: 0, background: 'transparent', cursor: 'pointer',
-display: 'flex', padding: 4, borderRadius: 6,
-minHeight: 36, minWidth: 36, alignItems: 'center', justifyContent: 'center',
-}}>
-<X size={18} color="#5C5F66" />
-</button>
-</div>
-
-{/* Groups */}
-{MORE_GROUPS.map((group) => (
-<div key={group.label}>
-{/* Group header */}
-<button
-onClick={() => toggleGroup(group.label)}
-style={{
-width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-padding: '6px 20px', border: 0, background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
-}}
->
-<span style={{ fontSize: 11, fontWeight: 600, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-{group.label}
-</span>
-{expandedGroups[group.label]
-? <ChevronDown size={13} color="#8A8D94" />
-: <ChevronRight size={13} color="#8A8D94" />
-}
-</button>
-
-{/* Group items */}
-{expandedGroups[group.label] && (
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '4px 16px 12px' }}>
-{group.items.map((item) => {
-const Icon = item.icon;
-const active = pathname === item.href || pathname.startsWith(item.href);
-return (
-<Link key={item.href} href={item.href} style={{
-display: 'flex', alignItems: 'center', gap: 10,
-padding: '14px', borderRadius: 10,
-background: active ? '#E8F7F2' : '#F5F6FA',
-color: active ? '#085041' : '#1A1A1F',
-textDecoration: 'none', fontSize: 14, fontWeight: active ? 500 : 400,
-minHeight: 52,
-}}>
-<Icon size={18} color={active ? '#1D9E75' : '#5C5F66'} />
-{item.label}
-</Link>
-);
-})}
-</div>
-)}
-</div>
-))}
-</div>
-)}
-
-<Toast />
-</div>
-);
-}
+<div style={{ fontSize: 16, 

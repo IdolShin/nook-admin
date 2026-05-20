@@ -1,59 +1,116 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, CreditCard, Users, Bell, MoreHorizontal } from 'lucide-react';
-import { decodeToken, canView, PageKey } from '@/lib/permissions';
+import { LayoutDashboard, Users, QrCode, Ticket, MoreHorizontal } from 'lucide-react';
+import { decodeToken, canView } from '@/lib/permissions';
 
-const ALL_ITEMS: { href: string; label: string; icon: React.ElementType; page: PageKey }[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, page: 'dashboard' },
-  { href: '/cards',     label: 'Cards',     icon: CreditCard,      page: 'cards' },
-  { href: '/customers', label: 'Customers', icon: Users,           page: 'customers' },
-  { href: '/push',      label: 'Push',      icon: Bell,            page: 'push' },
+const LEFT_ITEMS = [
+  { href: '/dashboard', label: 'Home',      icon: LayoutDashboard, page: 'dashboard' as const },
+  { href: '/customers', label: 'Customers', icon: Users,           page: 'customers' as const },
+];
+
+const RIGHT_ITEMS = [
+  { href: '/coupons', label: 'Coupons', icon: Ticket, page: 'coupons' as const },
 ];
 
 export default function BottomNav({ pathname, onMoreClick }: { pathname: string; onMoreClick?: () => void }) {
   const decoded = typeof window !== 'undefined' ? decodeToken() : null;
-  const items = ALL_ITEMS.filter((it) => canView(decoded, it.page));
+  const leftItems  = LEFT_ITEMS.filter(it => canView(decoded, it.page));
+  const rightItems = RIGHT_ITEMS.filter(it => canView(decoded, it.page));
+  const scanActive = pathname === '/scan' || pathname.startsWith('/scan/');
 
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30,
-      /* The visible tap area is always 56px; safe-area pushes the bar down on notched phones */
-      height: 'calc(56px + env(safe-area-inset-bottom, 0px))',
+      height: 'calc(60px + env(safe-area-inset-bottom, 0px))',
       paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      paddingLeft: 'env(safe-area-inset-left, 0px)',
+      paddingLeft:  'env(safe-area-inset-left, 0px)',
       paddingRight: 'env(safe-area-inset-right, 0px)',
-      background: 'rgba(255,255,255,0.96)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      borderTop: '1px solid rgba(235,235,235,0.8)',
-      display: 'flex',
-      /* Prevent iOS rubber-band scroll from revealing content behind the bar */
-      boxSizing: 'border-box',
+      background: 'rgba(255,255,255,0.97)',
+      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+      borderTop: '0.5px solid rgba(235,235,235,0.9)',
+      display: 'flex', alignItems: 'flex-end',
+      boxSizing: 'border-box', overflow: 'visible',
     }}>
-      {items.map((item) => {
-        const Icon = item.icon;
+
+      {leftItems.map((item) => {
         const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+        const Icon = item.icon;
         return (
           <Link key={item.href} href={item.href} style={{
             flex: 1, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 2,
-            textDecoration: 'none', minHeight: 44,
-            color: active ? '#1D9E75' : '#8A8D94',
+            alignItems: 'center', justifyContent: 'center', gap: 3,
+            textDecoration: 'none', height: 60,
           }}>
-            <Icon size={22} strokeWidth={active ? 2.2 : 1.7} />
-            <span style={{ fontSize: 10, fontWeight: active ? 600 : 400, letterSpacing: '-0.01em' }}>{item.label}</span>
+            <div style={{
+              width: 48, height: 26, borderRadius: 13,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: active ? '#E8F7F2' : 'transparent', transition: 'background 150ms',
+            }}>
+              <Icon size={20} strokeWidth={active ? 2.2 : 1.7} color={active ? '#1D9E75' : '#9CA3AF'} />
+            </div>
+            <span style={{ fontSize: 10, letterSpacing: '-0.01em', fontWeight: active ? 600 : 400, color: active ? '#085041' : '#9CA3AF' }}>
+              {item.label}
+            </span>
           </Link>
         );
       })}
+
+      {/* Center: Scan CTA */}
+      <Link href="/scan" style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'flex-end',
+        paddingBottom: 8, height: 60, textDecoration: 'none',
+      }}>
+        <div style={{
+          width: 52, height: 52, borderRadius: '50%',
+          background: scanActive ? '#085041' : '#1D9E75',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginTop: '-26px',
+          border: '3px solid rgba(255,255,255,0.97)',
+          boxShadow: '0 4px 16px rgba(29,158,117,0.35)',
+          flexShrink: 0, transition: 'background 200ms',
+        }}>
+          <QrCode size={22} color="white" strokeWidth={1.8} />
+        </div>
+        <span style={{ fontSize: 10, marginTop: 2, letterSpacing: '-0.01em', fontWeight: scanActive ? 600 : 400, color: scanActive ? '#1D9E75' : '#9CA3AF' }}>
+          Scan
+        </span>
+      </Link>
+
+      {rightItems.map((item) => {
+        const active = pathname === item.href || pathname.startsWith(item.href + '/');
+        const Icon = item.icon;
+        return (
+          <Link key={item.href} href={item.href} style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 3,
+            textDecoration: 'none', height: 60,
+          }}>
+            <div style={{
+              width: 48, height: 26, borderRadius: 13,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: active ? '#E8F7F2' : 'transparent', transition: 'background 150ms',
+            }}>
+              <Icon size={20} strokeWidth={active ? 2.2 : 1.7} color={active ? '#1D9E75' : '#9CA3AF'} />
+            </div>
+            <span style={{ fontSize: 10, letterSpacing: '-0.01em', fontWeight: active ? 600 : 400, color: active ? '#085041' : '#9CA3AF' }}>
+              {item.label}
+            </span>
+          </Link>
+        );
+      })}
+
+      {/* More */}
       <button onClick={onMoreClick} style={{
         flex: 1, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', gap: 2,
-        border: 0, background: 'transparent', cursor: 'pointer',
-        color: '#8A8D94', minHeight: 44,
+        alignItems: 'center', justifyContent: 'center', gap: 3,
+        border: 0, background: 'transparent', cursor: 'pointer', height: 60,
       }}>
-        <MoreHorizontal size={22} strokeWidth={1.7} />
-        <span style={{ fontSize: 10, letterSpacing: '-0.01em' }}>More</span>
+        <div style={{ width: 48, height: 26, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <MoreHorizontal size={20} strokeWidth={1.7} color="#9CA3AF" />
+        </div>
+        <span style={{ fontSize: 10, letterSpacing: '-0.01em', color: '#9CA3AF' }}>More</span>
       </button>
     </nav>
   );
