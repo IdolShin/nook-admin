@@ -15,7 +15,7 @@ export default function AdminLoading() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 'calc(50vh + 10vh)',
+        paddingTop: 'calc(50vh + 4vh)',
         background: 'linear-gradient(160deg, #E8F4EE 0%, #F0F7F3 50%, #EDF3EF 100%)',
         zIndex: 9999,
       }}
@@ -25,7 +25,7 @@ export default function AdminLoading() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 16,
+          gap: 20,
           transform: 'translateY(-50%)',
         }}
       >
@@ -46,7 +46,7 @@ export default function AdminLoading() {
         </div>
 
         {/* Subtle loading dots */}
-        <div style={{ display: 'flex', gap: 5, marginTop: 4 }}>
+        <div style={{ display: 'flex', gap: 5, marginTop: 14 }}>
           {[0, 1, 2].map((i) => (
             <div
               key={i}
