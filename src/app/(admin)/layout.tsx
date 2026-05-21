@@ -156,4 +156,54 @@ boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
 </div>
 
 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 12px' }}>
-<div style={{ fontSize: 16, 
+<div style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.01em' }}>More</div>
+          <button onClick={() => setMoreOpen(false)} style={{
+            width: 32, height: 32, border: 0, background: 'transparent',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6,
+          }}>
+            <X size={16} color="#5C5F66" />
+          </button>
+        </div>
+
+        {/* Groups */}
+        <div style={{ padding: '0 0 4px' }}>
+          {MORE_GROUPS.map((group) => (
+            <div key={group.label}>
+              <button onClick={() => toggleGroup(group.label)} style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 20px', border: 0, background: 'transparent', cursor: 'pointer',
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#B0B3BB', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{group.label}</span>
+                {expandedGroups[group.label] ? <ChevronDown size={14} color="#B0B3BB" /> : <ChevronRight size={14} color="#B0B3BB" />}
+              </button>
+              {expandedGroups[group.label] && (
+                <div style={{ padding: '0 12px 4px' }}>
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link key={item.href} href={item.href} style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '10px 12px', borderRadius: 10,
+                        color: '#1A1A1F', fontSize: 15, fontWeight: 500,
+                        textDecoration: 'none', transition: 'background 120ms',
+                      }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#F5F6FA'; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                      >
+                        <Icon size={18} color="#5C5F66" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <Toast />
+  </div>
+  );
+}

@@ -124,5 +124,5 @@ export const api = {
 
 export interface ApiBusiness { id: string; name: string; owner_email: string; plan: string; is_superadmin: boolean; page_permissions: Record<string, string> | null; created_at: string; }
 export interface ApiStaffUser { id: string; email: string; name: string; role: 'viewer' | 'editor' | 'admin'; page_permissions: Record<string, string>; is_active: boolean; created_at: string; }
-export interface ApiCoupon { id: string; title: string; description?: string; coupon_type: string; discount_value?: number; free_item_name?: string; terms?: string; trigger_type: string; trigger_config?: Record<string, unknown>; max_redemptions?: number; total_issued: number; total_redeemed: number; valid_days: number; expires_at?: string; is_active: boolean; color: string; created_at: string; }
-export interface ApiCouponPass { id: string; barcode: string; status: 'active' | 'redeemed' | 'expired'; issued_at: string; expires_at: string; redeemed_at?: string; wallet_link?: string; coupons?: ApiCoupon; customers?: { id: string; name: string; phone: string }; }
+export interface ApiCoupon { id: string; name: string; discount_type: 'percent' | 'fixed'; discount_value: number; trigger_type: string; valid_days: number; is_active: boolean; created_at: string; }
+export interface ApiCouponPass { id: string; coupon_id: string; customer_id: string; barcode: string; status: 'active' | 'used' | 'expired'; issued_at: string; expires_at: string | null; }
