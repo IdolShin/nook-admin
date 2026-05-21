@@ -62,7 +62,7 @@ const SPLASH_CSS = `
     top: 50%;
     width: 300px;
     height: 190px;
-    transform: translate(-50%, calc(-50% - 205px));
+    transform: translate(-50%, calc(-50% - 250px));
     z-index: 2;
     pointer-events: none;
   }
@@ -282,7 +282,7 @@ const SPLASH_CSS = `
     flex-direction: column;
     align-items: center;
     gap: 22px;
-    transform: translateY(-105px);
+    transform: translateY(-68px);
   }
   .nk-markwrap {
     position: relative;
