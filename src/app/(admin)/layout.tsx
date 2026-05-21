@@ -83,23 +83,13 @@ setMoreOpen(false);
 }, [pathname]);
 
 const bottomNavH = showDrawer ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : '0px';
+const mainOverflow = showDrawer && drawerOpen ? 'hidden' : 'auto';
 
-// Lock body scroll when mobile drawer is open.
-// We set overflow:hidden on body but do NOT set touchAction:none (that blocks sidebar scroll too).
-// The sidebar itself has overscrollBehavior:contain which prevents chain scrolling.
+// Only lock body scroll when drawer is open — no more setAttribute antipattern
 useEffect(() => {
-if (showDrawer && drawerOpen) {
-document.body.style.overflow = 'hidden';
-// Also freeze the main scroll container via a class
-document.getElementById('admin-main')?.setAttribute('style', `overflow:hidden;flex:1;background:#F5F7F6;padding-bottom:${bottomNavH}`);
-} else {
-document.body.style.overflow = '';
-document.getElementById('admin-main')?.setAttribute('style', `overflow:auto;flex:1;background:#F5F7F6;padding-bottom:${bottomNavH}`);
-}
-return () => {
-document.body.style.overflow = '';
-};
-}, [showDrawer, drawerOpen, bottomNavH]);
+document.body.style.overflow = (showDrawer && drawerOpen) ? 'hidden' : '';
+return () => { document.body.style.overflow = ''; };
+}, [showDrawer, drawerOpen]);
 
 function toggleGroup(label: string) {
 setExpandedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -126,7 +116,7 @@ boxShadow: drawerOpen ? '4px 0 32px rgba(0,0,0,0.18)' : 'none',
 
 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 <Topbar pathname={pathname} isMobile={showDrawer} onMenuClick={() => setDrawerOpen(true)} />
-<main id="admin-main" style={{ flex: 1, overflow: 'auto', background: '#F5F7F6', paddingBottom: bottomNavH }}>
+<main id="admin-main" style={{ flex: 1, overflow: mainOverflow, background: '#F5F7F6', paddingBottom: bottomNavH }}>
 {children}
 </main>
 </div>
