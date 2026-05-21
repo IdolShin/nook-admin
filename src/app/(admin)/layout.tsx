@@ -91,10 +91,10 @@ useEffect(() => {
 if (showDrawer && drawerOpen) {
 document.body.style.overflow = 'hidden';
 // Also freeze the main scroll container via a class
-document.getElementById('admin-main')?.setAttribute('style', 'overflow:hidden;flex:1;background:#F5F7F6;padding-bottom:calc(86px + env(safe-area-inset-bottom, 0px))');
+document.getElementById('admin-main')?.setAttribute('style', `overflow:hidden;flex:1;background:#F5F7F6;padding-bottom:${bottomNavH}`);
 } else {
 document.body.style.overflow = '';
-document.getElementById('admin-main')?.setAttribute('style', 'overflow:auto;flex:1;background:#F5F7F6;padding-bottom:calc(86px + env(safe-area-inset-bottom, 0px))');
+document.getElementById('admin-main')?.setAttribute('style', `overflow:auto;flex:1;background:#F5F7F6;padding-bottom:${bottomNavH}`);
 }
 return () => {
 document.body.style.overflow = '';

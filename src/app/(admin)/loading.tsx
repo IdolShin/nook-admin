@@ -15,7 +15,8 @@ export default function AdminLoading() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingBottom: 'calc(40px + env(safe-area-inset-bottom, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         background: 'linear-gradient(160deg, #E8F4EE 0%, #F0F7F3 50%, #EDF3EF 100%)',
         zIndex: 9999,
       }}
