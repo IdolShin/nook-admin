@@ -198,7 +198,7 @@ export default function DashboardPage() {
   const activityFeed = recentActivity.length > 0 ? recentActivity : [];
 
   return (
-    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 18 }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 18, minHeight: '100%', alignContent: 'start' }}>
       {/* KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         {displayStats.map((c, i) => (

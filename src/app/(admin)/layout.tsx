@@ -82,7 +82,7 @@ setDrawerOpen(false);
 setMoreOpen(false);
 }, [pathname]);
 
-const bottomNavH = showDrawer ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : '0px';
+const bottomNavH = showDrawer ? 'calc(86px + env(safe-area-inset-bottom, 0px))' : '0px';
 
 // Lock body scroll when mobile drawer is open.
 // We set overflow:hidden on body but do NOT set touchAction:none (that blocks sidebar scroll too).
@@ -91,10 +91,10 @@ useEffect(() => {
 if (showDrawer && drawerOpen) {
 document.body.style.overflow = 'hidden';
 // Also freeze the main scroll container via a class
-document.getElementById('admin-main')?.setAttribute('style', 'overflow:hidden;flex:1;background:#F5F7F6;padding-bottom:' + bottomNavH);
+document.getElementById('admin-main')?.setAttribute('style', 'overflow:hidden;flex:1;background:#F5F7F6;padding-bottom:calc(86px + env(safe-area-inset-bottom, 0px))');
 } else {
 document.body.style.overflow = '';
-document.getElementById('admin-main')?.setAttribute('style', 'overflow:auto;flex:1;background:#F5F7F6;padding-bottom:' + bottomNavH);
+document.getElementById('admin-main')?.setAttribute('style', 'overflow:auto;flex:1;background:#F5F7F6;padding-bottom:calc(86px + env(safe-area-inset-bottom, 0px))');
 }
 return () => {
 document.body.style.overflow = '';
