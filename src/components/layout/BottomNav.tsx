@@ -22,10 +22,10 @@ export default function BottomNav({ pathname, onMoreClick }: { pathname: string;
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30,
-      height: 'calc(60px + env(safe-area-inset-bottom, 0px))',
-      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      paddingLeft:  'env(safe-area-inset-left, 0px)',
-      paddingRight: 'env(safe-area-inset-right, 0px)',
+      height: 'calc(60px + var(--safe-bottom))',
+      paddingBottom: 'var(--safe-bottom)',
+      paddingLeft:  'var(--safe-left)',
+      paddingRight: 'var(--safe-right)',
       background: 'rgba(255,255,255,0.97)',
       backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
       borderTop: '0.5px solid rgba(235,235,235,0.9)',

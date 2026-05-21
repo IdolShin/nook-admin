@@ -82,7 +82,7 @@ setDrawerOpen(false);
 setMoreOpen(false);
 }, [pathname]);
 
-const bottomNavH = showDrawer ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : '0px';
+const bottomNavH = showDrawer ? 'calc(60px + var(--safe-bottom))' : '0px';
 const mainOverflow = showDrawer && drawerOpen ? 'hidden' : 'auto';
 
 // Only lock body scroll when drawer is open — no more setAttribute antipattern

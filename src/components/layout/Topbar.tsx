@@ -110,8 +110,8 @@ export default function Topbar({
       <header style={{
         display: 'flex', alignItems: 'center',
         padding: '0 16px',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        height: 'calc(52px + env(safe-area-inset-top, 0px))',
+        paddingTop: 'var(--safe-top)',
+        height: 'calc(52px + var(--safe-top))',
         gap: 10,
         borderBottom: '1px solid rgba(235,235,235,0.8)',
         background: 'rgba(255,255,255,0.96)',
