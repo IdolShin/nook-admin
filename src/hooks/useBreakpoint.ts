@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 export function useBreakpoint() {
-  const [w, setW] = useState(1200);
+  const [w, setW] = useState(0);
   useEffect(() => {
     setW(window.innerWidth);
     const handler = () => setW(window.innerWidth);

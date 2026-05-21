@@ -82,7 +82,7 @@ setDrawerOpen(false);
 setMoreOpen(false);
 }, [pathname]);
 
-const bottomNavH = showDrawer ? 'calc(86px + env(safe-area-inset-bottom, 0px))' : '0px';
+const bottomNavH = showDrawer ? 'calc(60px + env(safe-area-inset-bottom, 0px))' : '0px';
 
 // Lock body scroll when mobile drawer is open.
 // We set overflow:hidden on body but do NOT set touchAction:none (that blocks sidebar scroll too).
