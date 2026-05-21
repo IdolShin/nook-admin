@@ -439,7 +439,7 @@ function RegisterPageInner() {
           {/* Step tabs */}
           <div style={{ overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div style={{ display: 'flex', gap: 4, background: '#F0F1F4', borderRadius: 9, padding: 3, width: 'max-content', minWidth: '100%' }}>
-              {isPhone ? STEP_SHORT : STEP_LABELS}.map((s, i) => (
+              {(isPhone ? STEP_SHORT : STEP_LABELS).map((s, i) => (
                 <button key={i} onClick={() => setStep(i)} style={{
                   height: 28, padding: '0 10px', border: 0, borderRadius:7,
                   background: step === i ? 'white' : 'transparent',
@@ -487,7 +487,7 @@ function RegisterPageInner() {
                   </ul>
                   {cardId === null && (
                     <div style={{ marginTop: 10, padding: '10px 14px', background: '#FBEFD9', borderRadius: 9, fontSize: 12, color: '#C26B1F' }}>
-                      No card_id in URL. Add <code style={{ fontFamily: 'var(--font-mono)' }}]?card_id=YOUR_CARD_ID</code> to test the real API call.
+                      No card_id in URL. Add <code style={{ fontFamily: 'var(--font-mono)' }}>?card_id=YOUR_CARD_ID</code> to test the real API call.
                     </div>
                   )}
                 </>

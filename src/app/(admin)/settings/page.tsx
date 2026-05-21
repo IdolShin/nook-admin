@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, ChevronDown, ChevronRight, AlertTriangle, Check, Eye, EyeOff, Shield, Users, Briefcase, CreditCard, Zap, Star, ExternalLink, Link } from 'lucide-react';
+import { Plus, X, ChevronDown, ChevronRight, AlertTriangle, Check, Eye, EyeOff, Shield, Users, Briefcase, CreditCard, Zap } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { api, type ApiBusiness, type ApiStaffUser, type ApiCoupon, type ApiReviewConfig } from '@/lib/api';
+import { api, type ApiBusiness, type ApiStaffUser } from '@/lib/api';
 import { decodeToken } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/lib/toast';
@@ -302,263 +302,285 @@ function BizCard({ biz }: { biz: ApiBusiness }) {
   );
 }
 
-// ─── Google Review Settings panel ─────────────────────────────
-function GoogleReviewPanel() {
-  const [reviewUrl, setReviewUrl]       = useState('');
-  const [draftUrl, setDraftUrl]         = useState('');
-  const [editingUrl, setEditingUrl]     = useState(false);
-  const [savingUrl, setSavingUrl]       = useState(false);
+// ─── Settings card wrapper ─────────────────────────────────────
+function SCard({ title, desc, right, children, danger }: {
+  title: string; desc?: string; right?: React.ReactNode; children?: React.ReactNode; danger?: boolean;
+}) {
+  return (
+    <div style={{ background: 'white', borderRadius: 13, border: `1px solid ${danger ? '#F0D5DC' : '#EBEBEB'}`, padding: 22 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: desc ? 4 : 16 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: danger ? '#9C2848' : '#1A1A1F' }}>{title}</div>
+        {right}
+      </div>
+      {desc && <div style={{ fontSize: 12, color: '#5C5F66', marginBottom: 14 }}>{desc}</div>}
+      {children}
+    </div>
+  );
+}
 
-  const [config, setConfig]             = useState<ApiReviewConfig>({
-    enabled: false, reward_type: 'stamp', stamp_count: 1, coupon_id: null, days_to_wait: 3,
-  });
-  const [coupons, setCoupons]           = useState<ApiCoupon[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [savingCfg, setSavingCfg]       = useState(false);
+function FieldRow({ label, value, apiKey, readOnly }: {
+  label: string; value: string; apiKey?: string; readOnly?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { setDraft(value); }, [value]);
 
-  useEffect(() => {
-    (async () => {
+  async function handleSave() {
+    if (apiKey) {
+      setSaving(true);
       try {
-        const [cfgData, couponData] = await Promise.all([
-          api.getReviewConfig(),
-          api.coupons(),
-        ]);
-        setReviewUrl(cfgData.google_review_url || '');
-        setDraftUrl(cfgData.google_review_url || '');
-        setConfig(cfgData.review_reward_config);
-        setCoupons(couponData.filter((c) => c.is_active));
-      } catch { /* ignore */ }
-      setLoading(false);
-    })();
-  }, []);
-
-  async function saveUrl() {
-    setSavingUrl(true);
-    try {
-      const res = await api.updateReviewConfig({ google_review_url: draftUrl.trim() });
-      setReviewUrl(res.google_review_url || '');
-      setDraftUrl(res.google_review_url || '');
-      setEditingUrl(false);
-      toast('Review link saved', 'success');
-    } catch { toast('Failed to save link', 'error'); }
-    setSavingUrl(false);
+        await api.updateProfile({ [apiKey]: draft });
+        if (apiKey === 'name') localStorage.setItem('nook_biz', draft);
+        toast(`${label} updated`, 'success');
+        setEditing(false);
+      } catch { toast(`Failed to update ${label}`, 'error'); }
+      finally { setSaving(false); }
+    } else { setEditing(false); toast(`${label} updated`, 'success'); }
   }
-
-  async function saveConfig(patch: Partial<ApiReviewConfig>) {
-    const next = { ...config, ...patch };
-    setConfig(next);
-    setSavingCfg(true);
-    try {
-      const res = await api.updateReviewConfig({ review_reward_config: next });
-      setConfig(res.review_reward_config);
-      toast('Reward settings saved', 'success');
-    } catch { toast('Failed to save settings', 'error'); }
-    setSavingCfg(false);
-  }
-
-  const urlOk   = reviewUrl.trim().length > 0;
-  const inputSt: React.CSSProperties = {
-    width: '100%', padding: '8px 10px', fontSize: 13, fontFamily: 'inherit',
-    border: '1px solid #EBEBEB', borderRadius: 8, outline: 'none', background: 'white',
-    color: '#1A1A1F', boxSizing: 'border-box',
-  };
-
-  if (loading) return <div style={{ padding: '24px 0', textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading...</div>;
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
-
-      {/* ── Google Review URL card ── */}
-      <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 22 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <div style={{ fontSize: 15, fontWeight: 600 }}>Google Review Link</div>
-          {/* Status badge */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: urlOk ? '#E8F7F2' : '#FBF0E2', border: `1px solid ${urlOk ? '#C7E5D7' : '#EDD9AC'}` }}>
-            {urlOk
-              ? <><Check size={12} color="#085041" /><span style={{ fontSize: 11, color: '#085041', fontWeight: 600 }}>Link set</span></>
-              : <><AlertTriangle size={12} color="#8C5A11" /><span style={{ fontSize: 11, color: '#8C5A11', fontWeight: 600 }}>Link needed</span></>
-            }
-          </div>
-        </div>
-        <div style={{ fontSize: 12, color: '#5C5F66', marginBottom: 16 }}>
-          Google Maps {String.fromCharCode(8594)} Your business {String.fromCharCode(8594)} Reviews {String.fromCharCode(8594)} &ldquo;Get more reviews&rdquo; {String.fromCharCode(8594)} copy the short URL.
-        </div>
-
-        {!editingUrl ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #EBEBEB', background: urlOk ? '#F5FDFB' : '#F9FAFB', fontSize: 13, color: urlOk ? '#1D9E75' : '#8A8D94', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {urlOk ? reviewUrl : 'No link entered yet'}
-            </div>
-            {urlOk && (
-              <a href={reviewUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, height: 34, padding: '0 10px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', color: '#5C5F66', fontSize: 12, textDecoration: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                <ExternalLink size={12} /> Test
-              </a>
-            )}
-            <button onClick={() => { setDraftUrl(reviewUrl); setEditingUrl(true); }} style={{ height: 34, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', color: '#5C5F66' }}>
-              {urlOk ? 'Edit' : 'Add link'}
-            </button>
-          </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '1px solid #F0F0F2' }}>
+      <div style={{ fontSize: 12, color: '#8A8D94' }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+        {editing ? (
+          <>
+            <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false); }} autoFocus style={{ height: 26, padding: '0 8px', border: '1px solid #1D9E75', borderRadius: 6, fontSize: 13, fontFamily: 'inherit', outline: 'none', minWidth: 160 }} />
+            <button onClick={handleSave} disabled={saving} style={{ height: 26, padding: '0 8px', border: 0, background: saving ? '#8A8D94' : '#1D9E75', color: 'white', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 12, fontFamily: 'inherit' }}>{saving ? '…' : 'Save'}</button>
+            <button onClick={() => setEditing(false)} style={{ height: 26, padding: '0 8px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#8A8D94', fontFamily: 'inherit' }}>Cancel</button>
+          </>
         ) : (
-          <div style={{ display: 'grid', gap: 8 }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Link size={14} color="#8A8D94" style={{ position: 'absolute', left: 10, pointerEvents: 'none' }} />
-              <input
-                value={draftUrl}
-                onChange={(e) => setDraftUrl(e.target.value)}
-                placeholder="https://g.page/r/..."
-                style={{ ...inputSt, paddingLeft: 32 }}
-                autoFocus
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={saveUrl} disabled={savingUrl} style={{ height: 34, padding: '0 14px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, cursor: savingUrl ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                {savingUrl ? 'Saving...' : 'Save link'}
-              </button>
-              <button onClick={() => { setEditingUrl(false); setDraftUrl(reviewUrl); }} style={{ height: 34, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', color: '#5C5F66' }}>Cancel</button>
-            </div>
-          </div>
+          <>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{draft}</span>
+            {!readOnly && <button onClick={() => setEditing(true)} style={{ height: 26, padding: '0 8px', border: 0, background: 'transparent', cursor: 'pointer', fontSize: 12, color: '#8A8D94', fontFamily: 'inherit' }}>Edit</button>}
+          </>
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* ── Reward config card ── */}
-      <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 22 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <div style={{ fontSize: 15, fontWeight: 600 }}>Review Reward Settings</div>
-          {/* Toggle */}
-          <button
-            onClick={() => saveConfig({ enabled: !config.enabled })}
-            disabled={savingCfg}
-            style={{
-              width: 44, height: 24, borderRadius: 999, border: 0, cursor: 'pointer', padding: 0,
-              background: config.enabled ? '#1D9E75' : '#D4D6DC', position: 'relative', transition: 'background 200ms',
-            }}
+// ─── Main Page ─────────────────────────────────────────────────
+export default function SettingsPage() {
+  const router = useRouter();
+  const { isMobile } = useBreakpoint();
+  const [tab, setTab] = useState('workspace');
+  const [bizName, setBizName] = useState('');
+  const [bizEmail, setBizEmail] = useState('');
+  const [businesses, setBusinesses] = useState<ApiBusiness[]>([]);
+  const [loadingBiz, setLoadingBiz] = useState(false);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+
+  useEffect(() => {
+    const decoded = decodeToken();
+    if (!decoded || (!decoded.is_superadmin && decoded.is_staff)) {
+      router.replace('/dashboard');
+      return;
+    }
+    setIsSuperadmin(decoded.is_superadmin ?? false);
+    const stored = localStorage.getItem('nook_biz') ?? '';
+    setBizName(stored);
+    try {
+      const token = localStorage.getItem('nook_token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.email) setBizEmail(payload.email);
+      }
+    } catch { /* ignore */ }
+  }, [router]);
+
+  const loadBusinesses = useCallback(async () => {
+    setLoadingBiz(true);
+    try {
+      const data = await api.listBusinesses();
+      setBusinesses(data);
+    } catch { /* ignore */ }
+    setLoadingBiz(false);
+  }, []);
+
+  useEffect(() => {
+    if (tab === 'businesses' && isSuperadmin) loadBusinesses();
+  }, [tab, isSuperadmin, loadBusinesses]);
+
+  // Export alert count for topbar badge — write to localStorage
+  useEffect(() => {
+    localStorage.setItem('nook_alert_count', String(ALERT_COUNT));
+    window.dispatchEvent(new CustomEvent('nook:alerts', { detail: { count: ALERT_COUNT } }));
+  }, []);
+
+  const TABS: { key: string; label: string; icon: React.ElementType; alert?: boolean }[] = [
+    { key: 'workspace',    label: 'Workspace',    icon: Briefcase },
+    ...(isSuperadmin ? [{ key: 'businesses', label: 'Businesses', icon: Users }] : []),
+    { key: 'billing',      label: 'Billing',      icon: CreditCard },
+    { key: 'integrations', label: 'Integrations', icon: Zap, alert: ALERT_COUNT > 0 },
+  ];
+
+  return (
+    <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '200px 1fr', gap: isMobile ? 16 : 24 }}>
+      {/* Tab nav */}
+      <nav style={isMobile ? {
+        display: 'flex', gap: 2, overflowX: 'auto', padding: 3,
+        background: '#F0F1F4', borderRadius: 9, scrollbarWidth: 'none',
+      } : { display: 'grid', gap: 2, alignContent: 'start' }}>
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          return (
+            <button key={t.key} onClick={() => setTab(t.key)} style={{
+              padding: isMobile ? '6px 10px' : '8px 12px', border: 0, borderRadius: 8,
+              background: tab === t.key ? (isMobile ? 'white' : '#E8F7F2') : 'transparent',
+              color: tab === t.key ? (isMobile ? '#1A1A1F' : '#085041') : '#5C5F66',
+              fontWeight: tab === t.key ? 500 : 400,
+              textAlign: 'left', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              whiteSpace: 'nowrap', flexShrink: 0,
+              boxShadow: (isMobile && tab === t.key) ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              display: 'flex', alignItems: 'center', gap: 7, position: 'relative',
+            }}>
+              {!isMobile && <Icon size={14} />}
+              {t.label}
+              {t.alert && (
+                <span style={{ width: 7, height: 7, borderRadius: 999, background: '#E05050', display: 'inline-block', marginLeft: 2 }} />
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Content */}
+      <div style={{ display: 'grid', gap: 16 }}>
+
+        {/* WORKSPACE */}
+        {tab === 'workspace' && <>
+          <SCard title="Workspace" desc="Your business profile on Nook.">
+            <FieldRow label="Business name" value={bizName} apiKey="name" />
+            <FieldRow label="Owner email" value={bizEmail} apiKey="owner_email" />
+            <FieldRow label="Region" value="us-east-1" readOnly />
+            <FieldRow label="Timezone" value="America/New_York" readOnly />
+          </SCard>
+          <SCard title="Danger zone" danger>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>Delete workspace</div>
+                <div style={{ fontSize: 12, color: '#5C5F66' }}>Permanently deletes all businesses, cards, and customers.</div>
+              </div>
+              <button style={{ height: 32, padding: '0 12px', border: '1px solid #E5BCC9', borderRadius: 8, background: 'white', color: '#9C2848', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Delete</button>
+            </div>
+          </SCard>
+        </>}
+
+        {/* BUSINESSES (superadmin only) */}
+        {tab === 'businesses' && isSuperadmin && (
+          <SCard
+            title="Businesses"
+            desc="All businesses registered on Nook. Expand each to manage staff accounts."
           >
-            <div style={{
-              width: 18, height: 18, borderRadius: 999, background: 'white',
-              position: 'absolute', top: 3,
-              left: config.enabled ? 23 : 3,
-              transition: 'left 200ms',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-            }} />
-          </button>
-        </div>
-        <div style={{ fontSize: 12, color: '#5C5F66', marginBottom: 16 }}>
-          When enabled, customers are invited to leave a Google review after joining. After {config.days_to_wait} days, they automatically receive the reward with a push notification.
-        </div>
-
-        {!config.enabled && (
-          <div style={{ padding: '12px 14px', background: '#F5F6FA', borderRadius: 10, fontSize: 12, color: '#8A8D94', textAlign: 'center' }}>
-            Toggle on to configure the reward
-          </div>
+            {loadingBiz ? (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading businesses…</div>
+            ) : businesses.length === 0 ? (
+              <div style={{ padding: '24px 0', textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>No businesses found.</div>
+            ) : (
+              businesses.map((b) => <BizCard key={b.id} biz={b} />)
+            )}
+          </SCard>
         )}
 
-        {config.enabled && (
-          <div style={{ display: 'grid', gap: 16 }}>
-            {/* Days to wait */}
-            <div>
-              <div style={{ fontSize: 12, color: '#5C5F66', marginBottom: 6 }}>Days to wait before issuing reward</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {[1, 2, 3, 5, 7].map((d) => (
-                  <button key={d} onClick={() => saveConfig({ days_to_wait: d })} style={{
-                    height: 34, width: 46, border: `1px solid ${config.days_to_wait === d ? '#1D9E75' : '#EBEBEB'}`,
-                    borderRadius: 8, background: config.days_to_wait === d ? '#E8F7F2' : 'white',
-                    color: config.days_to_wait === d ? '#085041' : '#5C5F66',
-                    fontWeight: config.days_to_wait === d ? 600 : 400,
-                    fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-                  }}>{d}</button>
-                ))}
-                <span style={{ fontSize: 12, color: '#8A8D94', alignSelf: 'center', marginLeft: 4 }}>days</span>
+        {/* BILLING */}
+        {tab === 'billing' && <>
+          <SCard title="Current plan"
+            right={<button style={{ height: 32, padding: '0 12px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Upgrade to Pro</button>}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#E8F7F2', borderRadius: 10, marginTop: 8 }}>
+              <div style={{ flex: 1, lineHeight: 1.4 }}>
+                <div style={{ fontWeight: 500, color: '#085041' }}>Trial {String.fromCharCode(183)} 14 days left</div>
+                <div style={{ fontSize: 12, color: '#085041', opacity: 0.8 }}>Pro is $79/mo per business {String.fromCharCode(183)} unlimited cards, Apple Wallet, coupon system.</div>
               </div>
             </div>
-
-            {/* Reward type */}
-            <div>
-              <div style={{ fontSize: 12, color: '#5C5F66', marginBottom: 8 }}>Reward type</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                {[
-                  { val: 'stamp',          label: 'Stamps',        desc: 'Add stamps to card' },
-                  { val: 'coupon_percent', label: 'Discount %',    desc: 'Pick a coupon below' },
-                  { val: 'coupon',         label: 'Free item',     desc: 'Pick a coupon below' },
-                ].map((opt) => {
-                  const isActive = opt.val === 'stamp'
-                    ? config.reward_type === 'stamp'
-                    : config.reward_type === 'coupon';
-                  const handleClick = opt.val === 'stamp'
-                    ? () => saveConfig({ reward_type: 'stamp' })
-                    : () => saveConfig({ reward_type: 'coupon' });
-                  return (
-                    <button key={opt.val} onClick={handleClick} style={{
-                      padding: '10px 12px', borderRadius: 10, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
-                      border: `1px solid ${isActive ? '#1D9E75' : '#EBEBEB'}`,
-                      background: isActive ? '#E8F7F2' : 'white',
-                    }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: isActive ? '#085041' : '#1A1A1F' }}>{opt.label}</div>
-                      <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 2 }}>{opt.desc}</div>
-                    </button>
-                  );
-                })}
-              </div>
+            <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              {[
+                { plan: 'Basic', price: '$59/mo', features: 'Up to 100 customers, 1 card, stamps + Google Wallet' },
+                { plan: 'Pro', price: '$79/mo', features: 'Up to 500 customers, 3 cards, coupons, Apple Wallet' },
+                { plan: 'Premium', price: '$119/mo', features: 'Unlimited everything, analytics, priority support' },
+              ].map((p) => (
+                <div key={p.plan} style={{ padding: 12, borderRadius: 10, border: '1px solid #EBEBEB', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{p.plan}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#1D9E75', margin: '4px 0' }}>{p.price}</div>
+                  <div style={{ fontSize: 11, color: '#8A8D94' }}>{p.features}</div>
+                </div>
+              ))}
             </div>
+          </SCard>
+          <SCard title="Usage this month">
+            {[
+              { label: 'Active customers', used: 284, cap: 500 },
+              { label: 'Push notifications', used: 612, cap: 2000 },
+              { label: 'Wallet passes', used: 284, cap: 'Unlimited' },
+            ].map(({ label, used, cap }) => {
+              const pct = typeof cap === 'number' ? Math.min(100, (used / cap) * 100) : 30;
+              return (
+                <div key={label} style={{ padding: '10px 0', borderTop: '1px solid #F0F0F2' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                    <span>{label}</span>
+                    <span style={{ color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{used} / {cap}</span>
+                  </div>
+                  <div style={{ height: 6, background: '#F0F0F2', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: '#1D9E75', transition: 'width 400ms' }} />
+                  </div>
+                </div>
+              );
+            })}
+          </SCard>
+        </>}
 
-            {/* Stamp count */}
-            {config.reward_type === 'stamp' && (
-              <div>
-                <div style={{ fontSize: 12, color: '#5C5F66', marginBottom: 6 }}>Number of stamps to award</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {[1, 2, 3, 5].map((n) => (
-                    <button key={n} onClick={() => saveConfig({ stamp_count: n })} style={{
-                      height: 34, width: 46, border: `1px solid ${config.stamp_count === n ? '#1D9E75' : '#EBEBEB'}`,
-                      borderRadius: 8, background: config.stamp_count === n ? '#E8F7F2' : 'white',
-                      color: config.stamp_count === n ? '#085041' : '#5C5F66',
-                      fontWeight: config.stamp_count === n ? 600 : 400,
-                      fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-                    }}>{n}</button>
-                  ))}
-                  <span style={{ fontSize: 12, color: '#8A8D94', alignSelf: 'center', marginLeft: 4 }}>
-                    stamp{config.stamp_count !== 1 ? 's' : ''}
-                  </span>
+        {/* INTEGRATIONS */}
+        {tab === 'integrations' && (
+          <>
+            {ALERT_COUNT > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#FBF0E2', border: '1px solid #EDD9AC', borderRadius: 10 }}>
+                <AlertTriangle size={16} color="#8C5A11" />
+                <div style={{ fontSize: 13, color: '#8C5A11' }}>
+                  <strong>{ALERT_COUNT} integration{ALERT_COUNT !== 1 ? 's' : ''}</strong> need attention. See details below.
                 </div>
               </div>
             )}
-
-            {/* Coupon picker */}
-            {config.reward_type === 'coupon' && (
-              <div>
-                <div style={{ fontSize: 12, color: '#5C5F66', marginBottom: 6 }}>Select a coupon to award</div>
-                {coupons.length === 0 ? (
-                  <div style={{ padding: '12px 14px', background: '#FBF0E2', borderRadius: 10, fontSize: 12, color: '#8C5A11' }}>
-                    No active coupons found. Create one in the Coupons page first.
+            <SCard title="Integrations" desc="Status of all connected systems and APIs.">
+              {INTEGRATIONS.map((it, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 0', borderTop: i ? '1px solid #F0F0F2' : 'none' }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0, marginTop: 2,
+                    background: it.ok ? '#E8F7F2' : '#FBF0E2',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {it.ok
+                      ? <Check size={14} color="#085041" />
+                      : <AlertTriangle size={14} color="#8C5A11" />
+                    }
                   </div>
-                ) : (
-                  <div style={{ display: 'grid', gap: 6 }}>
-                    {coupons.map((c) => (
-                      <button key={c.id} onClick={() => saveConfig({ coupon_id: c.id })} style={{
-                        padding: '10px 14px', borderRadius: 10, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
-                        border: `1px solid ${config.coupon_id === c.id ? '#1D9E75' : '#EBEBEB'}`,
-                        background: config.coupon_id === c.id ? '#E8F7F2' : 'white',
-                        display: 'flex', alignItems: 'center', gap: 10,
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 500, fontSize: 14 }}>{it.n}</span>
+                      <span style={{
+                        fontSize: 11, padding: '2px 8px', borderRadius: 999,
+                        background: it.ok ? '#E8F7F2' : '#F0F1F4',
+                        color: it.ok ? '#085041' : '#5C5F66', fontWeight: 500,
                       }}>
-                        <div style={{ width: 10, height: 10, borderRadius: 999, background: c.color || '#1D9E75', flexShrink: 0 }} />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: 500, color: config.coupon_id === c.id ? '#085041' : '#1A1A1F' }}>{c.title}</div>
-                          <div style={{ fontSize: 11, color: '#8A8D94' }}>
-                            {c.coupon_type === 'percent' ? `${c.discount_value}% off` : c.coupon_type === 'fixed' ? `$${c.discount_value} off` : c.free_item_name || 'Free item'}
-                            {' '}{String.fromCharCode(183)}{' '}valid {c.valid_days} days
-                          </div>
-                        </div>
-                        {config.coupon_id === c.id && <Check size={14} color="#085041" />}
-                      </button>
-                    ))}
+                        {it.ok ? '● Connected' : '○ Not connected'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 2 }}>{it.d}</div>
+                    {!it.ok && it.note && (
+                      <div style={{ fontSize: 12, color: '#8C5A11', marginTop: 3 }}>⚠ {it.note}</div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Summary */}
-            {(config.reward_type === 'stamp' || (config.reward_type === 'coupon' && config.coupon_id)) && (
-              <div style={{ padding: '12px 14px', background: '#F0FAF6', border: '1px solid #C7E5D7', borderRadius: 10, fontSize: 12, color: '#085041' }}>
-                <strong>Active:</strong> Customers who click &ldquo;Leave a Review&rdquo; will receive{' '}
-                {config.reward_type === 'stamp'
-                  ? <strong>{config.stamp_count} stamp{config.stamp_count !== 1 ? 's' : ''}</strong>
-                  : <strong>{coupons.find((c) => c.id === config.coupon_id)?.title || 'the selected coupon'}</strong>
- 
+                  {!it.ok && (
+                    <button style={{ height: 30, padding: '0 10px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                      Connect
+                    </button>
+                  )}
+                </div>
+              ))}
+            </SCard>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -382,7 +382,6 @@ export default function ScanPage() {
                       ].map((s, i) => (
                         <div key={i} style={{ position: 'absolute', width: 28, height: 28, borderRadius: 4, animation: 'cornerPulse 2s ease-in-out infinite', ...s }} />
                       ))}
-                                          ))}
                       {cameraReady && (
                         <div style={{
                           position: 'absolute', left: 4, right: 4, height: 2,

@@ -159,7 +159,7 @@ export default function PushPage() {
     setSendResult('');
     try {
       const res = await api.broadcast(title, body);
-      setSendResult(`Sent · ${res.web_push_sent} push · ${res.wallet_updated} wallets updated`);
+      setSendResult(`Sent Â· ${res.web_push_sent} push Â· ${res.wallet_updated} wallets updated`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Send failed';
       try { setSendResult(`Error: ${JSON.parse(msg).error ?? msg}`); }
@@ -406,7 +406,7 @@ export default function PushPage() {
               <div style={{ background: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(10px)', borderRadius: 14, padding: 12, color: 'white' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <div style={{ width: 18, height: 18, borderRadius: 4, background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white' }}>n</div>
-                  <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>WALLET · NOOK</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>WALLET Â· NOOK</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.55 }}>now</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{title || 'Title'}</div>
