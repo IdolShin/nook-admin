@@ -72,11 +72,3 @@ export default function AdminLoading() {
     </div>
   );
 }
-transform: scale(1); }
-        }
-      `}</style>
-    </div>
-  );
-}
-;
-}
