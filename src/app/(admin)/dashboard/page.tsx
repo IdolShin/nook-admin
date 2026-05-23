@@ -8,6 +8,7 @@ import NookLineChart from '@/components/charts/NookLineChart';
 import Sparkline from '@/components/charts/Sparkline';
 import { Bell, Send, Users, CreditCard, Stamp, Gift, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { decodeToken } from '@/lib/permissions';
 
 /* ── KPI card definitions ─────────────────────────────── */
 const KPI_CONFIG = [
@@ -66,11 +67,17 @@ export default function DashboardPage() {
   const [stampsTrend,   setStampsTrend]   = useState<number[]>([]);
   const [redeemsTrend,  setRedeemsTrend]  = useState<number[]>([]);
   const [recentActivity, setRecentActivity] = useState<{ name: string; when: string; type: string }[]>([]);
-  const [bizName, setBizName] = useState('');
+  const [displayName, setDisplayName] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setBizName(localStorage.getItem('nook_biz') ?? 'Nook');
+      const decoded = decodeToken();
+      const isSuperadmin = decoded?.is_superadmin ?? false;
+      if (isSuperadmin && decoded?.name) {
+        setDisplayName(decoded.name);
+      } else {
+        setDisplayName(localStorage.getItem('nook_biz') ?? 'Nook');
+      }
     }
     api.stats()
       .then(s => { setCustomerCount(s.total_customers); setCardCount(s.active_cards); setTotalStamps(s.total_stamps); setTotalRedeems(s.total_redemptions); })
@@ -106,7 +113,7 @@ export default function DashboardPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
-            {greeting()}, {bizName} {String.fromCharCode(128075)}
+            {greeting()}, {displayName} {String.fromCharCode(128075)}
           </h1>
           <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>{todayLabel()}</div>
         </div>
@@ -127,24 +134,20 @@ export default function DashboardPage() {
           const spark = kpiSparks[i] ?? [];
           const Icon = c.icon;
           return (
-            <Card key={c.key} style={{ padding: '20px 20px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 11, background: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+            <Card key={c.key} style={{ padding: '16px 18px 14px' }}>
+              {/* Top row: icon + big number */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 11, background: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', flexShrink: 0 }}>
                   <Icon size={18} color={c.iconColor} />
                 </div>
-                {val !== null && val > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#E8F7F2', borderRadius: 999, padding: '3px 8px' }}>
-                    <TrendingUp size={10} color="#085041" />
-                    <span style={{ fontSize: 10, fontWeight: 600, color: '#085041' }}>+--</span>
-                  </div>
-                )}
+                <div style={{ fontSize: isMobile ? 26 : 28, fontWeight: 800, color: '#1A1A1F', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                  {val !== null ? val.toLocaleString() : '—'}
+                </div>
               </div>
-              <div style={{ fontSize: isMobile ? 26 : 30, fontWeight: 800, color: '#1A1A1F', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                {val !== null ? val.toLocaleString() : '—'}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 8 }}>
-                <div style={{ fontSize: 12, color: '#8A8D94' }}>{c.label}</div>
-                {spark.length > 1 && <Sparkline values={spark} color={c.sparkColor} w={60} h={20} />}
+              {/* Bottom row: label + sparkline */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: '#5C5F66' }}>{c.label}</div>
+                {spark.length > 1 && <Sparkline values={spark} color={c.sparkColor} w={56} h={20} />}
               </div>
             </Card>
           );
