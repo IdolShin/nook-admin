@@ -359,13 +359,9 @@ export default function Homepage() {
                   {t('대시보드 →', 'Dashboard →', lang)}
                 </Link>
               ) : (
-                <button
-                  className="btn btn-primary"
-                  style={{ height: 38 }}
-                  onClick={() => setContactOpen(true)}
-                >
+                <Link href="/contact" className="btn btn-primary" style={{ height: 38 }}>
                   {t('문의하기', 'Contact us', lang)}
-                </button>
+                </Link>
               )}
             </div>
             <button
@@ -411,9 +407,9 @@ export default function Homepage() {
               {t('대시보드 →', 'Dashboard →', lang)}
             </Link>
           ) : (
-            <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setMenuOpen(false); setContactOpen(true); }}>
+            <Link href="/contact" className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setMenuOpen(false)}>
               {t('문의하기 →', 'Contact us →', lang)}
-            </button>
+            </Link>
           )}
         </div>
       </div>
@@ -762,48 +758,49 @@ export default function Homepage() {
               <div
                 className="visual"
                 style={{
-                  background: 'linear-gradient(135deg, #FFE4D2 0%, #F9CFB4 100%)',
+                  background: 'linear-gradient(135deg, #1A2540 0%, #0D1B2E 100%)',
                   padding: 22,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <div
-                  style={{
-                    background: 'white',
-                    borderRadius: 12,
-                    padding: 14,
-                    boxShadow: '0 8px 22px rgba(0,0,0,0.10)',
-                    width: 200,
-                    position: 'relative',
-                  }}
-                >
+                {/* Push notification mockup */}
+                <div style={{ width: 210 }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8, textAlign: 'center', letterSpacing: '0.06em' }}>
+                    {t('잠금화면 알림', 'Lock screen notification', lang)}
+                  </div>
                   <div
                     style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: '#C26B1F',
-                      letterSpacing: '0.12em',
+                      background: 'rgba(255,255,255,0.13)',
+                      backdropFilter: 'blur(10px)',
+                      borderRadius: 14,
+                      padding: '11px 13px',
+                      color: 'white',
+                      boxShadow: '0 4px 18px rgba(0,0,0,0.25)',
                     }}
                   >
-                    {t('오늘 한정', 'TODAY ONLY', lang)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: 5, background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white', flexShrink: 0 }}>n</div>
+                      <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.85, flex: 1 }}>NOOK WALLET</span>
+                      <span style={{ fontSize: 10, opacity: 0.45 }}>now</span>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, marginBottom: 3 }}>
+                      {t('⭐ 리뷰 감사해요!', '⭐ Thanks for your review!', lang)}
+                    </div>
+                    <div style={{ fontSize: 11, opacity: 0.8, lineHeight: 1.45 }}>
+                      {t('구글 리뷰 확인 완료 — 10% 할인쿠폰이 지금 바로 월렛에 도착했어요 🎁', 'Google review verified — your 10% off coupon is now in your wallet 🎁', lang)}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4, letterSpacing: '-0.02em' }}>
-                    50% OFF
+                  {/* Coupon badge below */}
+                  <div style={{ marginTop: 10, background: 'rgba(29,158,117,0.22)', border: '1px solid rgba(29,158,117,0.45)', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontSize: 18 }}>🎟️</div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#5CFBB8' }}>10% OFF</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)' }}>{t('다음 방문 시 사용', 'Valid on next visit', lang)}</div>
+                    </div>
+                    <div style={{ marginLeft: 'auto', height: 28, width: 60, background: 'repeating-linear-gradient(90deg,rgba(255,255,255,0.7) 0,rgba(255,255,255,0.7) 1.5px,transparent 1.5px,transparent 3px)', borderRadius: 3 }} />
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-2)', marginTop: 2 }}>
-                    {t('모든 음료 메뉴', 'All drinks', lang)}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 10,
-                      height: 26,
-                      background:
-                        'repeating-linear-gradient(90deg, #000 0, #000 1.5px, transparent 1.5px, transparent 3px)',
-                      borderRadius: 3,
-                    }}
-                  />
                 </div>
               </div>
               <div className="row gap-2" style={{ marginBottom: 6 }}>
@@ -820,11 +817,11 @@ export default function Homepage() {
                   Coupons
                 </span>
               </div>
-              <h3>{t('사장님이 직접 보내는 특별 할인', 'Exclusive deals sent by you', lang)}</h3>
+              <h3>{t('구글 리뷰 한 줄이 쿠폰이 됩니다', 'A Google review becomes a coupon', lang)}</h3>
               <p>
                 {t(
-                  '주말 할인, BOGO, 무료 메뉴 쿠폰을 단골에게 직접 발송. 월렛에 바로 저장되고, 매장에서 바코드로 사용합니다.',
-                  'Weekend deals, BOGO, free items — sent directly. Saved to wallet, redeemed by barcode scan.',
+                  '손님이 구글 리뷰를 남기면 10% 할인쿠폰이 자동 발급됩니다. 쿠폰은 월렛에 저장되고, 다음 방문 때 바코드로 바로 사용할 수 있어요.',
+                  'When a customer leaves a Google review, a 10% discount coupon is issued automatically — saved to their wallet, redeemed by barcode on their next visit.',
                   lang
                 )}
               </p>
@@ -1475,15 +1472,15 @@ export default function Homepage() {
             <div className="modal-body">
               {/* Quick channels */}
               <div className="channel-row">
-                <a className="channel-card" href="mailto:hello@nook.app">
+                <a className="channel-card" href="mailto:info.tgtm@gmail.com">
                   <div className="ico">📧</div>
                   <div className="lbl">{t('바로 이메일', 'Email directly', lang)}</div>
-                  <div className="val">hello@nook.app</div>
+                  <div className="val">info.tgtm@gmail.com</div>
                 </a>
-                <a className="channel-card" href="sms:+12015551234">
+                <a className="channel-card" href="sms:+12012336184">
                   <div className="ico">💬</div>
                   <div className="lbl">{t('문자 메시지', 'Text message', lang)}</div>
-                  <div className="val">+1 (201) 555-1234</div>
+                  <div className="val">+1 (201) 233-6184</div>
                 </a>
               </div>
 
