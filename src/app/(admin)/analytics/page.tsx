@@ -30,7 +30,7 @@ function KpiCard({
   delta?: string; up?: boolean; icon: React.ElementType; loading?: boolean;
 }) {
   return (
-    <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 18 }}>
+    <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontSize: 12, color: '#8A8D94' }}>{label}</div>
         <div style={{ width: 28, height: 28, borderRadius: 8, background: '#F0F1F4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -208,15 +208,15 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 600, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
             Analytics
             {isSuperadmin && selectedBiz && (
-              <span style={{ fontSize: 13, fontWeight: 400, color: '#8A8D94', marginLeft: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 400, color: '#8A8D94', marginLeft: 10 }}>
                 {selectedBiz.name}
               </span>
             )}
-          </div>
-          <div style={{ fontSize: 12, color: '#8A8D94', marginTop: 2 }}>Last 30 days real-time data</div>
+          </h1>
+          <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Last 30 days real-time data</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {isSuperadmin && !bizLoading && businesses.length > 0 && (
@@ -256,7 +256,7 @@ export default function AnalyticsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr', gap: 16 }}>
 
         {/* Stamps by day */}
-        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0 }}>
+        <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 0 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #F0F0F2' }}>
             <div className="section-title">Visit activity</div>
             <div style={{ fontSize: 12, color: '#8A8D94' }}>Stamps by day of week, last 30 days</div>
@@ -281,7 +281,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Funnel */}
-        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0 }}>
+        <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 0 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #F0F0F2' }}>
             <div className="section-title">Loyalty funnel</div>
             <div style={{ fontSize: 12, color: '#8A8D94' }}>Customer journey</div>
@@ -307,7 +307,7 @@ export default function AnalyticsPage() {
 
       {/* Coupon summary */}
       {data && data.coupons_issued > 0 && (
-        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0 }}>
+        <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 0 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #F0F0F2' }}>
             <div className="section-title">Coupon performance</div>
             <div style={{ fontSize: 12, color: '#8A8D94' }}>All-time</div>

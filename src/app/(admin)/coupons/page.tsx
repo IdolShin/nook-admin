@@ -573,10 +573,25 @@ export default function CouponsPage() {
 
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
+      {/* Page header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Coupons</h1>
+          <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Create and manage loyalty rewards</div>
+        </div>
+        <button onClick={() => setShowCreate(true)} style={{
+          display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px',
+          background: '#1D9E75', color: 'white', border: 0, borderRadius: 9,
+          fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+          boxShadow: '0 2px 8px rgba(29,158,117,0.35)', flexShrink: 0,
+        }}>
+          + New coupon
+        </button>
+      </div>
       {/* KPI stat cards */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         {STAT_CARDS.map((s, i) => (
-          <div key={i} style={{ background: s.grad, borderRadius: 13, border: '1px solid rgba(0,0,0,0.04)', padding: 20 }} className="fadeup">
+          <div key={i} style={{ background: s.grad, borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: 20 }} className="fadeup">
             <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(20,30,30,0.65)' }}>{s.label}</div>
             <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.025em', marginTop: 8, color: '#1A1A1F' }}>{s.value}</div>
             <div style={{ fontSize: 11, marginTop: 4, color: 'rgba(20,30,30,0.55)' }}>{s.sub}</div>
@@ -589,7 +604,7 @@ export default function CouponsPage() {
         {/* Left: coupon list */}
         <div style={{ display: 'grid', gap: 10 }}>
           {coupons.length === 0 ? (
-            <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 48, textAlign: 'center' }}>
+            <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 48, textAlign: 'center' }}>
               <div style={{ fontSize: 16, fontWeight: 600 }}>No coupons yet</div>
               <div style={{ fontSize: 13, color: '#5C5F66', marginTop: 4 }}>Create your first coupon to start issuing passes.</div>
               <button onClick={() => setShowCreate(true)} style={{ marginTop: 16, height: 36, padding: '0 16px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -623,7 +638,7 @@ export default function CouponsPage() {
           </button>
 
           {/* Auto-triggers */}
-          <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0 }}>
+          <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 0 }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #F0F0F2' }}>
               <div className="section-title">Auto-triggers</div>
               <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 2 }}>Issue coupons automatically</div>
@@ -646,7 +661,7 @@ export default function CouponsPage() {
           </div>
 
           {/* Recent activity */}
-          <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0 }}>
+          <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 0 }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #F0F0F2' }}>
               <div className="section-title">Recent redemptions</div>
             </div>

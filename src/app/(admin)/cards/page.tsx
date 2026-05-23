@@ -300,11 +300,10 @@ function CardTile({ card, selected, onSelect }: { card: Card; selected: boolean;
     <div
       onClick={onSelect}
       style={{
-        background: 'white', borderRadius: 13,
-        border: `1px solid ${selected ? '#1D9E75' : '#EBEBEB'}`,
+        background: 'white', borderRadius: 16,
+        border: `2px solid ${selected ? '#1D9E75' : 'transparent'}`,
+        boxShadow: selected ? '0 0 0 2px #1D9E75, 0 1px 4px rgba(0,0,0,0.06)' : '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
         padding: 14, cursor: 'pointer',
-        outline: selected ? '2px solid #1D9E75' : '2px solid transparent',
-        outlineOffset: -1,
         transition: 'transform 160ms ease, box-shadow 160ms ease',
       }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 22px rgba(0,0,0,0.06)'; }}
@@ -357,7 +356,7 @@ function CardsTable({ rows, selectedId, onSelect }: { rows: Card[]; selectedId: 
         {rows.map((c) => (
           <div key={c.id} onClick={() => onSelect(c)} style={{
             background: 'white', borderRadius: 12,
-            border: `1px solid ${selectedId === c.id ? '#1D9E75' : '#EBEBEB'}`,
+            boxShadow: selectedId === c.id ? '0 0 0 2px #1D9E75, 0 1px 4px rgba(0,0,0,0.06)' : '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
             padding: '12px 14px', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 12,
           }}>
@@ -379,7 +378,7 @@ function CardsTable({ rows, selectedId, onSelect }: { rows: Card[]; selectedId: 
     );
   }
   return (
-    <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
+    <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
       <div className="table-scroll">
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
@@ -446,7 +445,7 @@ function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => vo
   };
 
   return (
-    <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0, position: 'sticky', top: 84 }} className="fadeup">
+    <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 0, position: 'sticky', top: 84 }} className="fadeup">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid #F0F0F2' }}>
         <div style={{ display: 'flex', gap: 8 }}>
           <StatusPill status={card.status} />
@@ -600,8 +599,8 @@ export default function CardsPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.015em' }}>Loyalty cards</div>
-          <div style={{ fontSize: 13, color: '#5C5F66' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Loyalty cards</h1>
+          <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 3 }}>
             {loading ? 'Loading…' : `${totals.total} cards ${String.fromCharCode(183)} ${totals.active} active ${String.fromCharCode(183)} ${totals.issued.toLocaleString()} total issued`}
           </div>
         </div>

@@ -70,7 +70,7 @@ function StatusPill({ status }: { status: string }) {
 
 function KPI({ label, value, delta, up, warn }: { label: string; value: string; delta: string; up?: boolean; warn?: boolean }) {
   return (
-    <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 16 }}>
+    <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 16 }}>
       <div style={{ fontSize: 12, color: '#8A8D94' }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.025em', marginTop: 6 }}>{value}</div>
       <div style={{ fontSize: 11, marginTop: 6, color: warn ? '#9C2848' : up ? '#0D6B45' : '#8A8D94' }}>{delta}</div>
@@ -181,7 +181,7 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { custo
   }, [customer.id, activeTab]);
 
   return (
-    <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 0, position: 'sticky', top: 84 }} className="fadeup">
+    <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 0, position: 'sticky', top: 84 }} className="fadeup">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid #F0F0F2' }}>
         <StatusPill status={customer.status} />
         <button onClick={onClose} style={{ height: 26, width: 26, border: 0, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -413,6 +413,12 @@ export default function CustomersPage() {
       {showCouponPicker && selected && (
         <CouponPickerModal customer={selected} onClose={() => setShowCouponPicker(false)} />
       )}
+      {/* Page header */}
+      <div>
+        <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Customers</h1>
+        <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Manage and track your loyalty members</div>
+      </div>
+
       {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         <KPI label="Total customers" value={allCustomers.length.toString()} delta={`${allCustomers.length} total`} up />
@@ -422,7 +428,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 12 }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 10px', background: '#F5F6FA', borderRadius: 8, flex: '1 1 280px', minWidth: 220 }}>
           <Search size={14} color="#8A8D94" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, phone..."
@@ -455,7 +461,7 @@ export default function CustomersPage() {
 
       {/* Body */}
       <div style={{ display: 'grid', gridTemplateColumns: (selected && !isMobile) ? '1fr 380px' : '1fr', gap: 16, alignItems: 'start' }}>
-        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', overflow: 'hidden' }}>
+        <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           {loading ? (
             <div style={{ padding: 48, textAlign: 'center', color: '#8A8D94', fontSize: 13 }}>Loading customers…</div>
           ) : rows.length === 0 && !q ? (

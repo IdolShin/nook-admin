@@ -83,7 +83,7 @@ export const api = {
   couponPasses: (customerId: string) => req<{ passes: ApiCouponPass[] }>(`/api/coupons/passes/${customerId}`).then((d) => d.passes),
   scanStamp: (code: string, scanType: 'qr' | 'barcode' = 'barcode') => req<{ success: boolean; customer_name: string; new_stamps: number; goal_stamps: number; reward_ready: boolean; message: string }>('/api/scan', { method: 'POST', body: JSON.stringify({ code, scan_type: scanType }) }),
   customerLookup: (code: string, type: 'qr' | 'barcode' = 'barcode') => req<{ customer: { id: string; name: string; wallet_type: string; card: { name: string; goal_stamps: number; reward_desc: string }; current_stamps: number; goal_stamps: number; rewards_earned: number } }>(`/api/customers/lookup?code=${encodeURIComponent(code)}&type=${type}`),
-  stats: () => req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>('/api/stats'),
+  stats: (bizId?: string) => req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>(`/api/stats${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),
   analytics: (bizId?: string) => req<ApiAnalytics>(`/api/analytics${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),
   updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string; phone?: string; address?: string }) => req<{ business: { id: string; name: string; owner_email: string; plan: string } }>('/api/auth/me', { method: 'PATCH', body: JSON.stringify(data) }),
 

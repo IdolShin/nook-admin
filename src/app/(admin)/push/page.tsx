@@ -177,12 +177,19 @@ export default function PushPage() {
 
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
+      {/* Page header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Push notifications</h1>
+          <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Send messages directly to your customers</div>
+        </div>
+      </div>
       <Seg tabs={['compose', 'history', 'templates']} active={tab} setActive={setTab} />
 
       {tab === 'compose' && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 16, alignItems: 'start' }}>
           {/* Form */}
-          <div style={{ background: 'white', borderRadius: 13, border: '1px solid #D4E6DB', padding: 22 }}>
+          <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 22 }}>
             <FormSection title="From business">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <button style={{
@@ -414,7 +421,7 @@ export default function PushPage() {
               </div>
             </div>
 
-            <div style={{ background: 'white', borderRadius: 13, border: '1px solid #D4E6DB', padding: 16, marginTop: 12 }}>
+            <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 16, marginTop: 12 }}>
               <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>Estimated impact</div>
               {[['Reach', reach.toString()], ['Estimated opens', Math.round(reach * 0.62).toString()], ['Visits driven (avg)', Math.round(reach * 0.18).toString()]].map(([l, v]) => (
                 <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
@@ -428,7 +435,7 @@ export default function PushPage() {
       )}
 
       {tab === 'history' && (
-        <div style={{ background: 'white', borderRadius: 13, border: '1px solid #D4E6DB', overflow: 'hidden' }}>
+        <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#F2FAF6' }}>
@@ -456,7 +463,7 @@ export default function PushPage() {
       {tab === 'templates' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: 12 }}>
           {TEMPLATES.map((tpl, i) => (
-            <div key={i} style={{ background: 'white', borderRadius: 13, border: '1px solid #D4E6DB', padding: 14 }}>
+            <div key={i} style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 14 }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{tpl.t}</div>
               <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 6, lineHeight: 1.45 }}>{tpl.b}</div>
               <button onClick={() => { setTitle(tpl.t); setBody(tpl.b); setTab('compose'); }} style={{ marginTop: 12, height: 28, padding: '0 10px', border: '1px solid #D4E6DB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Use template</button>
