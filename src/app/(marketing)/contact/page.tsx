@@ -399,9 +399,9 @@ export default function ContactPage() {
               {t('요금제', 'Plans', lang)}
             </div>
             {[
-              { name: 'Basic',   price: '$59', desc: t('고객 100명, 카드 1종', '100 customers, 1 card', lang) },
-              { name: 'Pro',     price: '$79', desc: t('고객 500명, 카드 3종', '500 customers, 3 cards', lang) },
-              { name: 'Premium', price: '$119', desc: t('무제한', 'Unlimited', lang) },
+              { name: 'Basic',   price: '$79',  desc: t('고객 100명, 카드 1종', '100 customers, 1 card', lang) },
+              { name: 'Pro',     price: '$99',  desc: t('고객 500명, 리뷰쿠폰(제한)', '500 customers, review coupon', lang) },
+              { name: 'Premium', price: '$129', desc: t('무제한 + 마케팅 자동화', 'Unlimited + automation', lang) },
             ].map(p => (
               <div key={p.name} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',

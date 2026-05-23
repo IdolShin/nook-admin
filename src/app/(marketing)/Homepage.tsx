@@ -1090,7 +1090,7 @@ export default function Homepage() {
             {/* Basic */}
             <div className="price-card reveal">
               <div className="name">{t('베이직', 'Basic', lang)}</div>
-              <div className="price">$59<small> /mo</small></div>
+              <div className="price">$79<small> /mo</small></div>
               <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4 }}>
                 {t('처음 시작하는 매장', 'Just getting started', lang)}
               </div>
@@ -1115,7 +1115,7 @@ export default function Homepage() {
             <div className="price-card featured reveal" style={{ transitionDelay: '80ms' }}>
               <div className="badge-featured">{t('인기', 'Popular', lang)}</div>
               <div className="name">{t('프로', 'Pro', lang)}</div>
-              <div className="price">$79<small> /mo</small></div>
+              <div className="price">$99<small> /mo</small></div>
               <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4 }}>
                 {t('안정적으로 운영하는 매장', 'Growing businesses', lang)}
               </div>
@@ -1124,7 +1124,7 @@ export default function Homepage() {
                 <li>{t('고객 500명까지', 'Up to 500 customers', lang)}</li>
                 <li>Apple + Google Wallet</li>
                 <li>{t('푸시 알림 주 1회', '1 push notification / week', lang)}</li>
-                <li>{t('자동 마케팅 캠페인', 'Automated campaigns', lang)}</li>
+                <li>{t('구글 리뷰 시 쿠폰 (제한적)', 'Google review coupon (limited)', lang)}</li>
                 <li>{t('전체 분석 대시보드', 'Full analytics dashboard', lang)}</li>
                 <li>{t('우선 지원', 'Priority support', lang)}</li>
               </ul>
@@ -1140,18 +1140,17 @@ export default function Homepage() {
             {/* Premium */}
             <div className="price-card reveal" style={{ transitionDelay: '160ms' }}>
               <div className="name">{t('프리미엄', 'Premium', lang)}</div>
-              <div className="price">$119<small> /mo</small></div>
+              <div className="price">$129<small> /mo</small></div>
               <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4 }}>
-                {t('여러 지점·프랜차이즈', 'Multi-location · franchise', lang)}
+                {t('최대 성장을 원하는 매장', 'Maximum growth, full power', lang)}
               </div>
               <ul>
                 <li>{t('적립카드 무제한 (커스터마이징)', 'Unlimited cards (custom design)', lang)}</li>
                 <li>{t('고객 무제한', 'Unlimited customers', lang)}</li>
-                <li>{t('여러 지점 지원', 'Multi-location support', lang)}</li>
-                <li>{t('푸시 광고 알림 무제한', 'Unlimited push notifications', lang)}</li>
-                <li>{t('AI 마케팅 에이전트 (데이터 기반)', 'AI Marketing Agent (data-driven)', lang)}</li>
-                <li>{t('모든 자동화 기능', 'All automation features', lang)}</li>
-                <li>{t('전담 매니저', 'Dedicated manager', lang)}</li>
+                <li>{t('구글 리뷰 쿠폰 최대 지원', 'Google review coupon (unlimited)', lang)}</li>
+                <li>{t('푸시 알림 무제한', 'Unlimited push notifications', lang)}</li>
+                <li>{t('고객 심층 데이터 분석 제공', 'In-depth customer data analytics', lang)}</li>
+                <li>{t('마케팅 자동화 기능 제공', 'Marketing automation features', lang)}</li>
               </ul>
               <button
                 className="btn"
