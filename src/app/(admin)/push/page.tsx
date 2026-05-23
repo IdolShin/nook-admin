@@ -7,12 +7,36 @@ import { api, ApiCustomer } from '@/lib/api';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 const TEMPLATES = [
-  { t: 'Welcome new customer',   b: 'Hey {name}, welcome to {business}! Your first stamp is on us \u{1F389}' },
-  { t: 'Win-back lapsing',       b: 'We miss you, {name}. Come back this week for 15% off.' },
-  { t: 'Reward unlocked',        b: '\u{1F381} You\'ve earned a free {reward}! Show this card to redeem.' },
-  { t: 'New product drop',       b: 'Just launched at {business}: come check it out.' },
-  { t: 'Birthday treat',         b: 'Happy birthday, {name}! Free {reward} on us today only.' },
-  { t: 'Weekend boost',          b: 'Double stamps all weekend. See you soon â' },
+  {
+    emoji: '☕',
+    t: '오늘 더블 스탬프!',
+    b: '오늘 하루만! 모든 방문 고객님께 스탬프 2배 제공합니다. 오늘 꼭 나오세요!',
+    audience: 'all',
+  },
+  {
+    emoji: '🎁',
+    t: '리워드 달성했어요!',
+    b: '축하합니다! 스탬프를 모두 모으셨습니다. 매장 방문 시 카드를 보여주세요 — 리워드를 받으실 수 있습니다!',
+    audience: 'active',
+  },
+  {
+    emoji: '👋',
+    t: '오래만이에요~',
+    b: '바쁘셨나요? 다시 방문해 주시면 다음 방문시 보너스 스탬프를 드립니다! 기다리고 있습니다 :)',
+    audience: 'inactive',
+  },
+  {
+    emoji: '🎉',
+    t: '신규 가입 환영합니다!',
+    b: '우리 매장에 첫 방문하셨군요! 첫 방문 고객님께 첫 스탬프 무료 제공합니다. 꼭 오세요!',
+    audience: 'new',
+  },
+  {
+    emoji: '📢',
+    t: '새 메뉴 출시!',
+    b: '기다리던 신메뉴가 드디어 나왔습니다! 직접 방문해서 첫 번째로 맛봐보세요.',
+    audience: 'all',
+  },
 ];
 
 interface Draft {
@@ -83,6 +107,22 @@ export default function PushPage() {
       setDrafts(Array.isArray(saved) ? saved : []);
     } catch {}
   }, []);
+
+  // Audience group helpers
+  const daysSince = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  const AUDIENCE_GROUPS = [
+    { id: 'all',      label: 'All',      color: '#1D9E75', filterFn: (_c: ApiCustomer) => true },
+    { id: 'new',      label: 'New',      color: '#3B82F6', filterFn: (c: ApiCustomer)  => daysSince(c.created_at) < 30 },
+    { id: 'active',   label: 'Active',   color: '#085041', filterFn: (c: ApiCustomer)  => (c.total_stamps ?? 0) > 0 },
+    { id: 'inactive', label: 'Inactive', color: '#E05050', filterFn: (c: ApiCustomer)  => (c.total_stamps ?? 0) === 0 },
+  ];
+
+  function selectGroup(filterId: string) {
+    const group = AUDIENCE_GROUPS.find(g => g.id === filterId);
+    if (!group) return;
+    const matching = customers.filter(group.filterFn);
+    setSelectedIds(new Set(matching.map(c => c.id)));
+  }
 
   const filteredCustomers = customers.filter((c) =>
     c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
@@ -166,9 +206,9 @@ export default function PushPage() {
           <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Push notifications</h1>
           <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Send messages directly to your customers</div>
         </div>
-        <button onClick={() => setTab('compose')}
+        <button onClick={() => { setTitle(''); setBody(''); setSendResult(''); setTab('compose'); }}
           style={{ display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}>
-          <Plus size={16} />{!isMobile && ' New push'}
+          <Plus size={16} /> New Push
         </button>
       </div>
 
@@ -211,6 +251,31 @@ export default function PushPage() {
               title="Audience"
               hint={<span style={{ color: '#1D9E75', fontWeight: 500 }}>{reach} selected</span>}
             >
+              {/* Group quick-select buttons */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+                {AUDIENCE_GROUPS.map((g) => {
+                  const count = customers.filter(g.filterFn).length;
+                  return (
+                    <button
+                      key={g.id}
+                      onClick={() => selectGroup(g.id)}
+                      style={{
+                        height: 34, border: 0, borderRadius: 8, cursor: 'pointer',
+                        fontFamily: 'inherit', background: g.color, color: 'white',
+                        fontSize: 12, fontWeight: 500, display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', gap: 1,
+                        transition: 'opacity 120ms',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+                    >
+                      <span>{g.label}</span>
+                      <span style={{ fontSize: 10, opacity: 0.8 }}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
                 <div style={{ flex: 1, position: 'relative' }}>
                   <Search size={13} color="#8A8D94" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -286,7 +351,7 @@ export default function PushPage() {
                 style={inputStyle} placeholder="Catchy title..." />
             </FormSection>
 
-            <FormSection title="Message" hint={<span style={{ color: body.length >= 120 ? '#C26B1F' : undefined }}>{body.length} / 160{body.length >= 120 ? ' â ' : ''}</span>}>
+            <FormSection title="Message" hint={`${body.length} / 160`}>
               <textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={160} rows={3}
                 style={{ ...inputStyle, resize: 'vertical', minHeight: 80, borderColor: body.length >= 120 ? '#C26B1F' : '#D4E6DB' }} />
             </FormSection>
@@ -314,12 +379,12 @@ export default function PushPage() {
                   <Calendar size={13} /> Schedule
                 </button>
                 {when === 'schedule' && (
-                  <input type="datetime-local" defaultValue="2026-05-02T11:00" style={{ ...inputStyle, width: 'auto', height: 32, padding: '0 10px' }} />
+                  <input type="datetime-local" style={{ ...inputStyle, width: 'auto', height: 32, padding: '0 10px' }} />
                 )}
               </div>
             </FormSection>
 
-            {/* Action row: Save | Test to me | [spacer] | Send to N */}
+            {/* Action row */}
             <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #E2EDE6' }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
@@ -457,7 +522,7 @@ export default function PushPage() {
                   <td style={{ padding: '12px 16px', color: '#8A8D94' }}>{p.sent}</td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{p.reach}</td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{p.opens}</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', color: '#0D6B45', fontWeight: 500 }}>{p.ctr}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', color: '#1D9E75' }}>{p.ctr}</td>
                 </tr>
               ))}
             </tbody>
@@ -466,12 +531,54 @@ export default function PushPage() {
       )}
 
       {tab === 'templates' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 12 }}>
           {TEMPLATES.map((tpl, i) => (
-            <div key={i} style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{tpl.t}</div>
-              <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 6, lineHeight: 1.45 }}>{tpl.b}</div>
-              <button onClick={() => { setTitle(tpl.t); setBody(tpl.b); setTab('compose'); }} style={{ marginTop: 12, height: 28, padding: '0 10px', border: '1px solid #D4E6DB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Use template</button>
+            <div key={i} style={{
+              background: 'white', borderRadius: 16,
+              boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
+              padding: 18,
+              display: 'flex', flexDirection: 'column', gap: 10,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                  background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20,
+                }}>{tpl.emoji}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1F', marginBottom: 4 }}>{tpl.t}</div>
+                  <div style={{ fontSize: 12, color: '#5C5F66', lineHeight: 1.5 }}>{tpl.b}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{
+                  fontSize: 11, padding: '3px 8px', borderRadius: 6,
+                  background: tpl.audience === 'all' ? '#E8F7F2' :
+                    tpl.audience === 'active' ? '#E8F0FB' :
+                    tpl.audience === 'new' ? '#EAF2FF' : '#FBE8E8',
+                  color: tpl.audience === 'all' ? '#085041' :
+                    tpl.audience === 'active' ? '#3B3BA0' :
+                    tpl.audience === 'new' ? '#1A50A0' : '#8B1A1A',
+                  fontWeight: 500, textTransform: 'capitalize',
+                }}>
+                  {tpl.audience}
+                </div>
+                <button
+                  onClick={() => {
+                    setTitle(tpl.t);
+                    setBody(tpl.b);
+                    selectGroup(tpl.audience);
+                    setTab('compose');
+                  }}
+                  style={{
+                    height: 30, padding: '0 12px',
+                    background: '#1D9E75', color: 'white', border: 0, borderRadius: 8,
+                    fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Use template
+                </button>
+              </div>
             </div>
           ))}
         </div>

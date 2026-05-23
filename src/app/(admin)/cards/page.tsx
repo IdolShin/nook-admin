@@ -598,18 +598,6 @@ export default function CardsPage() {
         </div>
       )}
 
-      {/* + button top right */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button
-          onClick={() => (selectedBusinessId || businesses.length === 0) && setShowModal(true)}
-          disabled={businesses.length > 1 && !selectedBusinessId}
-          title={businesses.length > 1 && !selectedBusinessId ? 'Select a business first' : undefined}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: (businesses.length > 1 && !selectedBusinessId) ? '#C8CACE' : '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 20, fontWeight: 300, cursor: (businesses.length > 1 && !selectedBusinessId) ? 'not-allowed' : 'pointer', boxShadow: '0 2px 8px rgba(29,158,117,0.3)' }}
-        >
-          +
-        </button>
-      </div>
-
       {/* Filter bar — search + 3 equal controls */}
       <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 12, display: 'grid', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 12px', background: '#F5F6FA', borderRadius: 10 }}>

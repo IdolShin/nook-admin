@@ -170,7 +170,8 @@ export default function DashboardPage() {
   const { isMobile } = useBreakpoint();
 
   const decoded = useMemo(() => (typeof window !== 'undefined' ? decodeToken() : null), []);
-  const isSuperadmin = decoded?.is_superadmin ?? false;
+  // Only the known superadmin email gets the multi-business view
+  const isSuperadmin = decoded?.is_superadmin === true && decoded?.email === 'woosang930414@gmail.com';
   const displayName  = isSuperadmin ? (decoded?.name ?? 'Woosang') : (typeof window !== 'undefined' ? localStorage.getItem('nook_biz') ?? 'Nook' : 'Nook');
 
   const [selectedBiz, setSelectedBiz] = useState<string>('all');   // 'all' | biz_id

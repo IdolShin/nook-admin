@@ -347,6 +347,13 @@ export default function CustomersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Topbar + button → go to add customer page
+  useEffect(() => {
+    const handler = () => router.push('/customers/add');
+    window.addEventListener('nook:cta', handler);
+    return () => window.removeEventListener('nook:cta', handler);
+  }, [router]);
+
   const handleExportCSV = () => {
     const headers = ['Name', 'Phone', 'Status', 'Stamps', 'Joined', 'Last Visit'];
     const csvRows = [
@@ -413,14 +420,6 @@ export default function CustomersPage() {
       {showCouponPicker && selected && (
         <CouponPickerModal customer={selected} onClose={() => setShowCouponPicker(false)} />
       )}
-
-      {/* + button top right only */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button onClick={() => router.push('/customers/add')}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 20, fontWeight: 300, cursor: 'pointer', boxShadow: '0 2px 8px rgba(29,158,117,0.3)' }}>
-          +
-        </button>
-      </div>
 
       {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
