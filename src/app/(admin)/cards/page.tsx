@@ -5,7 +5,7 @@ import { typeMeta, statusMeta } from '@/lib/utils';
 import MiniCardArt from '@/components/cards/MiniCardArt';
 import Sparkline from '@/components/charts/Sparkline';
 import { api, type ApiCard } from '@/lib/api';
-import { Search, Download, Plus, ChevronDown, X, MoreHorizontal, Send } from 'lucide-react';
+import { Search, Plus, ChevronDown, X, MoreHorizontal, Send } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
 import BottomSheet from '@/components/ui/BottomSheet';
@@ -109,16 +109,18 @@ function FilterDropdown({ label, value, options, onChange }: {
   const [open, setOpen] = useState(false);
   const cur = options.find((o) => o.value === value);
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', width: '100%' }}>
       <button onClick={() => setOpen((o) => !o)} style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        height: 32, padding: '0 10px',
-        border: '1px solid #EBEBEB', borderRadius: 8,
+        display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'space-between',
+        width: '100%', height: 36, padding: '0 12px',
+        border: '1px solid #EBEBEB', borderRadius: 9,
         background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit',
       }}>
-        <span style={{ color: '#8A8D94' }}>{label}:</span>
-        <span>{cur?.label}</span>
-        <ChevronDown size={13} color="#8A8D94" />
+        <span style={{ color: '#8A8D94', fontSize: 12 }}>{label}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontWeight: 500 }}>{cur?.label}</span>
+          <ChevronDown size={13} color="#8A8D94" />
+        </div>
       </button>
       {open && (
         <>
@@ -596,52 +598,47 @@ export default function CardsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Loyalty cards</h1>
-          <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 3 }}>
-            {loading ? 'Loading…' : `${totals.total} cards ${String.fromCharCode(183)} ${totals.active} active ${String.fromCharCode(183)} ${totals.issued.toLocaleString()} total issued`}
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-            <Download size={14} color="#5C5F66" /> Export
-          </button>
-          <button
-            onClick={() => (selectedBusinessId || businesses.length === 0) && setShowModal(true)}
-            disabled={businesses.length > 1 && !selectedBusinessId}
-            title={businesses.length > 1 && !selectedBusinessId ? 'Select a business first' : undefined}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', background: (businesses.length > 1 && !selectedBusinessId) ? '#C8CACE' : '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: (businesses.length > 1 && !selectedBusinessId) ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
-          >
-            <Plus size={14} /> New card
-          </button>
-        </div>
+      {/* + button top right */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button
+          onClick={() => (selectedBusinessId || businesses.length === 0) && setShowModal(true)}
+          disabled={businesses.length > 1 && !selectedBusinessId}
+          title={businesses.length > 1 && !selectedBusinessId ? 'Select a business first' : undefined}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: (businesses.length > 1 && !selectedBusinessId) ? '#C8CACE' : '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 20, fontWeight: 300, cursor: (businesses.length > 1 && !selectedBusinessId) ? 'not-allowed' : 'pointer', boxShadow: '0 2px 8px rgba(29,158,117,0.3)' }}
+        >
+          +
+        </button>
       </div>
 
-      {/* Filter bar */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: 'white', borderRadius: 13, border: '1px solid #EBEBEB', padding: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 10px', background: '#F5F6FA', borderRadius: 8, flex: '1 1 280px', minWidth: 220 }}>
+      {/* Filter bar — search + 3 equal controls */}
+      <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 12, display: 'grid', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 12px', background: '#F5F6FA', borderRadius: 10 }}>
           <Search size={14} color="#8A8D94" />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search cards or businesses…"
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search cards..."
             style={{ flex: 1, border: 0, background: 'transparent', outline: 'none', fontSize: 13, fontFamily: 'inherit', color: '#1A1A1F' }} />
         </div>
-        <FilterDropdown label="Type" value={type} onChange={setType}
-          options={[{ value: 'all', label: 'All types' }, { value: 'stamp', label: 'Stamp' }, { value: 'coupon', label: 'Coupon' }, { value: 'cashback', label: 'Cashback' }, { value: 'membership', label: 'Membership' }]} />
-        <FilterDropdown label="Status" value={status} onChange={setStatus}
-          options={[{ value: 'all', label: 'All statuses' }, { value: 'active', label: 'Active' }, { value: 'paused', label: 'Paused' }]} />
-        <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3, marginLeft: 'auto' }}>
-          {(['grid', 'list'] as const).map((v) => (
-            <button key={v} onClick={() => setView(v)} style={{
-              height: 26, padding: '0 10px', border: 0, borderRadius: 7,
-              background: view === v ? 'white' : 'transparent',
-              color: view === v ? '#1A1A1F' : '#5C5F66',
-              fontSize: 12, fontWeight: view === v ? 500 : 400,
-              cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: view === v ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-              textTransform: 'capitalize',
-            }}>{v}</button>
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+          <div style={{ width: '100%' }}>
+            <FilterDropdown label="Type" value={type} onChange={setType}
+              options={[{ value: 'all', label: 'All' }, { value: 'stamp', label: 'Stamp' }, { value: 'coupon', label: 'Coupon' }, { value: 'cashback', label: 'Cashback' }, { value: 'membership', label: 'Membership' }]} />
+          </div>
+          <div style={{ width: '100%' }}>
+            <FilterDropdown label="Status" value={status} onChange={setStatus}
+              options={[{ value: 'all', label: 'All' }, { value: 'active', label: 'Active' }, { value: 'paused', label: 'Paused' }]} />
+          </div>
+          <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
+            {(['grid', 'list'] as const).map((v) => (
+              <button key={v} onClick={() => setView(v)} style={{
+                flex: 1, height: '100%', border: 0, borderRadius: 7,
+                background: view === v ? 'white' : 'transparent',
+                color: view === v ? '#1A1A1F' : '#5C5F66',
+                fontSize: 12, fontWeight: view === v ? 500 : 400,
+                cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: view === v ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                textTransform: 'capitalize',
+              }}>{v}</button>
+            ))}
+          </div>
         </div>
       </div>
 

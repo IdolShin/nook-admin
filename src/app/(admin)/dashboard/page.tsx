@@ -70,22 +70,26 @@ function BizSelector({ businesses, selected, onChange }: {
   onChange: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const current = selected === 'all' ? 'All businesses' : (businesses.find(b => b.id === selected)?.name ?? 'Select');
+  const found = businesses.find(b => b.id === selected);
+  const shortName = selected === 'all' ? 'All' : (found?.name?.split(' ')[0] ?? 'All');
 
   return (
     <div style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
-          display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px',
-          background: 'white', border: '1px solid #EBEBEB', borderRadius: 10,
-          fontSize: 13, fontWeight: 500, color: '#1A1A1F', cursor: 'pointer',
-          fontFamily: 'inherit', boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          display: 'flex', alignItems: 'center', gap: 5, height: 30, padding: '0 10px',
+          background: selected === 'all' ? '#E8F7F2' : '#EEF5FF',
+          border: `1px solid ${selected === 'all' ? '#B6E3D4' : '#C3D9F8'}`,
+          borderRadius: 8,
+          fontSize: 12, fontWeight: 600,
+          color: selected === 'all' ? '#085041' : '#1D4ED8',
+          cursor: 'pointer', fontFamily: 'inherit',
         }}
       >
-        <Building2 size={14} color="#1D9E75" />
-        <span>{current}</span>
-        <ChevronDown size={13} color="#8A8D94" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }} />
+        <Building2 size={12} color={selected === 'all' ? '#085041' : '#1D4ED8'} />
+        <span style={{ maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName}</span>
+        <ChevronDown size={11} color={selected === 'all' ? '#085041' : '#1D4ED8'} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} />
       </button>
       {open && (
         <div style={{
@@ -251,22 +255,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Superadmin context banner ────────────────── */}
-      {isSuperadmin && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 16px', borderRadius: 10,
-          background: selectedBiz === 'all' ? '#E8F7F2' : '#EEF5FF',
-          border: `1px solid ${selectedBiz === 'all' ? '#B6E3D4' : '#C3D9F8'}`,
-        }}>
-          <Building2 size={14} color={selectedBiz === 'all' ? '#085041' : '#1D4ED8'} />
-          <span style={{ fontSize: 13, fontWeight: 500, color: selectedBiz === 'all' ? '#085041' : '#1D4ED8' }}>
-            {selectedBiz === 'all'
-              ? `Showing aggregated stats across all ${businesses.length} businesses`
-              : `Showing stats for: ${selectedBizName}`}
-          </span>
-        </div>
-      )}
 
       {/* ── KPI row ─────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 12 : 16 }}>

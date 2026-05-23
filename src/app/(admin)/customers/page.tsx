@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { customerStatusMeta } from '@/lib/utils';
 import { api, type ApiCustomer, type ApiCouponPass, type ApiCoupon } from '@/lib/api';
 import { toast } from '@/lib/toast';
-import { Search, Download, Send, Gift, X, Ticket, ArrowUp, ArrowDown, ChevronsUpDown, UserPlus } from 'lucide-react';
+import { Search, Gift, X, Ticket, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
@@ -342,7 +342,6 @@ export default function CustomersPage() {
       .then((cs) => {
         const mapped = cs.map(mapCustomer);
         setAllCustomers(mapped);
-        if (mapped.length > 0) setSelected(mapped[0]);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -370,19 +369,11 @@ export default function CustomersPage() {
     URL.revokeObjectURL(url);
   };
 
-  const segs = [
-    { id: 'all',     label: 'All',            count: allCustomers.length },
-    { id: 'vip',     label: 'VIP',            count: allCustomers.filter((c) => c.status === 'vip').length },
-    { id: 'new',     label: 'New (30d)',       count: allCustomers.filter((c) => c.status === 'new').length },
-    { id: 'at-risk', label: 'At risk',        count: allCustomers.filter((c) => c.status === 'at-risk').length },
-    { id: 'multi',   label: 'Multi-business', count: allCustomers.filter((c) => c.biz.length > 1).length },
-  ];
-
   const rows = useMemo(() => {
     const filtered = allCustomers.filter((c) => {
       if (q && !c.name.toLowerCase().includes(q.toLowerCase()) && !c.phone.includes(q)) return false;
       if (seg === 'all') return true;
-      if (seg === 'multi') return c.biz.length > 1;
+      if (seg === 'active') return c.status === 'active' || c.status === 'vip';
       return c.status === seg;
     });
     const STATUS_ORDER: Record<string, number> = { vip: 0, active: 1, new: 2, 'at-risk': 3 };
@@ -409,61 +400,64 @@ export default function CustomersPage() {
   const thBtn: React.CSSProperties = { background: 'none', border: 0, padding: 0, fontFamily: 'inherit', fontWeight: 500, fontSize: 11, color: '#8A8D94', textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer', display: 'flex', alignItems: 'center' };
   const tdStyle: React.CSSProperties = { padding: '12px 16px', verticalAlign: 'middle' };
 
+  // Segment definitions — 4 equal colored tabs
+  const SEG_DEFS = [
+    { id: 'all',    label: 'All',      count: allCustomers.length,                                                                  activeBg: '#1D9E75', activeFg: 'white',   dot: '#1D9E75',  inactiveDot: '#8A8D94' },
+    { id: 'new',    label: 'New',      count: allCustomers.filter((c) => c.status === 'new').length,                                activeBg: '#3B82F6', activeFg: 'white',   dot: '#3B82F6',  inactiveDot: '#8A8D94' },
+    { id: 'active', label: 'Active',   count: allCustomers.filter((c) => c.status === 'active' || c.status === 'vip').length,       activeBg: '#085041', activeFg: 'white',   dot: '#1D9E75',  inactiveDot: '#8A8D94' },
+    { id: 'at-risk',label: 'Inactive', count: allCustomers.filter((c) => c.status === 'at-risk').length,                           activeBg: '#E05050', activeFg: 'white',   dot: '#E05050',  inactiveDot: '#8A8D94' },
+  ];
+
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
       {showCouponPicker && selected && (
         <CouponPickerModal customer={selected} onClose={() => setShowCouponPicker(false)} />
       )}
-      {/* Page header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Customers</h1>
-          <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Manage and track your loyalty members</div>
-        </div>
-        <button onClick={() => router.push('/register')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}>
-          <UserPlus size={14} /> {isMobile ? '' : 'Add customer'}
+
+      {/* + button top right only */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button onClick={() => router.push('/customers/add')}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, background: '#1D9E75', color: 'white', border: 0, borderRadius: 10, fontSize: 20, fontWeight: 300, cursor: 'pointer', boxShadow: '0 2px 8px rgba(29,158,117,0.3)' }}>
+          +
         </button>
       </div>
 
       {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
-        <KPI label="Total customers" value={allCustomers.length.toString()} delta={`${allCustomers.length} total`} up />
-        <KPI label="VIPs"            value={vipCount.toString()}            delta={`${allCustomers.length ? ((vipCount / allCustomers.length) * 100).toFixed(1) : 0}% of base`} />
-        <KPI label="New (30d)"       value={newCount.toString()}            delta="joined in last 30 days" up />
-        <KPI label="At-risk"         value={atRiskCount.toString()}         delta="No visit in 14d" warn />
+        <KPI label="Total customers" value={allCustomers.length.toString()} delta={`${allCustomers.length} registered`} up />
+        <KPI label="New (30d)"       value={newCount.toString()}            delta="joined recently" up />
+        <KPI label="Active"          value={allCustomers.filter((c) => c.status === 'active' || c.status === 'vip').length.toString()} delta="returning customers" />
+        <KPI label="Inactive"        value={atRiskCount.toString()}         delta="no visit in 14d" warn />
       </div>
 
-      {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 10px', background: '#F5F6FA', borderRadius: 8, flex: '1 1 280px', minWidth: 220 }}>
+      {/* Search + 4-segment filter */}
+      <div style={{ background: 'white', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 12, display: 'grid', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 12px', background: '#F5F6FA', borderRadius: 10 }}>
           <Search size={14} color="#8A8D94" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, phone..."
-            style={{ flex: 1, border: 0, background: 'transparent', outline: 'none', fontSize: 13, fontFamily: 'inherit' }} />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or phone..."
+            style={{ flex: 1, border: 0, background: 'transparent', outline: 'none', fontSize: 13, fontFamily: 'inherit', color: '#1A1A1F' }} />
         </div>
-        <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
-          {segs.map((s) => (
-            <button key={s.id} onClick={() => setSeg(s.id)} style={{
-              height: 26, padding: '0 10px', border: 0, borderRadius: 7,
-              background: seg === s.id ? 'white' : 'transparent',
-              color: seg === s.id ? '#1A1A1F' : '#5C5F66',
-              fontSize: 12, fontWeight: seg === s.id ? 500 : 400,
-              cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: seg === s.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
-              {s.label}
-              <span style={{ fontSize: 10, color: '#8A8D94' }}>{s.count}</span>
-            </button>
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+          {SEG_DEFS.map((s) => {
+            const isActive = seg === s.id;
+            return (
+              <button key={s.id} onClick={() => setSeg(s.id)} style={{
+                height: 52, border: 0, borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
+                background: isActive ? s.activeBg : 'white',
+                color: isActive ? s.activeFg : '#5C5F66',
+                boxShadow: isActive ? `0 2px 8px ${s.dot}40` : '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                transition: 'all 130ms',
+              }}>
+                <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>{s.count}</span>
+                <span style={{ fontSize: 11, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <span style={{ width: 5, height: 5, borderRadius: 999, background: isActive ? 'rgba(255,255,255,0.7)' : s.inactiveDot, display: 'inline-block' }} />
+                  {s.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <div style={{ flex: 1 }} />
-        <button onClick={() => router.push('/push')} style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-          <Send size={13} color="#5C5F66" />{!isMobile && ' Message all'}
-        </button>
-        <button onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-          <Download size={13} color="#5C5F66" />{!isMobile && ' Export CSV'}
-        </button>
       </div>
 
       {/* Body */}
