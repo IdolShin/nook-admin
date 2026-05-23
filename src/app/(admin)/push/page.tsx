@@ -9,32 +9,42 @@ import { useBreakpoint } from '@/hooks/useBreakpoint';
 const TEMPLATES = [
   {
     emoji: '☕',
-    t: '오늘 더블 스탬프!',
-    b: '오늘 하루만! 모든 방문 고객님께 스탬프 2배 제공합니다. 오늘 꼭 나오세요!',
+    t:    '오늘 더블 스탬프!',
+    b:    '오늘 하루만! 모든 방문 고객님께 스탬프 2배 제공합니다. 오늘 꼭 나오세요!',
+    t_en: 'Double Stamps Today!',
+    b_en: 'Today only! Every customer gets double stamps on every visit. Come in and make it count!',
     audience: 'all',
   },
   {
     emoji: '🎁',
-    t: '리워드 달성했어요!',
-    b: '축하합니다! 스탬프를 모두 모으셨습니다. 매장 방문 시 카드를 보여주세요 — 리워드를 받으실 수 있습니다!',
+    t:    '리워드 달성했어요!',
+    b:    '축하합니다! 스탬프를 모두 모으셨습니다. 매장 방문 시 카드를 보여주세요 — 리워드를 받으실 수 있습니다!',
+    t_en: 'You\'ve Earned a Reward!',
+    b_en: 'Congratulations! You\'ve collected all your stamps. Show your card on your next visit to claim your reward!',
     audience: 'active',
   },
   {
     emoji: '👋',
-    t: '오래만이에요~',
-    b: '바쁘셨나요? 다시 방문해 주시면 다음 방문시 보너스 스탬프를 드립니다! 기다리고 있습니다 :)',
+    t:    '오래만이에요~',
+    b:    '바쁘셨나요? 다시 방문해 주시면 다음 방문시 보너스 스탬프를 드립니다! 기다리고 있습니다 :)',
+    t_en: 'We Miss You!',
+    b_en: 'It\'s been a while! Come back and we\'ll give you a bonus stamp on your next visit. We\'d love to see you :)',
     audience: 'inactive',
   },
   {
     emoji: '🎉',
-    t: '신규 가입 환영합니다!',
-    b: '우리 매장에 첫 방문하셨군요! 첫 방문 고객님께 첫 스탬프 무료 제공합니다. 꼭 오세요!',
+    t:    '신규 가입 환영합니다!',
+    b:    '우리 매장에 첫 방문하셨군요! 첫 방문 고객님께 첫 스탬프 무료 제공합니다. 꼭 오세요!',
+    t_en: 'Welcome to the Family!',
+    b_en: 'Thanks for joining us! As a welcome gift, your first stamp is on us. We hope to see you again soon!',
     audience: 'new',
   },
   {
     emoji: '📢',
-    t: '새 메뉴 출시!',
-    b: '기다리던 신메뉴가 드디어 나왔습니다! 직접 방문해서 첫 번째로 맛봐보세요.',
+    t:    '새 메뉴 출시!',
+    b:    '기다리던 신메뉴가 드디어 나왔습니다! 직접 방문해서 첫 번째로 맛봐보세요.',
+    t_en: 'New Menu Just Dropped!',
+    b_en: 'Our new menu is finally here! Come in and be one of the first to try it.',
     audience: 'all',
   },
 ];
@@ -92,6 +102,9 @@ export default function PushPage() {
 
   // Drafts
   const [drafts, setDrafts] = useState<Draft[]>([]);
+
+  // Template language
+  const [templateLang, setTemplateLang] = useState<'ko' | 'en'>('ko');
 
   const bizName = typeof window !== 'undefined' ? localStorage.getItem('nook_biz') ?? 'My Business' : 'My Business';
 
@@ -531,56 +544,106 @@ export default function PushPage() {
       )}
 
       {tab === 'templates' && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 12 }}>
-          {TEMPLATES.map((tpl, i) => (
-            <div key={i} style={{
-              background: 'white', borderRadius: 16,
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
-              padding: 18,
-              display: 'flex', flexDirection: 'column', gap: 10,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                  background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20,
-                }}>{tpl.emoji}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1F', marginBottom: 4 }}>{tpl.t}</div>
-                  <div style={{ fontSize: 12, color: '#5C5F66', lineHeight: 1.5 }}>{tpl.b}</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{
-                  fontSize: 11, padding: '3px 8px', borderRadius: 6,
-                  background: tpl.audience === 'all' ? '#E8F7F2' :
-                    tpl.audience === 'active' ? '#E8F0FB' :
-                    tpl.audience === 'new' ? '#EAF2FF' : '#FBE8E8',
-                  color: tpl.audience === 'all' ? '#085041' :
-                    tpl.audience === 'active' ? '#3B3BA0' :
-                    tpl.audience === 'new' ? '#1A50A0' : '#8B1A1A',
-                  fontWeight: 500, textTransform: 'capitalize',
+        <div>
+          {/* Language toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+            <span style={{ fontSize: 12, color: '#8A8D94', marginRight: 2 }}>Language</span>
+            <button
+              onClick={() => setTemplateLang('ko')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                height: 32, padding: '0 12px',
+                border: `1.5px solid ${templateLang === 'ko' ? '#1D9E75' : '#D4E6DB'}`,
+                borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                background: templateLang === 'ko' ? '#E8F7F2' : 'white',
+                color: templateLang === 'ko' ? '#085041' : '#5C5F66',
+                fontSize: 13, fontWeight: templateLang === 'ko' ? 600 : 400,
+                transition: 'all 120ms',
+              }}
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>🇰🇷</span> KOR
+            </button>
+            <button
+              onClick={() => setTemplateLang('en')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                height: 32, padding: '0 12px',
+                border: `1.5px solid ${templateLang === 'en' ? '#1D9E75' : '#D4E6DB'}`,
+                borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                background: templateLang === 'en' ? '#E8F7F2' : 'white',
+                color: templateLang === 'en' ? '#085041' : '#5C5F66',
+                fontSize: 13, fontWeight: templateLang === 'en' ? 600 : 400,
+                transition: 'all 120ms',
+              }}
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>🇺🇸</span> ENG
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 12 }}>
+            {TEMPLATES.map((tpl, i) => {
+              const tplTitle = templateLang === 'ko' ? tpl.t : tpl.t_en;
+              const tplBody  = templateLang === 'ko' ? tpl.b : tpl.b_en;
+              return (
+                <div key={i} style={{
+                  background: 'white', borderRadius: 16,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
+                  padding: 18,
+                  display: 'flex', flexDirection: 'column', gap: 10,
                 }}>
-                  {tpl.audience}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                      background: '#E8F7F2', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 20,
+                    }}>{tpl.emoji}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1F', marginBottom: 4 }}>{tplTitle}</div>
+                      <div style={{ fontSize: 12, color: '#5C5F66', lineHeight: 1.5 }}>{tplBody}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{
+                      fontSize: 11, padding: '3px 8px', borderRadius: 6,
+                      background: tpl.audience === 'all' ? '#E8F7F2' :
+                        tpl.audience === 'active' ? '#E8F0FB' :
+                        tpl.audience === 'new' ? '#EAF2FF' : '#FBE8E8',
+                      color: tpl.audience === 'all' ? '#085041' :
+                        tpl.audience === 'active' ? '#3B3BA0' :
+                        tpl.audience === 'new' ? '#1A50A0' : '#8B1A1A',
+                      fontWeight: 500, textTransform: 'capitalize',
+                    }}>
+                      {tpl.audience}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{
+                        fontSize: 11, color: '#8A8D94',
+                        display: 'flex', alignItems: 'center', gap: 3,
+                      }}>
+                        <span style={{ fontSize: 13 }}>{templateLang === 'ko' ? '🇰🇷' : '🇺🇸'}</span>
+                        <span>{templateLang === 'ko' ? 'KOR' : 'ENG'}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setTitle(tplTitle);
+                          setBody(tplBody);
+                          selectGroup(tpl.audience);
+                          setTab('compose');
+                        }}
+                        style={{
+                          height: 30, padding: '0 12px',
+                          background: '#1D9E75', color: 'white', border: 0, borderRadius: 8,
+                          fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                      >
+                        Use template
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setTitle(tpl.t);
-                    setBody(tpl.b);
-                    selectGroup(tpl.audience);
-                    setTab('compose');
-                  }}
-                  style={{
-                    height: 30, padding: '0 12px',
-                    background: '#1D9E75', color: 'white', border: 0, borderRadius: 8,
-                    fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  Use template
-                </button>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
