@@ -307,7 +307,7 @@ function SCard({ title, desc, right, children, danger }: {
   title: string; desc?: string; right?: React.ReactNode; children?: React.ReactNode; danger?: boolean;
 }) {
   return (
-    <div style={{ background: 'white', borderRadius: 13, border: `1px solid ${danger ? '#F0D5DC' : '#EBEBEB'}`, padding: 22 }}>
+    <div style={{ background: 'white', borderRadius: 16, boxShadow: danger ? '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(220,60,80,0.15)' : '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)', padding: 22 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: desc ? 4 : 16 }}>
         <div style={{ fontSize: 15, fontWeight: 600, color: danger ? '#9C2848' : '#1A1A1F' }}>{title}</div>
         {right}

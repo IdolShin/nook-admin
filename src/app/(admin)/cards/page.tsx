@@ -630,8 +630,7 @@ export default function CardsPage() {
           options={[{ value: 'all', label: 'All types' }, { value: 'stamp', label: 'Stamp' }, { value: 'coupon', label: 'Coupon' }, { value: 'cashback', label: 'Cashback' }, { value: 'membership', label: 'Membership' }]} />
         <FilterDropdown label="Status" value={status} onChange={setStatus}
           options={[{ value: 'all', label: 'All statuses' }, { value: 'active', label: 'Active' }, { value: 'paused', label: 'Paused' }]} />
-        <div style={{ flex: 1 }} />
-        <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
+        <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3, marginLeft: 'auto' }}>
           {(['grid', 'list'] as const).map((v) => (
             <button key={v} onClick={() => setView(v)} style={{
               height: 26, padding: '0 10px', border: 0, borderRadius: 7,

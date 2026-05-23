@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { pastCampaigns } from '@/lib/data';
-import { Zap, Calendar, Send, Bookmark, Search, CheckSquare, Square, Trash2 } from 'lucide-react';
+import { Zap, Calendar, Send, Bookmark, Search, CheckSquare, Square, Trash2, Plus, Clock, FileText } from 'lucide-react';
 import { api, ApiCustomer } from '@/lib/api';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 
@@ -25,23 +25,6 @@ interface Draft {
 const DRAFT_KEY = 'nook_push_drafts';
 const MAX_DRAFTS = 5;
 
-function Seg({ tabs, active, setActive }: { tabs: string[]; active: string; setActive: (t: string) => void }) {
-  return (
-    <div style={{ display: 'flex', gap: 2, background: '#E2EDE6', borderRadius: 9, padding: 3 }}>
-      {tabs.map((t) => (
-        <button key={t} onClick={() => setActive(t)} style={{
-          height: 26, padding: '0 12px', border: 0, borderRadius: 7,
-          background: active === t ? 'white' : 'transparent',
-          color: active === t ? '#1A1A1F' : '#5C5F66',
-          fontSize: 12, fontWeight: active === t ? 500 : 400,
-          cursor: 'pointer', fontFamily: 'inherit',
-          boxShadow: active === t ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-          textTransform: 'capitalize',
-        }}>{t}</button>
-      ))}
-    </div>
-  );
-}
 
 function FormSection({ title, hint, children }: { title: string; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -159,7 +142,7 @@ export default function PushPage() {
     setSendResult('');
     try {
       const res = await api.broadcast(title, body);
-      setSendResult(`Sent Â· ${res.web_push_sent} push Â· ${res.wallet_updated} wallets updated`);
+      setSendResult(`Sent ${String.fromCharCode(183)} ${res.web_push_sent} push ${String.fromCharCode(183)} ${res.wallet_updated} wallets updated`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Send failed';
       try { setSendResult(`Error: ${JSON.parse(msg).error ?? msg}`); }
@@ -178,13 +161,35 @@ export default function PushPage() {
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 16 }}>
       {/* Page header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Push notifications</h1>
           <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Send messages directly to your customers</div>
         </div>
+        <button onClick={() => setTab('compose')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          <Plus size={16} />{!isMobile && ' New push'}
+        </button>
       </div>
-      <Seg tabs={['compose', 'history', 'templates']} active={tab} setActive={setTab} />
+
+      {/* Full-width 3-tab buttons */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+        {([['compose', 'Compose', Send], ['history', 'History', Clock], ['templates', 'Templates', FileText]] as const).map(([id, label, Icon]) => (
+          <button key={id} onClick={() => setTab(id)} style={{
+            height: 46, border: 0, borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+            background: tab === id ? '#1D9E75' : 'white',
+            color: tab === id ? 'white' : '#5C5F66',
+            fontSize: isMobile ? 13 : 14, fontWeight: tab === id ? 600 : 400,
+            boxShadow: tab === id
+              ? '0 2px 8px rgba(29,158,117,0.3)'
+              : '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
+            transition: 'all 150ms',
+          }}>
+            <Icon size={15} />{label}
+          </button>
+        ))}
+      </div>
 
       {tab === 'compose' && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 16, alignItems: 'start' }}>
@@ -413,7 +418,7 @@ export default function PushPage() {
               <div style={{ background: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(10px)', borderRadius: 14, padding: 12, color: 'white' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <div style={{ width: 18, height: 18, borderRadius: 4, background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white' }}>n</div>
-                  <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>WALLET Â· NOOK</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>WALLET {String.fromCharCode(183)} NOOK</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.55 }}>now</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{title || 'Title'}</div>

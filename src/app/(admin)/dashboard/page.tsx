@@ -231,30 +231,24 @@ export default function DashboardPage() {
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 20, alignContent: 'start' }}>
 
-      {/* ── Page header ─────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>
-              {greeting()}, {displayName}
-            </h1>
-            <Smile size={isMobile ? 20 : 22} color="#1D9E75" strokeWidth={2} />
-          </div>
-          <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>{todayLabel()}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          {isSuperadmin && businesses.length > 0 && (
-            <BizSelector businesses={businesses} selected={selectedBiz} onChange={setSelectedBiz} />
+      {/* ── Page header — single row ─────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        {/* Left: greeting + date */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+          <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+            {greeting()}, {displayName}
+          </h1>
+          <Smile size={18} color="#1D9E75" strokeWidth={2} style={{ flexShrink: 0 }} />
+          {!isMobile && (
+            <div style={{ fontSize: 12, color: '#B0B3BB', whiteSpace: 'nowrap' }}>{todayLabel()}</div>
           )}
-          <button onClick={() => router.push('/cards')} style={{
-            display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px',
-            background: '#1D9E75', color: 'white', border: 0, borderRadius: 9,
-            fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 2px 8px rgba(29,158,117,0.35)',
-          }}>
-            <CreditCard size={14} /> {!isMobile && 'New card'}
-          </button>
         </div>
+        {/* Right: business selector (superadmin only) */}
+        {isSuperadmin && businesses.length > 0 && (
+          <div style={{ flexShrink: 0 }}>
+            <BizSelector businesses={businesses} selected={selectedBiz} onChange={setSelectedBiz} />
+          </div>
+        )}
       </div>
 
       {/* ── Superadmin context banner ────────────────── */}

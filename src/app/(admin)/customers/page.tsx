@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { customerStatusMeta } from '@/lib/utils';
 import { api, type ApiCustomer, type ApiCouponPass, type ApiCoupon } from '@/lib/api';
 import { toast } from '@/lib/toast';
-import { Search, Download, Send, Gift, X, Ticket, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
+import { Search, Download, Send, Gift, X, Ticket, ArrowUp, ArrowDown, ChevronsUpDown, UserPlus } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
@@ -85,6 +85,7 @@ const PASS_STATUS: Record<string, { label: string; bg: string; fg: string }> = {
 };
 
 /* âââ Coupon Picker Modal âââââââââââââââââââââââââââââââââââââ */
+
 
 function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose: () => void }) {
   const [coupons, setCoupons] = useState<ApiCoupon[]>([]);
@@ -414,9 +415,15 @@ export default function CustomersPage() {
         <CouponPickerModal customer={selected} onClose={() => setShowCouponPicker(false)} />
       )}
       {/* Page header */}
-      <div>
-        <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Customers</h1>
-        <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Manage and track your loyalty members</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#1A1A1F', letterSpacing: '-0.025em', lineHeight: 1.2 }}>Customers</h1>
+          <div style={{ fontSize: 13, color: '#8A8D94', marginTop: 4 }}>Manage and track your loyalty members</div>
+        </div>
+        <button onClick={() => router.push('/register')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, height: 36, padding: '0 14px', background: '#1D9E75', color: 'white', border: 0, borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          <UserPlus size={14} /> {isMobile ? '' : 'Add customer'}
+        </button>
       </div>
 
       {/* KPI strip */}
@@ -452,10 +459,10 @@ export default function CustomersPage() {
         </div>
         <div style={{ flex: 1 }} />
         <button onClick={() => router.push('/push')} style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-          <Send size={13} color="#5C5F66" /> Message segment
+          <Send size={13} color="#5C5F66" />{!isMobile && ' Message all'}
         </button>
-        <button style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-          <Download size={13} color="#5C5F66" /> Export CSV
+        <button onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: 5, height: 32, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+          <Download size={13} color="#5C5F66" />{!isMobile && ' Export CSV'}
         </button>
       </div>
 

@@ -97,8 +97,8 @@ function CouponRow({ coupon, onToggle, onIssue }: {
   if (isPhone) {
     return (
       <div style={{
-        background: 'white', borderRadius: 13,
-        border: '1px solid #EBEBEB',
+        background: 'white', borderRadius: 16,
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
         borderLeft: `4px solid ${coupon.color}`,
         padding: '14px 14px',
         opacity: coupon.is_active ? 1 : 0.65,
@@ -151,8 +151,8 @@ function CouponRow({ coupon, onToggle, onIssue }: {
   // Desktop layout (unchanged)
   return (
     <div style={{
-      background: 'white', borderRadius: 13,
-      border: '1px solid #EBEBEB',
+      background: 'white', borderRadius: 16,
+      boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)',
       borderLeft: `4px solid ${coupon.color}`,
       padding: '16px 18px',
       display: 'flex', alignItems: 'center', gap: 16,
