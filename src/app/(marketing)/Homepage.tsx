@@ -198,11 +198,7 @@ export default function Homepage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [journeyIdx, setJourneyIdx] = useState(0);
   const [journeyPaused, setJourneyPaused] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [formSuccess, setFormSuccess] = useState(false);
-  const [contactTab, setContactTab] = useState<'message' | 'email'>('message');
-  const [formContactType, setFormContactType] = useState<'tel' | 'email'>('tel');
   const journeyTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Init lang from localStorage / hash
@@ -252,15 +248,15 @@ export default function Homepage() {
 
   // Body scroll lock when mobile menu or contact modal open
   useEffect(() => {
-    const locked = menuOpen || contactOpen;
+    const locked = menuOpen;
     document.body.style.overflow = locked ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [menuOpen, contactOpen]);
+  }, [menuOpen]);
 
   // Close on Escape
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setContactOpen(false); setMenuOpen(false); }
+      if (e.key === 'Escape') { setMenuOpen(false); }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
@@ -312,20 +308,7 @@ export default function Homepage() {
     }, 5500);
   }
 
-  function handleContactSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setFormSuccess(true);
-    setTimeout(() => {
-      setContactOpen(false);
-      setFormSuccess(false);
-      (e.target as HTMLFormElement).reset();
-    }, 2400);
-  }
 
-  function handleTabSwitch(tab: 'message' | 'email') {
-    setContactTab(tab);
-    setFormContactType(tab === 'email' ? 'email' : 'tel');
-  }
 
   const frame = journeyFrames[journeyIdx];
 
@@ -444,12 +427,9 @@ export default function Homepage() {
               )}
             </p>
             <div className="hero-ctas">
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={() => setContactOpen(true)}
-              >
+              <Link href="/contact" className="btn btn-primary btn-lg">
                 {t('문의하기 →', 'Contact us →', lang)}
-              </button>
+              </Link>
               <button
                 className="btn btn-lg"
                 onClick={() =>
@@ -1102,16 +1082,12 @@ export default function Homepage() {
                 <li>{t('기본 분석', 'Basic analytics', lang)}</li>
                 <li>{t('이메일 지원', 'Email support', lang)}</li>
               </ul>
-              <button
-                className="btn"
-                style={{ width: '100%' }}
-                onClick={() => setContactOpen(true)}
-              >
+              <Link href="/contact" className="btn" style={{ width: '100%', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {t('문의하기', 'Contact us', lang)}
-              </button>
+              </Link>
             </div>
 
-            {/* Pro */}
+            {/* Pro */
             <div className="price-card featured reveal" style={{ transitionDelay: '80ms' }}>
               <div className="badge-featured">{t('인기', 'Popular', lang)}</div>
               <div className="name">{t('프로', 'Pro', lang)}</div>
@@ -1128,16 +1104,12 @@ export default function Homepage() {
                 <li>{t('전체 분석 대시보드', 'Full analytics dashboard', lang)}</li>
                 <li>{t('우선 지원', 'Priority support', lang)}</li>
               </ul>
-              <button
-                className="btn btn-primary"
-                style={{ width: '100%' }}
-                onClick={() => setContactOpen(true)}
-              >
+              <Link href="/contact" className="btn btn-primary" style={{ width: '100%', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {t('문의하기', 'Contact us', lang)}
-              </button>
+              </Link>
             </div>
 
-            {/* Premium */}
+            {/* Premium */
             <div className="price-card reveal" style={{ transitionDelay: '160ms' }}>
               <div className="name">{t('프리미엄', 'Premium', lang)}</div>
               <div className="price">$129<small> /mo</small></div>
@@ -1152,19 +1124,15 @@ export default function Homepage() {
                 <li>{t('고객 심층 데이터 분석 제공', 'In-depth customer data analytics', lang)}</li>
                 <li>{t('마케팅 자동화 기능 제공', 'Marketing automation features', lang)}</li>
               </ul>
-              <button
-                className="btn"
-                style={{ width: '100%' }}
-                onClick={() => setContactOpen(true)}
-              >
+              <Link href="/contact" className="btn" style={{ width: '100%', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {t('문의하기', 'Contact us', lang)}
-              </button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* TESTIMONIALS */
       <section>
         <div className="wrap">
           <div className="reveal">
@@ -1373,13 +1341,9 @@ export default function Homepage() {
               )}
             </p>
             <div style={{ marginTop: 32 }}>
-              <button
-                className="btn btn-lg"
-                style={{ background: 'white', border: 0, color: 'var(--accent-dark)' }}
-                onClick={() => setContactOpen(true)}
-              >
+              <Link href="/contact" className="btn btn-lg" style={{ background: 'white', border: 0, color: 'var(--accent-dark)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                 {t('데모 리워드카드 받아보기 →', 'Get a demo reward card →', lang)}
-              </button>
+              </Link>
             </div>
             <div style={{ fontSize: 13, opacity: 0.75, marginTop: 16 }}>
               {t(
@@ -1406,19 +1370,9 @@ export default function Homepage() {
               <a href="#features">{t('기능', 'Features', lang)}</a>
               <a href="#pricing">{t('요금제', 'Pricing', lang)}</a>
               <Link href="/auth">{t('로그인', 'Login', lang)}</Link>
-              <button
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--text-2)',
-                  fontSize: 13,
-                  fontFamily: 'inherit',
-                }}
-                onClick={() => setContactOpen(true)}
-              >
+              <Link href="/contact" style={{ color: 'var(--text-2)', fontSize: 13, textDecoration: 'none' }}>
                 {t('문의', 'Contact', lang)}
-              </button>
+              </Link>
             </div>
           </div>
           <div
@@ -1442,137 +1396,6 @@ export default function Homepage() {
         </div>
       </footer>
 
-      {/* CONTACT MODAL */}
-      {contactOpen && (
-        <div
-          className="modal-backdrop open"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setContactOpen(false);
-          }}
-        >
-          <div className="modal" role="dialog" aria-modal="true">
-            <div className="modal-head">
-              <div>
-                <h3>{t('문의하기', 'Contact us', lang)}</h3>
-                <p>
-                  {t(
-                    '이메일이나 메시지로 편하게 문의해주세요. 24시간 안에 답변드립니다.',
-                    'Reach out by email or message — we reply within 24 hours.',
-                    lang
-                  )}
-                </p>
-              </div>
-              <button className="modal-close" onClick={() => setContactOpen(false)} aria-label="close">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            <div className="modal-body">
-              {/* Quick channels */}
-              <div className="channel-row">
-                <a className="channel-card" href="mailto:info.tgtm@gmail.com">
-                  <div className="ico">📧</div>
-                  <div className="lbl">{t('바로 이메일', 'Email directly', lang)}</div>
-                  <div className="val">info.tgtm@gmail.com</div>
-                </a>
-                <a className="channel-card" href="sms:+12012336184">
-                  <div className="ico">💬</div>
-                  <div className="lbl">{t('문자 메시지', 'Text message', lang)}</div>
-                  <div className="val">+1 (201) 233-6184</div>
-                </a>
-              </div>
-
-              <div
-                style={{
-                  textAlign: 'center',
-                  fontSize: 12,
-                  color: 'var(--text-3)',
-                  marginBottom: 16,
-                }}
-              >
-                {t('— 또는 양식 작성 —', '— or send a message —', lang)}
-              </div>
-
-              <div className="modal-tabs">
-                <button
-                  className={contactTab === 'message' ? 'on' : ''}
-                  onClick={() => handleTabSwitch('message')}
-                >
-                  {t('메시지 보내기', 'Send message', lang)}
-                </button>
-                <button
-                  className={contactTab === 'email' ? 'on' : ''}
-                  onClick={() => handleTabSwitch('email')}
-                >
-                  {t('이메일 양식', 'Email form', lang)}
-                </button>
-              </div>
-
-              {!formSuccess ? (
-                <form onSubmit={handleContactSubmit}>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>{t('이름', 'Name', lang)}</label>
-                      <input type="text" required name="name" />
-                    </div>
-                    <div className="form-group">
-                      <label>{t('매장 이름', 'Business name', lang)}</label>
-                      <input type="text" name="business" placeholder="Nook Café" />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>
-                      {contactTab === 'email'
-                        ? t('이메일', 'Email', lang)
-                        : t('휴대폰 번호', 'Phone number', lang)}
-                    </label>
-                    <input
-                      type={formContactType}
-                      required
-                      placeholder={
-                        formContactType === 'email' ? 'you@example.com' : '+1 (201) 555-1234'
-                      }
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>{t('문의 종류', 'Topic', lang)}</label>
-                    <select name="topic">
-                      <option>{t('요금제 상담', 'Pricing inquiry', lang)}</option>
-                      <option>{t('데모 카드 받기', 'Demo reward card', lang)}</option>
-                      <option>{t('여러 지점 도입', 'Multi-location setup', lang)}</option>
-                      <option>{t('기능 문의', 'Feature question', lang)}</option>
-                      <option>{t('기타', 'Other', lang)}</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>{t('메시지', 'Message', lang)}</label>
-                    <textarea
-                      name="message"
-                      placeholder={t(
-                        '간단하게 어떤 매장이고 어떤 도움이 필요한지 알려주세요.',
-                        'Tell us briefly about your business and how we can help.',
-                        lang
-                      )}
-                    />
-                  </div>
-                  <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                    {t('문의 보내기', 'Send message', lang)}
-                  </button>
-                </form>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>🙏</div>
-                  <h4 style={{ margin: '0 0 8px' }}>{t('접수 완료!', 'Got it!', lang)}</h4>
-                  <p style={{ margin: 0, fontSize: 13, color: 'var(--text-2)' }}>
-                    {t('24시간 안에 연락드리겠습니다.', "We'll be in touch within 24 hours.", lang)}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

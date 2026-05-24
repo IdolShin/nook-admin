@@ -263,7 +263,7 @@ export default function ContactPage() {
             {/* Plan selector */}
             <div style={{ marginBottom: 22 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: '#5C5F66', display: 'block', marginBottom: 10 }}>
-                {t('관심 플랜', 'Interested Plan')}
+                {t('관심 플랜', 'Interested Plan', lang)}
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {PLANS.map(plan => {
