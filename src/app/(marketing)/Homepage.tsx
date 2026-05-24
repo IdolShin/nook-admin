@@ -1087,7 +1087,7 @@ export default function Homepage() {
               </Link>
             </div>
 
-            {/* Pro */
+            {/* Pro */}
             <div className="price-card featured reveal" style={{ transitionDelay: '80ms' }}>
               <div className="badge-featured">{t('인기', 'Popular', lang)}</div>
               <div className="name">{t('프로', 'Pro', lang)}</div>
@@ -1109,7 +1109,7 @@ export default function Homepage() {
               </Link>
             </div>
 
-            {/* Premium */
+            {/* Premium */}
             <div className="price-card reveal" style={{ transitionDelay: '160ms' }}>
               <div className="name">{t('프리미엄', 'Premium', lang)}</div>
               <div className="price">$129<small> /mo</small></div>
@@ -1132,7 +1132,7 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */
+      {/* TESTIMONIALS */}
       <section>
         <div className="wrap">
           <div className="reveal">
