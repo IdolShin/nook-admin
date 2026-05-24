@@ -18,7 +18,7 @@ const PLANS = [
 const BUSINESS_TYPES = [
   { value: 'cafe',       ko: '카페 / 커피숍',    en: 'Cafe / Coffee Shop' },
   { value: 'restaurant', ko: '레스토랑',          en: 'Restaurant' },
-  { value: 'salon',      ko: '미용실 / 살롱',     en: 'Salon / Beauty' },
+  { value: 'salon',      ko: '미용실 / 살롱',     en: 'Salon / Beauty' },h
   { value: 'gym',        ko: '헬스장 / 피트니스', en: 'Gym / Fitness' },
   { value: 'retail',     ko: '리테일 / 쇼핑',     en: 'Retail / Shopping' },
   { value: 'other',      ko: '기타',              en: 'Other' },
@@ -150,6 +150,19 @@ export default function ContactPage() {
             >
               {t('확인', 'Got it', lang)}
             </button>
+            <a
+              href="/"
+              style={{
+                display: 'block', width: '100%', height: 46, marginTop: 10,
+                background: 'transparent', color: '#1D9E75',
+                border: '1.5px solid #1D9E75', borderRadius: 12,
+                fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                textDecoration: 'none', lineHeight: '46px', textAlign: 'center',
+                boxSizing: 'border-box',
+              }}
+            >
+              {t('홈페이지로 가기', 'Go to Homepage', lang)}
+            </a>
           </div>
         </div>
       )}
