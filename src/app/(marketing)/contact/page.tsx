@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import NookMark from '@/components/NookMark';
 import '../marketing.css';
@@ -26,6 +26,18 @@ const BUSINESS_TYPES = [
 
 export default function ContactPage() {
   const [lang, setLang]   = useState<Lang>('ko');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('nook-lang') as Lang | null;
+      if (saved === 'ko' || saved === 'en') setLang(saved);
+    } catch (e) {}
+  }, []);
+
+  function switchLang(l: Lang) {
+    setLang(l);
+    try { localStorage.setItem('nook-lang', l); } catch (e) {}
+  }
   const [form, setForm]   = useState({
     businessName: '', location: '', phone: '',
     email: '', businessType: '', plan: '', message: '',
@@ -94,19 +106,10 @@ export default function ContactPage() {
           <span style={{ fontSize: 17, fontWeight: 700, color: '#085041', letterSpacing: '-0.02em' }}>nook</span>
         </Link>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button
-            onClick={() => setLang(l => l === 'ko' ? 'en' : 'ko')}
-            style={{
-              height: 32, padding: '0 12px',
-              border: '1.5px solid #D4E6DB', borderRadius: 8,
-              background: 'white', color: '#085041',
-              fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 5,
-            }}
-          >
-            <span style={{ fontSize: 15 }}>{lang === 'ko' ? '🇰🇷' : '🇺🇸'}</span>
-            {lang === 'ko' ? 'KOR' : 'ENG'}
-          </button>
+          <div className="lang-toggle">
+            <button className={lang === 'ko' ? 'on' : ''} onClick={() => switchLang('ko')}>한국어</button>
+            <button className={lang === 'en' ? 'on' : ''} onClick={() => switchLang('en')}>EN</button>
+          </div>
           <Link href="/#pricing" style={{
             height: 34, padding: '0 14px', display: 'flex', alignItems: 'center',
             background: '#1D9E75', color: 'white', borderRadius: 9,
