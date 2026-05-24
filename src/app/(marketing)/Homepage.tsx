@@ -1557,30 +1557,15 @@ export default function Homepage() {
                     />
                   </div>
                   <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                    {t('문의 보내기', 'Send inquiry', lang)}
+                    {t('문의 보내기', 'Send message', lang)}
                   </button>
-                  <div
-                    style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-3)', marginTop: 14 }}
-                  >
-                    {t('24시간 안에 회신드립니다 · 스팸 없음', 'We reply within 24 hours · No spam', lang)}
-                  </div>
                 </form>
               ) : (
-                <div className="form-success shown">
-                  <div className="check">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                      <path
-                        d="M8 16l5 5L24 11"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <h4>{t('문의가 전송되었습니다!', 'Message sent!', lang)}</h4>
-                  <p>
-                    {t('24시간 안에 답변드릴게요. 감사합니다 ☕', "We'll get back to you within 24 hours. Thank you ☕", lang)}
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{ fontSize: 36, marginBottom: 12 }}>🙏</div>
+                  <h4 style={{ margin: '0 0 8px' }}>{t('접수 완료!', 'Got it!', lang)}</h4>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--text-2)' }}>
+                    {t('24시간 안에 연락드리겠습니다.', "We'll be in touch within 24 hours.", lang)}
                   </p>
                 </div>
               )}
