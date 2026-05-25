@@ -217,8 +217,8 @@ function NewCardModal({ onClose, onCreate, businessId, allowedCardTypes, isSuper
             <div>
               <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Card type</label>
               {!isSuperadmin && allowedCardTypes.length === 1 && (
-                <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFF8E8', border: '1px solid #F0C860', borderRadius: 8, fontSize: 12, color: '#8C5A11', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Lock size={12} /> Basic plan: stamp cards only. <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>Upgrade to Pro or Premium</span> for more card types.
+                <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 8, fontSize: 12, color: '#92400E', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Lock size={12} /> Basic plan: stamp cards only. <span onClick={() => window.location.href = '/upgrade'} style={{ textDecoration: 'underline', cursor: 'pointer', fontWeight: 600 }}>Upgrade to Pro or Premium</span> for more card types.
                 </div>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isPhone ? 2 : 4},1fr)`, gap: 6 }}>
@@ -524,7 +524,7 @@ function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => vo
 
 export default function CardsPage() {
   const { isMobile } = useBreakpoint();
-  const { allowedCardTypes, isSuperadmin, cardLimit, isBasic, isPro } = usePlan();
+  const { allowedCardTypes, isSuperadmin, cardLimit, isBasic, isPro, isPremium } = usePlan();
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [type, setType] = useState('all');
   const [status, setStatus] = useState('all');
@@ -592,16 +592,25 @@ export default function CardsPage() {
       )}
 
       {/* Plan limit banner */}
-      {!isSuperadmin && (isBasic || isPro) && (
-        <div style={{
-          padding: '10px 16px', background: '#FFFBEB', border: '1px solid #F0C860',
-          borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#8C5A11',
-        }}>
+      {!isSuperadmin && isPremium && (
+        <div style={{ padding: '10px 16px', background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)', border: '1px solid #93C5FD', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#1D4ED8' }}>
+          <span style={{ fontSize: 15 }}>✨</span>
+          <div><div style={{ fontWeight: 700 }}>Premium — Unlimited Cards & Customers</div><div style={{ fontSize: 11, opacity: 0.8, marginTop: 1 }}>All card types · Unlimited customers · Unlimited push</div></div>
+          <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, background: '#2563EB', color: 'white', padding: '2px 8px', borderRadius: 20 }}>PREMIUM</span>
+        </div>
+      )}
+      {!isSuperadmin && isBasic && (
+        <div style={{ padding: '10px 16px', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#92400E' }}>
           <Lock size={13} />
-          {isBasic
-            ? `Basic plan: 1 stamp card · 100 customers · push 1/month`
-            : `Pro plan: up to 3 cards · 500 customers · push 1/week`}
-          <span style={{ marginLeft: 'auto', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>Upgrade →</span>
+          <div><div style={{ fontWeight: 700 }}>Basic Plan</div><div style={{ fontSize: 11, opacity: 0.8, marginTop: 1 }}>1 stamp card · 100 customers · push 1/month</div></div>
+          <button onClick={() => window.location.href = '/upgrade'} style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, background: '#F59E0B', color: 'white', border: 0, padding: '4px 12px', borderRadius: 20, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Upgrade</button>
+        </div>
+      )}
+      {!isSuperadmin && isPro && (
+        <div style={{ padding: '10px 16px', background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#14532D' }}>
+          <Lock size={13} />
+          <div><div style={{ fontWeight: 700 }}>Pro Plan</div><div style={{ fontSize: 11, opacity: 0.8, marginTop: 1 }}>Up to 3 cards · 500 customers · push 1/week</div></div>
+          <button onClick={() => window.location.href = '/upgrade'} style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, background: '#16A34A', color: 'white', border: 0, padding: '4px 12px', borderRadius: 20, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Upgrade</button>
         </div>
       )}
 

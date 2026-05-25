@@ -266,19 +266,41 @@ export default function PushPage() {
               title="Audience"
               hint={<span style={{ color: '#1D9E75', fontWeight: 500 }}>{reach} selected</span>}
             >
-              {/* Plan notice for audience filter */}
-              {!isSuperadmin && !canFilterAudience && (
-                <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFF8E8', border: '1px solid #F0C860', borderRadius: 8, fontSize: 11, color: '#8C5A11', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Lock size={11} />
-                  {isPro ? 'Pro plan: audience filtering locked — sends to all customers. Upgrade to Premium to target by status.' : 'Basic plan: sends to all customers only.'}
+              {/* Plan banner */}
+              {!isSuperadmin && isPremium && (
+                <div style={{ marginBottom: 10, padding: '10px 14px', background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)', border: '1px solid #93C5FD', borderRadius: 10, fontSize: 12, color: '#1D4ED8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <span style={{ fontSize: 15 }}>✨</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 12 }}>Premium — Unlimited Push</div>
+                      <div style={{ fontSize: 11, opacity: 0.85, marginTop: 1 }}>No frequency limit · Target any audience segment</div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, background: '#2563EB', color: 'white', padding: '2px 8px', borderRadius: 20 }}>PREMIUM</span>
                 </div>
               )}
-
-              {/* Plan notice for push frequency */}
-              {!isSuperadmin && pushLimitDays !== null && (
-                <div style={{ marginBottom: 8, padding: '8px 12px', background: '#F0F4FF', border: '1px solid #C0CCEE', borderRadius: 8, fontSize: 11, color: '#3B4A8C', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Clock size={11} />
-                  {isBasic ? 'Basic plan: 1 push per month allowed.' : 'Pro plan: 1 push per week allowed.'} Upgrade to Premium for unlimited.
+              {!isSuperadmin && isBasic && (
+                <div style={{ marginBottom: 10, padding: '10px 14px', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 10, fontSize: 12, color: '#92400E', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <Lock size={13} />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 12 }}>Basic Plan</div>
+                      <div style={{ fontSize: 11, opacity: 0.85, marginTop: 1 }}>1 push/month · Sends to all customers only</div>
+                    </div>
+                  </div>
+                  <button onClick={() => window.location.href = '/upgrade'} style={{ fontSize: 11, fontWeight: 700, background: '#F59E0B', color: 'white', border: 0, padding: '4px 10px', borderRadius: 20, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Upgrade</button>
+                </div>
+              )}
+              {!isSuperadmin && isPro && (
+                <div style={{ marginBottom: 10, padding: '10px 14px', background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 10, fontSize: 12, color: '#14532D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <Lock size={13} />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 12 }}>Pro Plan</div>
+                      <div style={{ fontSize: 11, opacity: 0.85, marginTop: 1 }}>1 push/week · Sends to all customers only · Upgrade for audience targeting</div>
+                    </div>
+                  </div>
+                  <button onClick={() => window.location.href = '/upgrade'} style={{ fontSize: 11, fontWeight: 700, background: '#16A34A', color: 'white', border: 0, padding: '4px 10px', borderRadius: 20, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Upgrade</button>
                 </div>
               )}
 
