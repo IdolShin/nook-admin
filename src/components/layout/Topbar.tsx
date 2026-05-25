@@ -168,18 +168,7 @@ export default function Topbar({
       </div>
       <div style={{ flex: 1 }} />
 
-      <div style={{
-        height: 34, padding: '0 12px',
-        background: '#F0F1F4', borderRadius: 8,
-        color: '#8A8D94', minWidth: 220,
-        display: 'flex', alignItems: 'center', gap: 8,
-      }}>
-        <Search size={15} />
-        <span style={{ fontSize: 13, flex: 1 }}>Search customers, cards…</span>
-        <span style={{ fontSize: 11, padding: '1px 5px', border: '1px solid #EBEBEB', borderRadius: 4, color: '#8A8D94', background: 'white' }}>⌘K</span>
-      </div>
-
-      <div style={{ position: 'relative' }}>
+      {isSuperadmin && <div style={{ position: 'relative' }}>
         <button onClick={() => setBizOpen((o) => !o)} style={{
           display: 'flex', alignItems: 'center', gap: 6,
           height: 34, padding: '0 12px',
@@ -212,7 +201,7 @@ export default function Topbar({
             </div>
           </>
         )}
-      </div>
+      </div>}
 
       <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3 }}>
         {(['7d', '30d', '90d', '12m'] as const).map((r) => (

@@ -1,5 +1,5 @@
 export const businesses = [
-  { id: "all",     name: "All businesses", short: "ALL", color: "#1D9E75", customers: 284 },
+  { id: "all",     name: "All", short: "ALL", color: "#1D9E75", customers: 284 },
   { id: "nook",    name: "Nook Café",      short: "NC",  color: "#1D9E75", customers: 128, emoji: String.fromCharCode(0x2615) },
   { id: "kook",    name: "Kook 미용실",     short: "K",   color: "#3B6BCC", customers: 76,  emoji: "✂️" },
   { id: "fortlee", name: "Fort Lee Gym",   short: "FL",  color: "#C26B1F", customers: 53,  emoji: "💪" },
