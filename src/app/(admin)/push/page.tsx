@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { pastCampaigns } from '@/lib/data';
-import { Zap, Calendar, Send, Bookmark, Search, CheckSquare, Square, Trash2, Plus, Clock, FileText } from 'lucide-react';
+import { Zap, Calendar, Send, Bookmark, Search, CheckSquare, Square, Trash2, Plus, Clock, FileText, Lock } from 'lucide-react';
 import { api, ApiCustomer } from '@/lib/api';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { usePlan } from '@/hooks/usePlan';
 
 const TEMPLATES = [
   {
@@ -87,6 +88,7 @@ function formatDraftTime(iso: string) {
 
 export default function PushPage() {
   const { isMobile } = useBreakpoint();
+  const { canFilterAudience, pushLimitDays, isSuperadmin, isBasic, isPro, isPremium } = usePlan();
   const [tab, setTab] = useState('compose');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -264,26 +266,49 @@ export default function PushPage() {
               title="Audience"
               hint={<span style={{ color: '#1D9E75', fontWeight: 500 }}>{reach} selected</span>}
             >
+              {/* Plan notice for audience filter */}
+              {!isSuperadmin && !canFilterAudience && (
+                <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFF8E8', border: '1px solid #F0C860', borderRadius: 8, fontSize: 11, color: '#8C5A11', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Lock size={11} />
+                  {isPro ? 'Pro plan: audience filtering locked — sends to all customers. Upgrade to Premium to target by status.' : 'Basic plan: sends to all customers only.'}
+                </div>
+              )}
+
+              {/* Plan notice for push frequency */}
+              {!isSuperadmin && pushLimitDays !== null && (
+                <div style={{ marginBottom: 8, padding: '8px 12px', background: '#F0F4FF', border: '1px solid #C0CCEE', borderRadius: 8, fontSize: 11, color: '#3B4A8C', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Clock size={11} />
+                  {isBasic ? 'Basic plan: 1 push per month allowed.' : 'Pro plan: 1 push per week allowed.'} Upgrade to Premium for unlimited.
+                </div>
+              )}
+
               {/* Group quick-select buttons */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
                 {AUDIENCE_GROUPS.map((g) => {
                   const count = customers.filter(g.filterFn).length;
+                  const isLocked = !isSuperadmin && !canFilterAudience && g.id !== 'all';
                   return (
                     <button
                       key={g.id}
-                      onClick={() => selectGroup(g.id)}
+                      onClick={() => !isLocked && selectGroup(g.id)}
                       style={{
-                        height: 34, border: 0, borderRadius: 8, cursor: 'pointer',
-                        fontFamily: 'inherit', background: g.color, color: 'white',
+                        height: 34, border: 0, borderRadius: 8,
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit',
+                        background: isLocked ? '#E0E0E0' : g.color,
+                        color: isLocked ? '#999' : 'white',
                         fontSize: 12, fontWeight: 500, display: 'flex', flexDirection: 'column',
                         alignItems: 'center', justifyContent: 'center', gap: 1,
                         transition: 'opacity 120ms',
+                        position: 'relative',
                       }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+                      onMouseEnter={(e) => { if (!isLocked) (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                     >
-                      <span>{g.label}</span>
-                      <span style={{ fontSize: 10, opacity: 0.8 }}>{count}</span>
+                      {isLocked
+                        ? <><Lock size={11} /><span style={{ fontSize: 10 }}>{g.label}</span></>
+                        : <><span>{g.label}</span><span style={{ fontSize: 10, opacity: 0.8 }}>{count}</span></>
+                      }
                     </button>
                   );
                 })}

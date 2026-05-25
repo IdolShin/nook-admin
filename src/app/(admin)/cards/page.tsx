@@ -5,10 +5,11 @@ import { typeMeta, statusMeta } from '@/lib/utils';
 import MiniCardArt from '@/components/cards/MiniCardArt';
 import Sparkline from '@/components/charts/Sparkline';
 import { api, type ApiCard } from '@/lib/api';
-import { Search, Plus, ChevronDown, X, MoreHorizontal, Send } from 'lucide-react';
+import { Search, Plus, ChevronDown, X, MoreHorizontal, Send, Lock } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
 import BottomSheet from '@/components/ui/BottomSheet';
+import { usePlan } from '@/hooks/usePlan';
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -156,7 +157,7 @@ function FilterDropdown({ label, value, options, onChange }: {
 
 const PRESET_COLORS = ['#1D9E75', '#3B6BCC', '#C26B1F', '#C53A6B', '#8B5CF6', '#1A1A1F'];
 
-function NewCardModal({ onClose, onCreate, businessId }: { onClose: () => void; onCreate: (c: Card) => void; businessId?: string }) {
+function NewCardModal({ onClose, onCreate, businessId, allowedCardTypes, isSuperadmin }: { onClose: () => void; onCreate: (c: Card) => void; businessId?: string; allowedCardTypes: string[]; isSuperadmin: boolean }) {
   const [name, setName] = useState('');
   const [cardType, setCardType] = useState('stamp');
   const [goalStamps, setGoalStamps] = useState(10);
@@ -215,17 +216,28 @@ function NewCardModal({ onClose, onCreate, businessId }: { onClose: () => void; 
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Card type</label>
+              {!isSuperadmin && allowedCardTypes.length === 1 && (
+                <div style={{ marginBottom: 8, padding: '8px 12px', background: '#FFF8E8', border: '1px solid #F0C860', borderRadius: 8, fontSize: 12, color: '#8C5A11', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Lock size={12} /> Basic plan: stamp cards only. <span style={{ textDecoration: 'underline', cursor: 'pointer' }}>Upgrade to Pro or Premium</span> for more card types.
+                </div>
+              )}
               <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isPhone ? 2 : 4},1fr)`, gap: 6 }}>
                 {(['stamp', 'cashback', 'coupon', 'membership'] as const).map((t) => {
                   const m = typeMeta[t];
+                  const isLocked = !isSuperadmin && !allowedCardTypes.includes(t);
                   return (
-                    <button key={t} onClick={() => setCardType(t)} style={{
+                    <button key={t} onClick={() => !isLocked && setCardType(t)} style={{
                       padding: isPhone ? '10px 4px' : '8px 4px',
-                      border: `1px solid ${cardType === t ? color : '#EBEBEB'}`,
-                      borderRadius: 8, background: cardType === t ? '#E8F7F2' : 'white',
-                      cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
-                      color: cardType === t ? '#085041' : '#5C5F66', fontWeight: cardType === t ? 500 : 400,
-                    }}>{m.label}</button>
+                      border: `1px solid ${cardType === t ? color : isLocked ? '#F0F0F0' : '#EBEBEB'}`,
+                      borderRadius: 8, background: cardType === t ? '#E8F7F2' : isLocked ? '#F9F9F9' : 'white',
+                      cursor: isLocked ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: 13,
+                      color: cardType === t ? '#085041' : isLocked ? '#C0C0C0' : '#5C5F66',
+                      fontWeight: cardType === t ? 500 : 400,
+                      position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    }}>
+                      {isLocked && <Lock size={11} style={{ opacity: 0.5 }} />}
+                      {m.label}
+                    </button>
                   );
                 })}
               </div>
@@ -512,6 +524,7 @@ function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => vo
 
 export default function CardsPage() {
   const { isMobile } = useBreakpoint();
+  const { allowedCardTypes, isSuperadmin, cardLimit, isBasic, isPro } = usePlan();
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [type, setType] = useState('all');
   const [status, setStatus] = useState('all');
@@ -573,7 +586,23 @@ export default function CardsPage() {
           businessId={selectedBusinessId}
           onClose={() => setShowModal(false)}
           onCreate={(c) => setAllCards((prev) => [c, ...prev])}
+          allowedCardTypes={allowedCardTypes}
+          isSuperadmin={isSuperadmin}
         />
+      )}
+
+      {/* Plan limit banner */}
+      {!isSuperadmin && (isBasic || isPro) && (
+        <div style={{
+          padding: '10px 16px', background: '#FFFBEB', border: '1px solid #F0C860',
+          borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#8C5A11',
+        }}>
+          <Lock size={13} />
+          {isBasic
+            ? `Basic plan: 1 stamp card · 100 customers · push 1/month`
+            : `Pro plan: up to 3 cards · 500 customers · push 1/week`}
+          <span style={{ marginLeft: 'auto', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>Upgrade →</span>
+        </div>
       )}
 
       {/* Business Selector — only shown when multiple businesses exist */}

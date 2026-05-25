@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, ChevronDown, Plus, Menu, Bell, AlertTriangle, X } from 'lucide-react';
 import { businesses } from '@/lib/data';
+import { usePlan } from '@/hooks/usePlan';
 
 const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
   '/dashboard':  { t: 'Dashboard',          s: "Welcome back — here's what's happening." },
@@ -102,6 +103,7 @@ export default function Topbar({
   const [bizOpen, setBizOpen] = useState(false);
   const [bizId, setBizId] = useState('all');
   const [range, setRange] = useState('30d');
+  const { isSuperadmin } = usePlan();
   const head = PAGE_META[pathname] ?? PAGE_META['/dashboard'];
   const current = businesses.find((b) => b.id === bizId) ?? businesses[0];
 
@@ -132,7 +134,7 @@ export default function Topbar({
         </div>
 
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <NotificationBell />
+          {isSuperadmin && <NotificationBell />}
           {head.cta ? (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('nook:cta'))}
@@ -226,7 +228,7 @@ export default function Topbar({
         ))}
       </div>
 
-      <NotificationBell />
+      {isSuperadmin && <NotificationBell />}
 
       {head.cta && (
         <button onClick={() => window.dispatchEvent(new CustomEvent('nook:cta'))} style={{
