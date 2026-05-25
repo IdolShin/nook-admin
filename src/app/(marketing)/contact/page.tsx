@@ -18,7 +18,7 @@ const PLANS = [
 const BUSINESS_TYPES = [
   { value: 'cafe',       ko: '카페 / 커피숍',    en: 'Cafe / Coffee Shop' },
   { value: 'restaurant', ko: '레스토랑',          en: 'Restaurant' },
-  { value: 'salon',      ko: '미용실 / 살롱',     en: 'Salon / Beauty' },h
+  { value: 'salon',      ko: '미용실 / 살롱',     en: 'Salon / Beauty' },
   { value: 'gym',        ko: '헬스장 / 피트니스', en: 'Gym / Fitness' },
   { value: 'retail',     ko: '리테일 / 쇼핑',     en: 'Retail / Shopping' },
   { value: 'other',      ko: '기타',              en: 'Other' },

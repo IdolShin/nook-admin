@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import '../../../marketing.css';
+import '../../marketing.css';
 
 type Lang = 'ko' | 'en';
 function T(ko: string, en: string, lang: Lang) { return lang === 'ko' ? ko : en; }
