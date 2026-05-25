@@ -46,7 +46,11 @@ export default function Sidebar({
   const mainItems    = NAV_MAIN.filter(it => canView(decoded, it.page));
   const growthItems  = NAV_GROWTH.filter(it => canView(decoded, it.page));
   const scanVisible  = canView(decoded, 'scanner');
-  const settingItems = NAV_SETTINGS.filter(it => it.page === null || canView(decoded, it.page));
+  // Settings page: superadmin only. How to use: everyone.
+  const settingItems = NAV_SETTINGS.filter(it => {
+    if (it.page === 'settings') return isSuperadmin;
+    return it.page === null || canView(decoded, it.page);
+  });
   // Compute slug for Customer Sign-up link (same logic as backend nameToSlug)
   const bizSlug = (decoded?.name ?? '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9가-힣-]/g, '');
   const isActive = (href: string) => pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
