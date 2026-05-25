@@ -5,10 +5,9 @@ import { typeMeta, statusMeta } from '@/lib/utils';
 import MiniCardArt from '@/components/cards/MiniCardArt';
 import Sparkline from '@/components/charts/Sparkline';
 import { api, type ApiCard } from '@/lib/api';
-import { Search, Plus, ChevronDown, X, MoreHorizontal, Send, Lock } from 'lucide-react';
+import { Search, Plus, ChevronDown, X, Send, Lock, Pencil, Trash2 } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
-import BottomSheet from '@/components/ui/BottomSheet';
 import { usePlan } from '@/hooks/usePlan';
 
 /* ─── Types ────────────────────────────────────────────────── */
@@ -306,6 +305,188 @@ function NewCardModal({ onClose, onCreate, businessId, allowedCardTypes, isSuper
   );
 }
 
+/* ─── Edit Card Modal ───────────────────────────────────────── */
+
+function EditCardModal({ card, onClose, onUpdated }: { card: Card; onClose: () => void; onUpdated: (c: Card) => void }) {
+  const [name, setName] = useState(card.name);
+  const [cardType, setCardType] = useState(card.type);
+  const [goalStamps, setGoalStamps] = useState(card.goal_stamps || 10);
+  const [rewardDesc, setRewardDesc] = useState(card.reward);
+  const [color, setColor] = useState(card.color);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const { isPhone } = useBreakpoint();
+  const { allowedCardTypes, isSuperadmin } = usePlan();
+
+  const handleSave = async () => {
+    if (!name.trim()) { setError('Card name is required'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      const result = await api.updateCard(card.id, {
+        name: name.trim(),
+        card_type: cardType,
+        goal_stamps: goalStamps,
+        reward_desc: rewardDesc.trim() || undefined,
+        color,
+      });
+      const gradient = CARD_COLORS[result.color] ?? [darkenHex(result.color), result.color];
+      onUpdated({ ...card, name: result.name, type: result.card_type, reward: result.reward_desc || '', color: result.color, gradient, goal_stamps: result.goal_stamps, stamps: result.card_type === 'stamp' ? result.goal_stamps : null });
+      onClose();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to update card');
+      setSaving(false);
+    }
+  };
+
+  return (
+    <ResponsiveModal isOpen onClose={onClose} title="Edit loyalty card">
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: isPhone ? '16px 20px' : 20, display: 'grid', gap: 14 }}>
+          {error && (
+            <div style={{ padding: '10px 14px', background: '#FBE2EC', borderRadius: 8, fontSize: 12, color: '#9C2848' }}>{error}</div>
+          )}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Card name *</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Coffee lovers"
+              style={{ width: '100%', height: 40, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Card type</label>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isPhone ? 2 : 4},1fr)`, gap: 6 }}>
+              {(['stamp', 'cashback', 'coupon', 'membership'] as const).map((t) => {
+                const m = typeMeta[t];
+                const isLocked = !isSuperadmin && !allowedCardTypes.includes(t);
+                return (
+                  <button key={t} onClick={() => !isLocked && setCardType(t)} style={{
+                    padding: isPhone ? '10px 4px' : '8px 4px',
+                    border: `1px solid ${cardType === t ? color : isLocked ? '#F0F0F0' : '#EBEBEB'}`,
+                    borderRadius: 8, background: cardType === t ? '#E8F7F2' : isLocked ? '#F9F9F9' : 'white',
+                    cursor: isLocked ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: 13,
+                    color: cardType === t ? '#085041' : isLocked ? '#C0C0C0' : '#5C5F66',
+                    fontWeight: cardType === t ? 500 : 400,
+                    position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  }}>
+                    {isLocked && <Lock size={11} style={{ opacity: 0.5 }} />}
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {cardType === 'stamp' && (
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Goal stamps</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[5, 6, 7, 8, 10, 12].map((n) => (
+                  <button key={n} onClick={() => setGoalStamps(n)} style={{
+                    flex: 1, height: 36, border: `1px solid ${goalStamps === n ? color : '#EBEBEB'}`,
+                    borderRadius: 8, background: goalStamps === n ? '#E8F7F2' : 'white',
+                    cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
+                    color: goalStamps === n ? '#085041' : '#5C5F66', fontWeight: goalStamps === n ? 600 : 400,
+                  }}>{n}</button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>
+              {cardType === 'coupon' ? 'Offer description' : cardType === 'membership' ? 'Member benefits' : 'Reward description'}
+            </label>
+            <input value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)}
+              placeholder={cardType === 'coupon' ? 'e.g. 감자튀김/고로케 무료' : 'e.g. Free latte after 10 stamps'}
+              style={{ width: '100%', height: 40, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 8 }}>Color</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {PRESET_COLORS.map((c) => (
+                <button key={c} onClick={() => setColor(c)} style={{
+                  width: 32, height: 32, borderRadius: 999, background: c, border: 'none', cursor: 'pointer',
+                  outline: color === c ? `3px solid ${c}` : '3px solid transparent',
+                  outlineOffset: 2,
+                }} />
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 4 }}>
+            <MiniCardArt card={{
+              id: card.id, name: name || 'Card name', biz: api.getBusinessName() || 'Your business',
+              type: cardType, reward: rewardDesc || 'Your reward',
+              gradient: CARD_COLORS[color] ?? [darkenHex(color), color],
+              stamps: cardType === 'stamp' ? goalStamps : null,
+              issued: 0, redemptions: 0,
+            }} w={isPhone ? 280 : 320} h={isPhone ? 172 : 196} />
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              height: isPhone ? 52 : 40, background: saving ? '#8A8D94' : '#1D9E75', color: 'white',
+              border: 0, borderRadius: 10, fontSize: 14, fontWeight: 600,
+              cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
+      </div>
+    </ResponsiveModal>
+  );
+}
+
+/* ─── Delete Card Confirm ───────────────────────────────────── */
+
+function DeleteCardConfirm({ card, onClose, onDeleted }: { card: Card; onClose: () => void; onDeleted: (id: string) => void }) {
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const { isPhone } = useBreakpoint();
+  async function handleDelete() {
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      await api.deleteCard(card.id);
+      onDeleted(card.id);
+      onClose();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to delete card';
+      setDeleteError(msg);
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <ResponsiveModal isOpen onClose={onClose} title="Delete card" maxWidth={400}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: isPhone ? '16px 20px' : 24 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 999, background: '#FBE2EC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Trash2 size={24} color="#C53A6B" />
+          </div>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>Delete &ldquo;{card.name}&rdquo;?</div>
+            <div style={{ fontSize: 13, color: '#5C5F66', lineHeight: 1.5 }}>
+              This will permanently delete the card and all associated data. Customers will lose their stamps. This cannot be undone.
+            </div>
+          </div>
+          {deleteError && (
+            <div style={{ padding: '10px 14px', background: '#FBE2EC', borderRadius: 8, fontSize: 12, color: '#9C2848', marginBottom: 12 }}>
+              {deleteError}
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: isPhone ? 'column' : 'row', gap: 8 }}>
+            <button onClick={onClose} style={{ flex: 1, height: isPhone ? 48 : 38, border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+              Cancel
+            </button>
+            <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, height: isPhone ? 48 : 38, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: deleting ? '#8A8D94' : '#C53A6B', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: deleting ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+              <Trash2 size={13} /> {deleting ? 'Deleting…' : 'Delete card'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </ResponsiveModal>
+  );
+}
+
 /* ─── Card tile & table ────────────────────────────────────── */
 
 function CardTile({ card, selected, onSelect }: { card: Card; selected: boolean; onSelect: () => void }) {
@@ -440,7 +621,7 @@ function CardsTable({ rows, selectedId, onSelect }: { rows: Card[]; selectedId: 
   );
 }
 
-function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => void; onToggle: (id: string, active: boolean) => void }) {
+function CardDetail({ card, onClose, onToggle, onEdit, onDelete }: { card: Card; onClose: () => void; onToggle: (id: string, active: boolean) => void; onEdit: (card: Card) => void; onDelete: (card: Card) => void }) {
   const [toggling, setToggling] = useState(false);
   const [cardStats, setCardStats] = useState<{ total_customers: number; total_stamps: number; total_redeems: number } | null>(null);
 
@@ -508,11 +689,11 @@ function CardDetail({ card, onClose, onToggle }: { card: Card; onClose: () => vo
           >
             {toggling ? '…' : card.is_active ? 'Pause card' : 'Activate card'}
           </button>
-          <button style={{ height: 34, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
-            <Send size={13} color="#5C5F66" /> Push
+          <button onClick={() => onEdit(card)} style={{ height: 34, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 5, border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+            <Pencil size={13} color="#5C5F66" />
           </button>
-          <button style={{ height: 34, padding: '0 8px', border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-            <MoreHorizontal size={16} color="#5C5F66" />
+          <button onClick={() => onDelete(card)} style={{ height: 34, padding: '0 10px', display: 'flex', alignItems: 'center', gap: 5, border: '1px solid #FBE2EC', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+            <Trash2 size={13} color="#C53A6B" />
           </button>
         </div>
       </div>
@@ -533,6 +714,8 @@ export default function CardsPage() {
   const [allCards, setAllCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editCard, setEditCard] = useState<Card | null>(null);
+  const [deleteCard, setDeleteCard] = useState<Card | null>(null);
   const [businesses, setBusinesses] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedBusinessId, setSelectedBusinessId] = useState('');
 
@@ -579,6 +762,16 @@ export default function CardsPage() {
     setSelected((prev) => prev?.id === id ? { ...prev, is_active: newActive, status: newActive ? 'active' : 'paused' } : prev);
   };
 
+  const handleCardUpdated = (updated: Card) => {
+    setAllCards((prev) => prev.map((c) => c.id === updated.id ? updated : c));
+    setSelected((prev) => prev?.id === updated.id ? updated : prev);
+  };
+
+  const handleCardDeleted = (id: string) => {
+    setAllCards((prev) => prev.filter((c) => c.id !== id));
+    setSelected((prev) => prev?.id === id ? null : prev);
+  };
+
   return (
     <div style={{ padding: isMobile ? '16px' : '24px 28px', display: 'grid', gap: 18 }}>
       {showModal && (
@@ -588,6 +781,20 @@ export default function CardsPage() {
           onCreate={(c) => setAllCards((prev) => [c, ...prev])}
           allowedCardTypes={allowedCardTypes}
           isSuperadmin={isSuperadmin}
+        />
+      )}
+      {editCard && (
+        <EditCardModal
+          card={editCard}
+          onClose={() => setEditCard(null)}
+          onUpdated={handleCardUpdated}
+        />
+      )}
+      {deleteCard && (
+        <DeleteCardConfirm
+          card={deleteCard}
+          onClose={() => setDeleteCard(null)}
+          onDeleted={handleCardDeleted}
         />
       )}
 
@@ -693,7 +900,7 @@ export default function CardsPage() {
             <CardsTable rows={filtered} selectedId={selected?.id ?? null} onSelect={(c) => setSelected(selected?.id === c.id ? null : c)} />
           )}
         </div>
-        {selected && !isMobile && <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />}
+        {selected && !isMobile && <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} onEdit={setEditCard} onDelete={setDeleteCard} />}
       </div>
 
       {isMobile && (
@@ -705,7 +912,7 @@ export default function CardsPage() {
             boxShadow: '0 -4px 24px rgba(0,0,0,0.10)',
             maxHeight: '80vh', overflowY: 'auto',
           }}>
-            <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} />
+            <CardDetail card={selected} onClose={() => setSelected(null)} onToggle={handleToggle} onEdit={setEditCard} onDelete={setDeleteCard} />
           </div>
         )
       )}

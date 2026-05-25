@@ -77,6 +77,8 @@ export const api = {
   coupons: () => req<{ coupons: ApiCoupon[] }>('/api/coupons').then((d) => d.coupons),
   createCoupon: (data: Partial<ApiCoupon>) => req<{ coupon: ApiCoupon }>('/api/coupons', { method: 'POST', body: JSON.stringify(data) }).then((d) => d.coupon),
   updateCoupon: (id: string, data: Partial<ApiCoupon>) => req<{ coupon: ApiCoupon }>(`/api/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.coupon),
+  deleteCoupon: (id: string) => req<{ success: boolean }>(`/api/coupons/${id}`, { method: 'DELETE' }),
+  deleteCard: (id: string) => req<{ success: boolean }>(`/api/cards/${id}`, { method: 'DELETE' }),
   issueCoupon: (id: string, opts: { customer_ids?: string[]; send_push?: boolean; send_email?: boolean }) => req<{ issued: number; skipped: number; total: number }>(`/api/coupons/${id}/issue`, { method: 'POST', body: JSON.stringify(opts) }),
   redeemStamp: (customerId: string) => req<{ success: boolean; message: string }>('/api/scan/redeem', { method: 'POST', body: JSON.stringify({ customer_id: customerId }) }),
   redeemCoupon: (barcode: string) => req<{ success: boolean; coupon: ApiCoupon; customer: { name: string; phone: string }; redeemed_at: string }>('/api/coupons/redeem', { method: 'POST', body: JSON.stringify({ barcode }) }),
@@ -131,5 +133,5 @@ export const api = {
 
 export interface ApiBusiness { id: string; name: string; owner_email: string; plan: string; is_superadmin: boolean; page_permissions: Record<string, string> | null; created_at: string; }
 export interface ApiStaffUser { id: string; email: string; name: string; role: 'viewer' | 'editor' | 'admin'; page_permissions: Record<string, string>; is_active: boolean; created_at: string; }
-export interface ApiCoupon { id: string; name: string; discount_type: 'percent' | 'fixed'; discount_value: number; trigger_type: string; valid_days: number; is_active: boolean; created_at: string; }
+export interface ApiCoupon { id: string; title: string; name?: string; description?: string; coupon_type: 'percent' | 'fixed' | 'bogo' | 'free_item'; discount_type?: 'percent' | 'fixed'; discount_value?: number; free_item_name?: string; trigger_type: string; trigger_config?: Record<string, unknown>; valid_days?: number; expires_at?: string | null; is_active: boolean; color?: string; terms?: string; max_redemptions?: number | null; total_issued?: number; total_redeemed?: number; created_at: string; }
 export interface ApiCouponPass { id: string; coupon_id: string; customer_id: string; barcode: string; status: 'active' | 'used' | 'expired'; issued_at: string; expires_at: string | null; }
