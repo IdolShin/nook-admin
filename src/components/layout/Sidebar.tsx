@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, CreditCard, Users, Bell, Settings,
-  QrCode, BookOpen, ChevronLeft, ChevronRight, Ticket, X, LogOut, ExternalLink, Zap,
+  QrCode, BookOpen, ChevronLeft, ChevronRight, Ticket, X, LogOut, ExternalLink, Zap, UserPlus,
 } from 'lucide-react';
 import NookMark from '@/components/NookMark';
 import { decodeToken, canView, PageKey } from '@/lib/permissions';
@@ -47,6 +47,8 @@ export default function Sidebar({
   const growthItems  = NAV_GROWTH.filter(it => canView(decoded, it.page));
   const scanVisible  = canView(decoded, 'scanner');
   const settingItems = NAV_SETTINGS.filter(it => it.page === null || canView(decoded, it.page));
+  // Compute slug for Customer Sign-up link (same logic as backend nameToSlug)
+  const bizSlug = (decoded?.name ?? '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9가-힣-]/g, '');
   const isActive = (href: string) => pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
 
   function handleLogout() {
@@ -129,6 +131,42 @@ export default function Sidebar({
           <>
             <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '12px 4px' }} />
             <NavItem href="/scan" label="Scanner" icon={QrCode} page={'scanner' as PageKey} active={isActive('/scan')} collapsed={collapsed && !mobileMode} mobile={mobileMode} accent />
+            {bizSlug && (
+              <a
+                href={`/join/${bizSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={collapsed && !mobileMode ? 'Customer Sign-up' : undefined}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: mobileMode ? 12 : 10,
+                  padding: (collapsed && !mobileMode) ? '8px' : mobileMode ? '11px 14px' : '7px 10px',
+                  justifyContent: (collapsed && !mobileMode) ? 'center' : 'flex-start',
+                  borderRadius: 9,
+                  background: 'transparent',
+                  borderLeft: !(collapsed && !mobileMode) ? '3px solid transparent' : 'none',
+                  color: 'rgba(255,255,255,0.55)',
+                  fontSize: mobileMode ? 14 : 13, fontWeight: 400,
+                  textDecoration: 'none', transition: 'background 120ms, color 120ms',
+                  minHeight: mobileMode ? 46 : 34,
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.85)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)'; }}
+              >
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.07)',
+                }}>
+                  <UserPlus size={mobileMode ? 16 : 15} color="rgba(255,255,255,0.5)" />
+                </div>
+                {!(collapsed && !mobileMode) && (
+                  <span style={{ flex: 1 }}>Customer Sign-up</span>
+                )}
+                {!(collapsed && !mobileMode) && (
+                  <ExternalLink size={10} color="rgba(255,255,255,0.3)" />
+                )}
+              </a>
+            )}
           </>
         )}
 

@@ -27,25 +27,41 @@ interface Business {
 type Step = 'loading' | 'notfound' | 'form' | 'success' | 'error';
 
 const CARD_TYPE_LABEL: Record<string, { ko: string; en: string }> = {
-  stamp:      { ko: '스탬프 카드', en: 'Stamp Card' },
-  cashback:   { ko: '캐시백 카드', en: 'Cashback Card' },
-  coupon:     { ko: '쿠폰 카드',   en: 'Coupon Card' },
-  membership: { ko: '멤버십 카드', en: 'Membership Card' },
+  stamp:      { ko: '디지털 리워드 카드', en: 'Digital Reward Card' },
+  cashback:   { ko: '캐시백 카드',        en: 'Cashback Card' },
+  coupon:     { ko: '쿠폰 카드',          en: 'Coupon Card' },
+  membership: { ko: '멤버십 카드',        en: 'Membership Card' },
 };
 
-function StampIcon({ n, color }: { n: number; color: string }) {
-  const stamps = Array.from({ length: n });
-  const cols = Math.min(n, 5);
+function NookLogo({ size = 18 }: { size?: number }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 5, padding: '10px 0' }}>
-      {stamps.map((_, i) => (
-        <div key={i} style={{
-          width: '100%', aspectRatio: '1', borderRadius: '50%',
-          border: `2px solid ${color}`,
-          background: i < 1 ? color : 'transparent',
-          opacity: i < 1 ? 1 : 0.3,
-        }} />
-      ))}
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <path d="M9 22V10l7 8 7-8v12" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function AppleWalletBadge() {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: '5px 12px', border: '1px solid rgba(255,255,255,0.25)' }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 600, color: 'white', letterSpacing: '-0.01em' }}>Apple Wallet</span>
+    </div>
+  );
+}
+
+function GoogleWalletBadge() {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: '5px 12px', border: '1px solid rgba(255,255,255,0.25)' }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 600, color: 'white', letterSpacing: '-0.01em' }}>Google Wallet</span>
     </div>
   );
 }
@@ -59,7 +75,6 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
   const [selectedCard, setSelectedCard] = useState<BizCard | null>(null);
   const [isMobile, setIsMobile] = useState(true);
 
-  // Form state
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [birthday, setBirthday] = useState('');
@@ -87,8 +102,13 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
         if (!res.ok) { setStep('notfound'); return; }
         const data = await res.json();
         setBusiness(data.business);
-        setCards(data.cards ?? []);
-        if (data.cards?.length === 1) setSelectedCard(data.cards[0]);
+        const cardList: BizCard[] = data.cards ?? [];
+        setCards(cardList);
+        // Default: prefer stamp (Digital Reward Card), otherwise first card
+        if (cardList.length > 0) {
+          const stampCard = cardList.find(c => c.card_type === 'stamp');
+          setSelectedCard(stampCard ?? cardList[0]);
+        }
         setStep('form');
       } catch {
         setStep('error');
@@ -140,8 +160,6 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     }
   }
 
-  // ── Layout helpers ──────────────────────────────────────────
-
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '13px 16px',
     border: '1.5px solid #D4E6DB', borderRadius: 10,
@@ -159,7 +177,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     padding: isMobile ? '0 0 40px' : '40px 20px 60px',
   };
 
-  // ── Loading ─────────────────────────────────────────────────
+  // ── Loading ──────────────────────────────────────────────────
   if (step === 'loading') {
     return (
       <div style={{ ...containerStyle, justifyContent: 'center', gap: 16 }}>
@@ -172,7 +190,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     );
   }
 
-  // ── Not found ───────────────────────────────────────────────
+  // ── Not found ────────────────────────────────────────────────
   if (step === 'notfound' || step === 'error') {
     return (
       <div style={{ ...containerStyle, justifyContent: 'center', textAlign: 'center', gap: 16, padding: 40 }}>
@@ -183,22 +201,20 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
         <div style={{ fontSize: 15, color: '#5C5F66' }}>
           {T('링크를 다시 확인해주세요.', 'Please check the link and try again.', lang)}
         </div>
-        <Link href="/" style={{ marginTop: 8, color: '#1D9E75', fontSize: 14, fontWeight: 500 }}>← Nook</Link>
+        <Link href="/" style={{ marginTop: 8, color: '#1D9E75', fontSize: 14, fontWeight: 500 }}>← Nook Wallet</Link>
       </div>
     );
   }
 
-  // ── Success ─────────────────────────────────────────────────
+  // ── Success ──────────────────────────────────────────────────
   if (step === 'success') {
     return (
       <div style={containerStyle}>
         <div style={{
           width: isMobile ? '100%' : 420, maxWidth: 480,
           background: 'white', borderRadius: isMobile ? '0 0 28px 28px' : 20,
-          boxShadow: '0 8px 40px rgba(0,0,0,0.10)',
-          overflow: 'hidden',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.10)', overflow: 'hidden',
         }}>
-          {/* Header */}
           <div style={{
             background: `linear-gradient(135deg, ${primaryColor}dd, ${primaryColor})`,
             padding: '32px 24px 28px', textAlign: 'center', color: 'white',
@@ -208,7 +224,11 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               {T(`환영해요, ${customerName}님!`, `Welcome, ${customerName}!`, lang)}
             </div>
             <div style={{ fontSize: 14, opacity: 0.9, marginTop: 6 }}>
-              {T(`${business?.name ?? ''} 멤버가 되셨습니다`, `You joined ${business?.name ?? ''}`, lang)}
+              {T(
+                `${business?.name ?? ''} 디지털 리워드 카드가 추가되었습니다`,
+                `Your ${business?.name ?? ''} Digital Reward Card is ready`,
+                lang
+              )}
             </div>
           </div>
 
@@ -226,9 +246,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: primaryColor, flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1F' }}>
-                    {selectedCard?.name}
-                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1F' }}>{selectedCard?.name}</div>
                   {selectedCard?.reward_desc && (
                     <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 2 }}>
                       {T('리워드: ', 'Reward: ', lang)}{selectedCard.reward_desc}
@@ -247,8 +265,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
             </div>
 
             <Link href="/" style={{
-              display: 'block', textAlign: 'center',
-              padding: '12px', borderRadius: 10,
+              display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
               border: '1.5px solid #1D9E75', color: '#1D9E75',
               fontSize: 14, fontWeight: 500, textDecoration: 'none',
             }}>
@@ -260,22 +277,15 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     );
   }
 
-  // ── Form ────────────────────────────────────────────────────
+  // ── Form ─────────────────────────────────────────────────────
   return (
     <div style={containerStyle}>
-      {/* Lang toggle + top nav */}
+      {/* Lang toggle */}
       <div style={{
         width: '100%', maxWidth: 480,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: isMobile ? '16px 20px 0' : '0 0 20px',
+        display: 'flex', justifyContent: 'flex-end',
+        padding: isMobile ? '16px 20px 0' : '0 0 12px',
       }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: '#1A1A1F' }}>
-          <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="8" fill="#1D9E75" />
-            <path d="M9 22V10l7 8 7-8v12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#085041' }}>nook</span>
-        </Link>
         <div style={{ display: 'flex', gap: 4 }}>
           {(['ko', 'en'] as Lang[]).map(l => (
             <button key={l} onClick={() => switchLang(l)} style={{
@@ -290,42 +300,72 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
         </div>
       </div>
 
-      {/* Card */}
+      {/* Main card */}
       <div style={{
-        width: isMobile ? '100%' : 420, maxWidth: 480, marginTop: isMobile ? 0 : 0,
+        width: isMobile ? '100%' : 420, maxWidth: 480,
         background: 'white',
         borderRadius: isMobile ? '28px 28px 0 0' : 20,
         boxShadow: '0 8px 40px rgba(0,0,0,0.10)',
-        overflow: 'hidden',
-        flex: 1,
+        overflow: 'hidden', flex: 1,
       }}>
         {/* Hero header */}
         <div style={{
-          background: `linear-gradient(135deg, ${primaryColor}dd, ${primaryColor})`,
-          padding: '32px 28px 28px', color: 'white',
+          background: `linear-gradient(135deg, ${primaryColor}cc, ${primaryColor})`,
+          padding: '24px 28px 26px', color: 'white',
         }}>
-          {business?.logo_url ? (
-            <img src={business.logo_url} alt={business.name} style={{ width: 52, height: 52, borderRadius: 14, marginBottom: 14, objectFit: 'cover', background: 'rgba(255,255,255,0.2)' }} />
-          ) : (
+          {/* Nook Wallet branding */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 22 }}>
             <div style={{
-              width: 52, height: 52, borderRadius: 14, marginBottom: 14,
-              background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 24, fontWeight: 700,
+              width: 28, height: 28, borderRadius: 8,
+              background: 'rgba(255,255,255,0.22)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, border: '1px solid rgba(255,255,255,0.3)',
             }}>
-              {business?.name?.[0] ?? 'N'}
+              <NookLogo size={16} />
             </div>
-          )}
-          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-            {business?.name}
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.95)' }}>
+              Nook Wallet
+            </span>
           </div>
-          <div style={{ fontSize: 14, opacity: 0.9, marginTop: 6 }}>
-            {T('멤버십 등록', 'Join Membership', lang)}
+
+          {/* Business branding */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+            {business?.logo_url ? (
+              <img
+                src={business.logo_url}
+                alt={business.name}
+                style={{ width: 54, height: 54, borderRadius: 14, objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(255,255,255,0.35)' }}
+              />
+            ) : (
+              <div style={{
+                width: 54, height: 54, borderRadius: 14, flexShrink: 0,
+                background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22, fontWeight: 800, border: '2px solid rgba(255,255,255,0.3)',
+              }}>
+                {business?.name?.[0] ?? 'N'}
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                {business?.name}
+              </div>
+              <div style={{ fontSize: 13, opacity: 0.88, marginTop: 5, fontWeight: 500 }}>
+                {T('Add Digital Reward Card', 'Add Digital Reward Card', lang)}
+              </div>
+            </div>
+          </div>
+
+          {/* Wallet badges */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <AppleWalletBadge />
+            <GoogleWalletBadge />
           </div>
         </div>
 
         <div style={{ padding: '28px 24px 32px' }}>
           <form onSubmit={handleSubmit}>
-            {/* Card selector (shown only if multiple cards) */}
+
+            {/* Card selector — only shown if multiple cards */}
             {cards.length > 1 && (
               <div style={{ marginBottom: 22 }}>
                 <label style={{ fontSize: 13, fontWeight: 600, color: '#5C5F66', display: 'block', marginBottom: 10 }}>
@@ -334,6 +374,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {cards.map(card => {
                     const isSelected = selectedCard?.id === card.id;
+                    const isRewardCard = card.card_type === 'stamp';
                     return (
                       <button
                         key={card.id}
@@ -349,12 +390,18 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
                       >
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: card.color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="2" y="5" width="20" height="14" rx="3" />
-                            <path d="M2 10h20" />
+                            <rect x="2" y="5" width="20" height="14" rx="3" /><path d="M2 10h20" />
                           </svg>
                         </div>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1F' }}>{card.name}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1F' }}>{card.name}</span>
+                            {isRewardCard && (
+                              <span style={{ fontSize: 9, fontWeight: 700, background: card.color, color: 'white', padding: '2px 7px', borderRadius: 10, letterSpacing: '0.05em' }}>
+                                DEFAULT
+                              </span>
+                            )}
+                          </div>
                           <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 2 }}>
                             {CARD_TYPE_LABEL[card.card_type]?.[lang] ?? card.card_type}
                             {card.card_type === 'stamp' && ` · ${card.goal_stamps} ${T('스탬프', 'stamps', lang)}`}
@@ -362,7 +409,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
                           </div>
                         </div>
                         {isSelected && (
-                          <div style={{ marginLeft: 'auto', width: 20, height: 20, borderRadius: '50%', background: card.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', background: card.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 8 4 4 6-7" /></svg>
                           </div>
                         )}
@@ -373,7 +420,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               </div>
             )}
 
-            {/* Single card info (if only 1 card) */}
+            {/* Single card info */}
             {cards.length === 1 && selectedCard && (
               <div style={{
                 marginBottom: 22, padding: '14px 16px',
@@ -439,7 +486,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               />
             </div>
 
-            {/* Birthday (optional) */}
+            {/* Birthday */}
             <div style={{ marginBottom: 22 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#5C5F66', display: 'block', marginBottom: 8 }}>
                 {T('생일', 'Birthday', lang)}{' '}
@@ -491,13 +538,12 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
                 color: 'white', border: 0, fontSize: 16, fontWeight: 700,
                 cursor: sending || cards.length === 0 ? 'not-allowed' : 'pointer',
                 fontFamily: 'inherit', letterSpacing: '-0.01em',
-                transition: 'opacity 150ms',
-                opacity: sending ? 0.8 : 1,
+                transition: 'opacity 150ms', opacity: sending ? 0.8 : 1,
               }}
             >
               {sending
-                ? T('등록 중...', 'Joining...', lang)
-                : T('멤버십 가입하기', 'Join Membership', lang)}
+                ? T('등록 중...', 'Adding...', lang)
+                : T('디지털 리워드 카드 추가하기', 'Add Digital Reward Card', lang)}
             </button>
 
             <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: '#8A8D94' }}>
