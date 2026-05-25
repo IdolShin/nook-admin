@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { customerStatusMeta } from '@/lib/utils';
-import { api, type ApiCustomer, type ApiCouponPass, type ApiCoupon } from '@/lib/api';
+import { api, type ApiCustomer, type ApiCouponPass, type ApiCoupon, type ApiRedemption } from '@/lib/api';
 import { toast } from '@/lib/toast';
 import { Search, Gift, X, Ticket, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -22,8 +22,9 @@ interface Customer {
   biz: string[];
   cards: number;
   totalStamps: number;
+  totalPoints: number | null;
+  cardType: string;
   lastVisit: string;
-  spend: number;
   status: CustomerStatus;
   tags: string[];
 }
@@ -34,6 +35,7 @@ function mapCustomer(c: ApiCustomer, i: number): Customer {
   const parts = c.name.trim().split(/\s+/);
   const initials = parts.map((w) => w[0]?.toUpperCase() ?? '').join('').slice(0, 2);
   const stamps = c.total_stamps ?? 0;
+  const cardType = c.card_type || 'stamp';
   const daysSince = Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86_400_000);
   const status: CustomerStatus = stamps > 20 ? 'vip' : daysSince < 30 ? 'new' : 'active';
   return {
@@ -46,8 +48,9 @@ function mapCustomer(c: ApiCustomer, i: number): Customer {
     biz: [api.getBusinessName() || 'Nook Café'],
     cards: 1,
     totalStamps: stamps,
+    totalPoints: cardType === 'membership' ? (c.total_points ?? stamps * 100) : null,
+    cardType,
     lastVisit: daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : `${daysSince}d ago`,
-    spend: 0,
     status,
     tags: [],
   };
@@ -168,9 +171,11 @@ function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose:
 
 function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { customer: Customer; onClose: () => void; onSendPush?: () => void; onSendCoupon?: () => void }) {
   const visits = [3, 5, 4, 6, 7, 5, 8, 6, 7, 9, 8, 10];
-  const [activeTab, setActiveTab] = useState<'activity' | 'coupons'>('activity');
+  const [activeTab, setActiveTab] = useState<'activity' | 'redeems' | 'coupons'>('activity');
   const [passes, setPasses] = useState<ApiCouponPass[]>([]);
   const [passesLoading, setPassesLoading] = useState(false);
+  const [redemptions, setRedemptions] = useState<ApiRedemption[]>([]);
+  const [redeemsLoading, setRedeemsLoading] = useState(false);
 
   useEffect(() => {
     if (activeTab !== 'coupons') return;
@@ -179,6 +184,15 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { custo
       .then(setPasses)
       .catch(() => setPasses([]))
       .finally(() => setPassesLoading(false));
+  }, [customer.id, activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'redeems') return;
+    setRedeemsLoading(true);
+    api.customerRedemptions(customer.id)
+      .then(setRedemptions)
+      .catch(() => setRedemptions([]))
+      .finally(() => setRedeemsLoading(false));
   }, [customer.id, activeTab]);
 
   return (
@@ -213,22 +227,31 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { custo
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginTop: 14 }}>
-          {[['Cards', customer.cards.toString()], ['Stamps', customer.totalStamps.toString()], ['Spend', `$${customer.spend}`]].map(([l, v]) => (
-            <div key={l} style={{ padding: '10px 12px', border: '1px solid #F0F0F2', borderRadius: 10 }}>
-              <div style={{ fontSize: 11, color: '#8A8D94' }}>{l}</div>
-              <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', fontFamily: 'var(--font-mono)' }}>{v}</div>
+          <div style={{ padding: '10px 12px', border: '1px solid #F0F0F2', borderRadius: 10 }}>
+            <div style={{ fontSize: 11, color: '#8A8D94' }}>Cards</div>
+            <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', fontFamily: 'var(--font-mono)' }}>{customer.cards}</div>
+          </div>
+          <div style={{ padding: '10px 12px', border: '1px solid #F0F0F2', borderRadius: 10 }}>
+            <div style={{ fontSize: 11, color: '#8A8D94' }}>{customer.cardType === 'membership' ? 'Points' : 'Stamps'}</div>
+            <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', fontFamily: 'var(--font-mono)', color: customer.cardType === 'membership' ? '#6366F1' : undefined }}>
+              {customer.cardType === 'membership' ? (customer.totalPoints?.toLocaleString() ?? 0) : customer.totalStamps}
+              {customer.cardType === 'membership' && <span style={{ fontSize: 10, fontWeight: 400, color: '#8A8D94', marginLeft: 2 }}>pts</span>}
             </div>
-          ))}
+          </div>
+          <div style={{ padding: '10px 12px', border: '1px solid #F0F0F2', borderRadius: 10 }}>
+            <div style={{ fontSize: 11, color: '#8A8D94' }}>Joined</div>
+            <div style={{ fontSize: 12, fontWeight: 500, letterSpacing: '-0.01em', marginTop: 2, color: '#5C5F66' }}>{customer.joined}</div>
+          </div>
         </div>
 
         {/* Tab switcher */}
         <div style={{ display: 'flex', gap: 2, background: '#F0F1F4', borderRadius: 9, padding: 3, marginTop: 16 }}>
-          {([['activity', 'Activity'], ['coupons', 'Coupons']] as const).map(([id, label]) => (
+          {([['activity', 'Activity'], ['redeems', 'Redeems'], ['coupons', 'Coupons']] as const).map(([id, label]) => (
             <button key={id} onClick={() => setActiveTab(id)} style={{
               flex: 1, height: 26, border: 0, borderRadius: 7,
               background: activeTab === id ? 'white' : 'transparent',
               color: activeTab === id ? '#1A1A1F' : '#5C5F66',
-              fontSize: 12, fontWeight: activeTab === id ? 500 : 400,
+              fontSize: 11, fontWeight: activeTab === id ? 500 : 400,
               cursor: 'pointer', fontFamily: 'inherit',
               boxShadow: activeTab === id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
             }}>{label}</button>
@@ -258,11 +281,55 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { custo
               {customer.biz.map((b, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', border: '1px solid #F0F0F2', borderRadius: 8, marginBottom: 6 }}>
                   <span style={{ fontSize: 13 }}>{b}</span>
-                  <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>{Math.floor(customer.totalStamps / customer.biz.length)} stamps</span>
+                  <span style={{ fontSize: 11, color: '#8A8D94', fontFamily: 'var(--font-mono)' }}>
+                    {customer.cardType === 'membership'
+                      ? `${(customer.totalPoints ?? 0).toLocaleString()} pts`
+                      : `${Math.floor(customer.totalStamps / customer.biz.length)} stamps`}
+                  </span>
                 </div>
               ))}
             </div>
           </>
+        )}
+
+        {activeTab === 'redeems' && (
+          <div style={{ marginTop: 16 }}>
+            {redeemsLoading ? (
+              <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 12, color: '#8A8D94' }}>Loading…</div>
+            ) : redemptions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <Gift size={28} color="#EBEBEB" style={{ margin: '0 auto 8px' }} />
+                <div style={{ fontSize: 12, color: '#8A8D94' }}>No redeems yet</div>
+              </div>
+            ) : (
+              redemptions.map((r) => {
+                const date = new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const isPoints = r.redeem_type === 'points';
+                return (
+                  <div key={r.id} style={{
+                    padding: '10px 12px', borderRadius: 10, marginBottom: 6,
+                    border: '1px solid #F0F0F2',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>
+                        {isPoints ? 'Points redeemed' : 'Stamp reward redeemed'}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 2 }}>{date}</div>
+                    </div>
+                    <div style={{
+                      fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)',
+                      color: isPoints ? '#6366F1' : '#1D9E75',
+                    }}>
+                      {isPoints
+                        ? `−${r.points_redeemed?.toLocaleString()} pts`
+                        : `−${r.stamps_redeemed ?? 10} stamps`}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         )}
 
         {activeTab === 'coupons' && (
@@ -355,7 +422,7 @@ export default function CustomersPage() {
   }, [router]);
 
   const handleExportCSV = () => {
-    const headers = ['Name', 'Phone', 'Status', 'Stamps', 'Joined', 'Last Visit'];
+    const headers = ['Name', 'Phone', 'Status', 'Stamps', 'Points', 'Joined', 'Last Visit'];
     const csvRows = [
       headers.join(','),
       ...rows.map((c) => [
@@ -363,6 +430,7 @@ export default function CustomersPage() {
         `"${c.phone}"`,
         c.status,
         c.totalStamps,
+        c.cardType === 'membership' ? (c.totalPoints ?? 0) : '',
         `"${c.joined}"`,
         `"${c.lastVisit}"`,
       ].join(',')),
@@ -479,7 +547,7 @@ export default function CustomersPage() {
                 <th style={thStyle}>Businesses</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Cards</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Stamps</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Spend</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Points</th>
                 <th style={thStyle}>Last visit</th>
               </tr>
             </thead>
@@ -514,7 +582,9 @@ export default function CustomersPage() {
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{c.cards}</td>
                     <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{c.totalStamps}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>${c.spend}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'var(--font-mono)', color: c.cardType === 'membership' ? '#6366F1' : '#8A8D94' }}>
+                      {c.cardType === 'membership' ? `${(c.totalPoints ?? 0).toLocaleString()} pts` : '—'}
+                    </td>
                     <td style={{ ...tdStyle, color: '#8A8D94' }}>{c.lastVisit}</td>
                   </tr>
                 );

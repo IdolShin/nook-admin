@@ -34,7 +34,8 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export interface ApiCard { id: string; name: string; card_type: string; goal_stamps: number; reward_desc: string; color: string; is_active: boolean; created_at: string; business_id?: string; }
-export interface ApiCustomer { id: string; name: string; phone: string; card_id: string; business_id: string; wallet_type?: string; total_stamps?: number; created_at: string; }
+export interface ApiCustomer { id: string; name: string; phone: string; card_id: string; business_id: string; wallet_type?: string; total_stamps?: number; total_points?: number | null; card_type?: string; created_at: string; }
+export interface ApiRedemption { id: string; stamps_redeemed: number | null; points_redeemed: number | null; redeem_type: string; created_at: string; }
 export interface BroadcastResult { total_customers: number; web_push_sent: number; wallet_updated: number; failed: number; }
 export interface ApiAnalytics { total_customers: number; new_customers_30d: number; new_customers_prev: number; active_cards: number; total_stamps: number; stamps_last_30d: number; stamps_prev_30d: number; total_redemptions: number; redemptions_30d: number; coupons_issued: number; coupons_redeemed: number; stamps_by_day: number[]; stamps_daily_30d?: number[]; redemptions_daily_30d?: number[]; }
 export interface ApiReviewConfig { enabled: boolean; reward_type: 'stamp' | 'coupon'; stamp_count: number; coupon_id: string | null; days_to_wait: number; }
@@ -81,6 +82,8 @@ export const api = {
   deleteCard: (id: string) => req<{ success: boolean }>(`/api/cards/${id}`, { method: 'DELETE' }),
   issueCoupon: (id: string, opts: { customer_ids?: string[]; send_push?: boolean; send_email?: boolean }) => req<{ issued: number; skipped: number; total: number }>(`/api/coupons/${id}/issue`, { method: 'POST', body: JSON.stringify(opts) }),
   redeemStamp: (customerId: string) => req<{ success: boolean; message: string }>('/api/scan/redeem', { method: 'POST', body: JSON.stringify({ customer_id: customerId }) }),
+  redeemPoints: (customerId: string, points: number) => req<{ success: boolean; points_spent: number; new_balance: number; message: string }>('/api/scan/redeem-points', { method: 'POST', body: JSON.stringify({ customer_id: customerId, points }) }),
+  customerRedemptions: (customerId: string) => req<{ redemptions: ApiRedemption[] }>(`/api/customers/${customerId}/redemptions`).then((d) => d.redemptions),
   redeemCoupon: (barcode: string) => req<{ success: boolean; coupon: ApiCoupon; customer: { name: string; phone: string }; redeemed_at: string }>('/api/coupons/redeem', { method: 'POST', body: JSON.stringify({ barcode }) }),
   couponPasses: (customerId: string) => req<{ passes: ApiCouponPass[] }>(`/api/coupons/passes/${customerId}`).then((d) => d.passes),
   scanStamp: (code: string, scanType: 'qr' | 'barcode' = 'barcode') => req<{ success: boolean; customer_name: string; card_type: string; points_earned: number | null; total_points: number | null; new_stamps: number | null; goal_stamps: number | null; reward_ready: boolean; message: string }>('/api/scan', { method: 'POST', body: JSON.stringify({ code, scan_type: scanType }) }),
