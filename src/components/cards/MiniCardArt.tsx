@@ -116,11 +116,18 @@ export default function MiniCardArt({ card, w = 240, h = 148 }: { card: CardData
         </>
       )}
 
-      {/* ── MEMBERSHIP: barcode only ────────────────────────── */}
+      {/* ── MEMBERSHIP: points badge + barcode ─────────────── */}
       {card.type === 'membership' && (
         <>
-          <div style={{ marginTop: 8, fontSize: w > 220 ? 15 : 13, fontWeight: 600, letterSpacing: '-0.01em', position: 'relative' }}>
-            {card.name}
+          <div style={{ marginTop: 6, position: 'relative', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: w > 220 ? 15 : 13, fontWeight: 600, letterSpacing: '-0.01em' }}>
+              {card.name}
+            </div>
+            <div style={{
+              fontSize: 9, padding: '2px 7px', borderRadius: 999,
+              background: 'rgba(99,102,241,0.4)', color: 'rgba(255,255,255,0.95)',
+              fontWeight: 600, letterSpacing: '.06em', whiteSpace: 'nowrap',
+            }}>100 pts/visit</div>
           </div>
           <div style={{ fontSize: 10, opacity: 0.75, marginTop: 2, position: 'relative', lineHeight: 1.3 }}>{card.reward}</div>
           <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14 }}>

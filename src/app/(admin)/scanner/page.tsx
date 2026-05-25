@@ -7,7 +7,17 @@ type Mode = 'stamp' | 'coupon';
 type StampView = 'scan' | 'success' | 'customer';
 type CouponView = 'scan' | 'found' | 'success' | 'already_redeemed' | 'expired';
 
-interface StampResult { customerName: string; newStamps: number; goalStamps: number; rewardReady: boolean }
+interface StampResult {
+  customerName: string;
+  cardType: string;
+  // Stamp card fields
+  newStamps: number;
+  goalStamps: number;
+  rewardReady: boolean;
+  // Membership fields
+  totalPoints: number | null;
+  pointsEarned: number | null;
+}
 interface CouponResult { customerName: string; couponTitle: string }
 
 function ActionBtn({ primary, danger, amber, label, sub, onClick, disabled }: {
@@ -113,6 +123,46 @@ function StampScanView({ code, setCode, onAddStamp, loading, error }: {
 
 function StampSuccessView({ data, onBack }: { data: StampResult | null; onBack: () => void }) {
   const name = data?.customerName ?? '—';
+  const isMembership = data?.cardType === 'membership';
+
+  if (isMembership) {
+    const totalPts = data?.totalPoints ?? 0;
+    const earned = data?.pointsEarned ?? 100;
+    return (
+      <div style={{ height: 'calc(100% - 50px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+        <div style={{
+          width: 100, height: 100, borderRadius: 999,
+          background: 'rgba(99,102,241,0.18)', color: '#A5B4FC',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 0 14px rgba(99,102,241,0.06)',
+        }}>
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        </div>
+        <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 22 }}>
+          Points added!
+        </div>
+        <div style={{ fontSize: 14, opacity: 0.65, marginTop: 6 }}>{name}</div>
+        <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
+          <div style={{ padding: '14px 22px', borderRadius: 14, background: 'rgba(99,102,241,0.15)', textAlign: 'center' }}>
+            <div style={{ fontSize: 11, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '.08em' }}>Earned</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#A5B4FC', fontFamily: 'var(--font-mono)', marginTop: 4 }}>+{earned}</div>
+            <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>pts</div>
+          </div>
+          <div style={{ padding: '14px 22px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', textAlign: 'center' }}>
+            <div style={{ fontSize: 11, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '.08em' }}>Total</div>
+            <div style={{ fontSize: 28, fontWeight: 800, fontFamily: 'var(--font-mono)', marginTop: 4 }}>{totalPts.toLocaleString()}</div>
+            <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>pts</div>
+          </div>
+        </div>
+        <div style={{ marginTop: 20, fontSize: 12, opacity: 0.5 }}>Auto-returning to scanner in 4s</div>
+        <button onClick={onBack} style={{ marginTop: 12, fontSize: 12, background: 'none', border: 0, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontFamily: 'inherit' }}>Return now</button>
+      </div>
+    );
+  }
+
+  // Stamp card success view
   const stamps = data?.newStamps ?? 0;
   const goal = data?.goalStamps ?? 10;
   return (
@@ -393,7 +443,15 @@ export default function ScannerPage() {
     setError('');
     try {
       const res = await api.scanStamp(code.trim(), 'barcode');
-      setStampData({ customerName: res.customer_name, newStamps: res.new_stamps, goalStamps: res.goal_stamps, rewardReady: res.reward_ready });
+      setStampData({
+        customerName: res.customer_name,
+        cardType: res.card_type || 'stamp',
+        newStamps: res.new_stamps ?? 0,
+        goalStamps: res.goal_stamps ?? 10,
+        rewardReady: res.reward_ready,
+        totalPoints: res.total_points ?? null,
+        pointsEarned: res.points_earned ?? null,
+      });
       setStampView('success');
       setCode('');
       setTimeout(() => { setStampData(null); setStampView('scan'); }, 4000);
