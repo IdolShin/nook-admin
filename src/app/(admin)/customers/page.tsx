@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { customerStatusMeta } from '@/lib/utils';
 import { api, type ApiCustomer, type ApiCouponPass, type ApiCoupon, type ApiRedemption } from '@/lib/api';
 import { toast } from '@/lib/toast';
-import { Search, Gift, X, Ticket, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
+import { Search, Gift, X, Ticket, Send, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
@@ -594,7 +594,7 @@ export default function CustomersPage() {
           </div>
           )}
         </div>
-        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
+        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} />}
       </div>
 
       {isMobile && (
@@ -604,7 +604,7 @@ export default function CustomersPage() {
           bottomOffset="calc(60px + env(safe-area-inset-bottom))"
           maxHeight="82vh"
         >
-          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} />}
+          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} />}
         </BottomSheet>
       )}
     </div>
