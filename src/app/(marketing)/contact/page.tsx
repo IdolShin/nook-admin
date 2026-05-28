@@ -185,13 +185,23 @@ export default function ContactPage() {
             <button className={lang === 'en' ? 'on' : ''} onClick={() => switchLang('en')}>EN</button>
           </div>
           {!isMobile && (
-            <Link href="/#pricing" style={{
-              height: 34, padding: '0 14px', display: 'flex', alignItems: 'center',
-              background: '#1D9E75', color: 'white', borderRadius: 9,
-              fontSize: 13, fontWeight: 600, textDecoration: 'none',
-            }}>
-              {t('요금제 보기', 'View Pricing', lang)}
-            </Link>
+            <>
+              <Link href="/#pricing" style={{
+                height: 34, padding: '0 14px', display: 'flex', alignItems: 'center',
+                background: '#1D9E75', color: 'white', borderRadius: 9,
+                fontSize: 13, fontWeight: 600, textDecoration: 'none',
+              }}>
+                {t('요금제 보기', 'View Pricing', lang)}
+              </Link>
+              <Link href="/" style={{
+                height: 34, padding: '0 14px', display: 'flex', alignItems: 'center',
+                background: 'transparent', color: '#085041',
+                border: '1.5px solid #1D9E75', borderRadius: 9,
+                fontSize: 13, fontWeight: 600, textDecoration: 'none',
+              }}>
+                {t('홈페이지', 'Homepage', lang)}
+              </Link>
+            </>
           )}
         </div>
       </nav>
@@ -481,17 +491,4 @@ export default function ContactPage() {
       </div>
 
       {/* FOOTER */}
-      <div style={{ borderTop: '1px solid #E2EDE6', padding: '20px 24px', textAlign: 'center', fontSize: 12, color: '#8A8D94' }}>
-        {'© 2025 Nook Wallet · '}
-        <Link href="/" style={{ color: '#1D9E75', textDecoration: 'none' }}>nook-wallet.com</Link>
-      </div>
-
-      <style>{`
-        @keyframes popIn {
-          from { opacity: 0; transform: scale(0.92) translateY(12px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `}</style>
-    </div>
-  );
-}
+      <div style={{ borderTop: '1px solid #E2EDE6'
