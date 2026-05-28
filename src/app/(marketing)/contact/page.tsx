@@ -491,4 +491,17 @@ export default function ContactPage() {
       </div>
 
       {/* FOOTER */}
-      <div style={{ borderTop: '1px solid #E2EDE6'
+      <div style={{ borderTop: '1px solid #E2EDE6', padding: '20px 24px', textAlign: 'center', fontSize: 12, color: '#8A8D94' }}>
+        {'© 2025 Nook Wallet · '}
+        <Link href="/" style={{ color: '#1D9E75', textDecoration: 'none' }}>nook-wallet.com</Link>
+      </div>
+
+      <style>{`
+        @keyframes popIn {
+          from { opacity: 0; transform: scale(0.92) translateY(12px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
