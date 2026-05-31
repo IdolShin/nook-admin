@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 import { api, type RewardTier } from '@/lib/api';
 import { toast } from '@/lib/toast';
+import { usePlan } from '@/hooks/usePlan';
 
 type Mode = 'stamp' | 'coupon';
 type StampView = 'scan' | 'success' | 'customer';
@@ -45,8 +47,7 @@ function ActionBtn({ primary, danger, amber, label, sub, onClick, disabled }: {
 // ─── Live camera viewfinder with BarcodeDetector ──────────────
 function Viewfinder({ mode, onDetect }: { mode: Mode; onDetect?: (code: string) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const rafRef = useRef<number | null>(null);
+  const controlsRef = useRef<{ stop: () => void } | null>(null);
   const cooldownRef = useRef(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
@@ -61,75 +62,61 @@ function Viewfinder({ mode, onDetect }: { mode: Mode; onDetect?: (code: string) 
 
     function describeError(err: unknown): string {
       const name = (err as { name?: string }).name;
-      if (name === 'NotAllowedError' || name === 'SecurityError') return 'Camera permission blocked — allow it in the browser address bar';
+      if (name === 'NotAllowedError' || name === 'SecurityError') return 'Camera blocked — iPhone: tap "aA" in the address bar → Website Settings → Camera → Allow, then Retry';
       if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'No camera found on this device';
       if (name === 'NotReadableError') return 'Camera is in use by another app — close it and retry';
-      return 'Camera unavailable';
+      return 'Camera unavailable — enter code manually';
     }
 
     async function start() {
       // Needs a secure context (HTTPS) + API support
       if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-        setCameraError('Camera not supported on this browser');
+        setCameraError('Camera needs HTTPS / a supported browser');
         return;
       }
+      if (!videoRef.current) return;
 
-      let stream: MediaStream;
+      // ZXing works on iOS Safari AND Android (BarcodeDetector is missing on iOS),
+      // and reads both QR codes and 1D barcodes (code_128 etc.).
+      const reader = new BrowserMultiFormatReader();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const onResult = (result: any) => {
+        if (!result || stopped || cooldownRef.current || !onDetect) return;
+        cooldownRef.current = true;
+        onDetect(result.getText());
+        setTimeout(() => { cooldownRef.current = false; }, 2500); // avoid double-trigger
+      };
+
       try {
         // Prefer the rear camera, but don't *require* it (laptops have none)
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } }
-        });
+        controlsRef.current = await reader.decodeFromConstraints(
+          { video: { facingMode: { ideal: 'environment' } } },
+          videoRef.current,
+          (result) => onResult(result)
+        );
       } catch {
-        // Fallback: any available camera
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          controlsRef.current = await reader.decodeFromConstraints(
+            { video: true },
+            videoRef.current,
+            (result) => onResult(result)
+          );
         } catch (err2: unknown) {
           if (!stopped) setCameraError(describeError(err2));
           return;
         }
       }
 
-      if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        try { await videoRef.current.play(); } catch { /* autoplay may need gesture; video still shows */ }
-      }
+      if (stopped) { try { controlsRef.current?.stop(); } catch {} return; }
       setCameraReady(true);
-
-      // BarcodeDetector — Chrome/Edge/Android/iOS 17+
-      if ('BarcodeDetector' in window && onDetect) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const detector = new (window as any).BarcodeDetector({
-          formats: ['qr_code', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e']
-        });
-        setAutoScan(true);
-
-        function loop() {
-          if (stopped || !videoRef.current) return;
-          if (!cooldownRef.current && videoRef.current.readyState >= 2) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            detector.detect(videoRef.current).then((codes: any[]) => {
-              if (codes.length > 0 && !cooldownRef.current) {
-                cooldownRef.current = true;
-                onDetect(codes[0].rawValue);
-                // 2.5s cooldown to avoid double-triggering
-                setTimeout(() => { cooldownRef.current = false; }, 2500);
-              }
-            }).catch(() => {});
-          }
-          rafRef.current = requestAnimationFrame(loop);
-        }
-        rafRef.current = requestAnimationFrame(loop);
-      }
+      setAutoScan(true);
     }
 
     start();
     return () => {
       stopped = true;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      try { controlsRef.current?.stop(); } catch {}
     };
   }, [retry]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -223,33 +210,51 @@ function Viewfinder({ mode, onDetect }: { mode: Mode; onDetect?: (code: string) 
 
 /* ─── Stamp mode views ─────────────────────────────────────── */
 
-function StampScanView({ code, setCode, onAddStamp, onCameraDetect, loading, error }: {
+function StampScanView({ code, setCode, onAddStamp, onCameraDetect, loading, error, prefix }: {
   code: string; setCode: (v: string) => void;
   onAddStamp: () => void; onCameraDetect: (c: string) => void;
-  loading: boolean; error: string;
+  loading: boolean; error: string; prefix: string;
 }) {
+  // The numeric box only holds the digits after the fixed business prefix.
+  // Camera scans may fill `code` with a full key (e.g. NOO12345) — strip the
+  // prefix for display so the box always shows just the number part.
+  const digits = code.toUpperCase().startsWith(prefix)
+    ? code.slice(prefix.length).replace(/[^0-9]/g, '')
+    : code.replace(/[^0-9]/g, '');
   return (
     <div style={{ display: 'flex', gap: 16, height: 'calc(100% - 50px)' }}>
       <Viewfinder mode="stamp" onDetect={onCameraDetect} />
       <div style={{ width: 220, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            onKeyDown={(e) => e.key === 'Enter' && onAddStamp()}
-            placeholder="Code e.g. NOO12345 or barcode"
-            type="text"
-            inputMode="text"
-            autoCapitalize="characters"
-            autoCorrect="off"
-            spellCheck={false}
-            style={{
-              width: '100%', padding: '10px 12px', borderRadius: 10,
-              border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)',
-              color: 'white', fontSize: 13, fontFamily: 'inherit', outline: 'none',
-              boxSizing: 'border-box', textTransform: 'uppercase', letterSpacing: '0.04em',
-            }}
-          />
+          <div style={{ fontSize: 11, opacity: 0.55, letterSpacing: '.04em' }}>Enter customer number</div>
+          <div style={{
+            display: 'flex', alignItems: 'stretch', borderRadius: 10, overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)',
+          }}>
+            <span style={{
+              display: 'flex', alignItems: 'center', padding: '0 10px',
+              background: 'rgba(29,158,117,0.22)', color: '#7DD9B5',
+              fontSize: 13, fontWeight: 700, letterSpacing: '0.06em',
+              borderRight: '1px solid rgba(255,255,255,0.15)', fontFamily: 'var(--font-mono)',
+            }}>{prefix}</span>
+            <input
+              value={digits}
+              onChange={(e) => setCode(prefix + e.target.value.replace(/[^0-9]/g, ''))}
+              onKeyDown={(e) => e.key === 'Enter' && onAddStamp()}
+              placeholder="12345"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              style={{
+                flex: 1, minWidth: 0, padding: '10px 12px', border: 0,
+                background: 'transparent', color: 'white', fontSize: 14,
+                fontFamily: 'var(--font-mono)', outline: 'none', letterSpacing: '0.08em',
+              }}
+            />
+          </div>
+          <div style={{ fontSize: 10, opacity: 0.4 }}>Type only the number — {prefix} is added automatically</div>
           {error && <div style={{ fontSize: 11, color: '#FF8A9A', padding: '4px 0' }}>{error}</div>}
         </div>
         <ActionBtn primary label={loading ? 'Adding…' : 'Add stamp'} sub="+1 to current card" onClick={onAddStamp} disabled={loading || !code.trim()} />
@@ -598,6 +603,13 @@ const COUPON_VIEWS: { id: CouponView; label: string }[] = [
 ];
 
 export default function ScannerPage() {
+  // unique_key prefix for THIS business (first 3 alphanumerics of name, upper).
+  // Staff only type the digits; this prefix is shown fixed and added back.
+  const { businessName } = usePlan();
+  // Must match unique_key generation in backend customers.js: first 3
+  // alphanumerics, uppercase, padded to 3 with 'X'.
+  const prefix = (businessName || 'NOO').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 3).padEnd(3, 'X');
+
   const [mode, setMode] = useState<Mode>('stamp');
   const [stampView, setStampView] = useState<StampView>('scan');
   const [couponView, setCouponView] = useState<CouponView>('scan');
@@ -794,7 +806,7 @@ export default function ScannerPage() {
             </div>
 
             {/* Content */}
-            {mode === 'stamp' && stampView === 'scan'     && <StampScanView code={code} setCode={setCode} onAddStamp={handleAddStamp} onCameraDetect={handleCamDetectStamp} loading={loading} error={error} />}
+            {mode === 'stamp' && stampView === 'scan'     && <StampScanView code={code} setCode={setCode} onAddStamp={handleAddStamp} onCameraDetect={handleCamDetectStamp} loading={loading} error={error} prefix={prefix} />}
             {mode === 'stamp' && stampView === 'success'  && <StampSuccessView data={stampData} onBack={resetStamp} onRedeem={handleRedeemFromSuccess} redeeming={redeeming} onRedeemTier={handleRedeemTier} />}
             {mode === 'stamp' && stampView === 'customer' && <StampCustomerView />}
 

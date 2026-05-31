@@ -6,6 +6,7 @@ export type Plan = 'basic' | 'starter' | 'pro' | 'premium';
 
 export interface PlanInfo {
   plan: Plan;
+  businessName: string;
   isSuperadmin: boolean;
   isBasic: boolean;
   isPro: boolean;
@@ -68,23 +69,25 @@ function decodeJwt(token: string): Record<string, unknown> | null {
 export function usePlan(): PlanInfo {
   return useMemo(() => {
     if (typeof window === 'undefined') {
-      return makeInfo('basic', false);
+      return makeInfo('basic', false, '');
     }
     const token = localStorage.getItem('nook_token');
-    if (!token) return makeInfo('basic', false);
+    if (!token) return makeInfo('basic', false, '');
     const payload = decodeJwt(token);
-    if (!payload) return makeInfo('basic', false);
+    if (!payload) return makeInfo('basic', false, '');
     const plan = (payload.plan as string)?.toLowerCase() ?? 'basic';
     const isSuperadmin = !!(payload.is_superadmin);
-    return makeInfo(plan, isSuperadmin);
+    const businessName = (payload.name as string) ?? '';
+    return makeInfo(plan, isSuperadmin, businessName);
   }, []);
 }
 
-function makeInfo(planStr: string, isSuperadmin: boolean): PlanInfo {
+function makeInfo(planStr: string, isSuperadmin: boolean, businessName: string): PlanInfo {
   const plan = (planStr as Plan);
   const limits = PLAN_LIMITS[planStr] ?? PLAN_LIMITS.basic;
   return {
     plan,
+    businessName,
     isSuperadmin,
     isBasic: planStr === 'basic' || planStr === 'starter',
     isPro: planStr === 'pro',
