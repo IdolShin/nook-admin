@@ -51,57 +51,77 @@ function Viewfinder({ mode, onDetect }: { mode: Mode; onDetect?: (code: string) 
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [autoScan, setAutoScan] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     let stopped = false;
+    setCameraError('');
+    setCameraReady(false);
+    setAutoScan(false);
+
+    function describeError(err: unknown): string {
+      const name = (err as { name?: string }).name;
+      if (name === 'NotAllowedError' || name === 'SecurityError') return 'Camera permission blocked — allow it in the browser address bar';
+      if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'No camera found on this device';
+      if (name === 'NotReadableError') return 'Camera is in use by another app — close it and retry';
+      return 'Camera unavailable';
+    }
 
     async function start() {
+      // Needs a secure context (HTTPS) + API support
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+        setCameraError('Camera not supported on this browser');
+        return;
+      }
+
+      let stream: MediaStream;
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        // Prefer the rear camera, but don't *require* it (laptops have none)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }
         });
-        if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+      } catch {
+        // Fallback: any available camera
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        } catch (err2: unknown) {
+          if (!stopped) setCameraError(describeError(err2));
+          return;
         }
-        setCameraReady(true);
+      }
 
-        // BarcodeDetector — Chrome/Edge/Android/iOS 17+
-        if ('BarcodeDetector' in window && onDetect) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const detector = new (window as any).BarcodeDetector({
-            formats: ['qr_code', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e']
-          });
-          setAutoScan(true);
+      if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        try { await videoRef.current.play(); } catch { /* autoplay may need gesture; video still shows */ }
+      }
+      setCameraReady(true);
 
-          function loop() {
-            if (stopped || !videoRef.current) return;
-            if (!cooldownRef.current && videoRef.current.readyState >= 2) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              detector.detect(videoRef.current).then((codes: any[]) => {
-                if (codes.length > 0 && !cooldownRef.current) {
-                  cooldownRef.current = true;
-                  onDetect(codes[0].rawValue);
-                  // 2.5s cooldown to avoid double-triggering
-                  setTimeout(() => { cooldownRef.current = false; }, 2500);
-                }
-              }).catch(() => {});
-            }
-            rafRef.current = requestAnimationFrame(loop);
+      // BarcodeDetector — Chrome/Edge/Android/iOS 17+
+      if ('BarcodeDetector' in window && onDetect) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const detector = new (window as any).BarcodeDetector({
+          formats: ['qr_code', 'code_128', 'code_39', 'code_93', 'ean_13', 'ean_8', 'upc_a', 'upc_e']
+        });
+        setAutoScan(true);
+
+        function loop() {
+          if (stopped || !videoRef.current) return;
+          if (!cooldownRef.current && videoRef.current.readyState >= 2) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            detector.detect(videoRef.current).then((codes: any[]) => {
+              if (codes.length > 0 && !cooldownRef.current) {
+                cooldownRef.current = true;
+                onDetect(codes[0].rawValue);
+                // 2.5s cooldown to avoid double-triggering
+                setTimeout(() => { cooldownRef.current = false; }, 2500);
+              }
+            }).catch(() => {});
           }
           rafRef.current = requestAnimationFrame(loop);
         }
-      } catch (err: unknown) {
-        if (!stopped) {
-          const name = (err as { name?: string }).name;
-          setCameraError(
-            name === 'NotAllowedError' ? 'Camera permission denied' :
-            name === 'NotFoundError'   ? 'No camera found' :
-            'Camera unavailable'
-          );
-        }
+        rafRef.current = requestAnimationFrame(loop);
       }
     }
 
@@ -111,7 +131,7 @@ function Viewfinder({ mode, onDetect }: { mode: Mode; onDetect?: (code: string) 
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       streamRef.current?.getTracks().forEach(t => t.stop());
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [retry]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{
@@ -174,7 +194,17 @@ function Viewfinder({ mode, onDetect }: { mode: Mode; onDetect?: (code: string) 
       {/* Status message */}
       <div style={{ position: 'absolute', bottom: 18, left: 0, right: 0, textAlign: 'center', fontSize: 12, padding: '0 12px' }}>
         {cameraError ? (
-          <span style={{ color: '#FF8A9A' }}>{cameraError} — enter code manually →</span>
+          <span style={{ color: '#FF8A9A', display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {cameraError} — enter code manually →
+            <button
+              onClick={() => setRetry((n) => n + 1)}
+              style={{
+                padding: '3px 10px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.25)',
+                background: 'rgba(255,255,255,0.08)', color: 'white', fontSize: 11,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >Retry camera</button>
+          </span>
         ) : !cameraReady ? (
           <span style={{ color: 'rgba(255,255,255,0.5)' }}>Starting camera…</span>
         ) : autoScan ? (
@@ -205,14 +235,19 @@ function StampScanView({ code, setCode, onAddStamp, onCameraDetect, loading, err
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <input
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
             onKeyDown={(e) => e.key === 'Enter' && onAddStamp()}
-            placeholder="Barcode or QR code…"
+            placeholder="Code e.g. NOO12345 or barcode"
+            type="text"
+            inputMode="text"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
             style={{
               width: '100%', padding: '10px 12px', borderRadius: 10,
               border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)',
               color: 'white', fontSize: 13, fontFamily: 'inherit', outline: 'none',
-              boxSizing: 'border-box',
+              boxSizing: 'border-box', textTransform: 'uppercase', letterSpacing: '0.04em',
             }}
           />
           {error && <div style={{ fontSize: 11, color: '#FF8A9A', padding: '4px 0' }}>{error}</div>}
@@ -454,14 +489,19 @@ function CouponScanView({ code, setCode, onRedeem, onCameraDetect, loading, erro
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <input
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
             onKeyDown={(e) => e.key === 'Enter' && onRedeem()}
-            placeholder="Coupon barcode…"
+            placeholder="Coupon barcode or code"
+            type="text"
+            inputMode="text"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
             style={{
               width: '100%', padding: '10px 12px', borderRadius: 10,
               border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)',
               color: 'white', fontSize: 13, fontFamily: 'inherit', outline: 'none',
-              boxSizing: 'border-box',
+              boxSizing: 'border-box', textTransform: 'uppercase', letterSpacing: '0.04em',
             }}
           />
           {error && <div style={{ fontSize: 11, color: '#FF8A9A', padding: '4px 0' }}>{error}</div>}
