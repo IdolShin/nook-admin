@@ -10,6 +10,46 @@ import { useBreakpoint } from '@/hooks/useBreakpoint';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
 import { usePlan } from '@/hooks/usePlan';
 import { toast } from '@/lib/toast';
+import type { RewardTier } from '@/lib/api';
+
+/* ─── Reward Tiers Editor (membership cards) ─────────────────── */
+function RewardTiersEditor({ tiers, onChange, color }: {
+  tiers: RewardTier[]; onChange: (t: RewardTier[]) => void; color: string;
+}) {
+  const inp: React.CSSProperties = {
+    height: 36, padding: '0 10px', border: '1px solid #EBEBEB',
+    borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' as const,
+  };
+  return (
+    <div>
+      <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>
+        Reward options <span style={{ fontWeight: 400, color: '#8A8D94' }}>(customers spend points for these)</span>
+      </label>
+      {tiers.length === 0 && (
+        <div style={{ fontSize: 12, color: '#8A8D94', marginBottom: 8 }}>No reward options yet. Add one below.</div>
+      )}
+      {tiers.map((tier, i) => (
+        <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 8, alignItems: 'center' }}>
+          <input value={tier.label} onChange={e => { const n = [...tiers]; n[i] = {...n[i], label: e.target.value}; onChange(n); }}
+            placeholder="e.g. Free Coffee" style={{ ...inp, flex: 1 }} />
+          <input type="number" min={1} value={tier.points}
+            onChange={e => { const n = [...tiers]; n[i] = {...n[i], points: Number(e.target.value) || 0}; onChange(n); }}
+            placeholder="500" style={{ ...inp, width: 72, textAlign: 'right' }} />
+          <span style={{ fontSize: 11, color: '#8A8D94', flexShrink: 0 }}>pts</span>
+          <button onClick={() => onChange(tiers.filter((_, j) => j !== i))}
+            style={{ width: 28, height: 28, border: 0, borderRadius: 6, background: '#FBE2EC', color: '#C53A6B', cursor: 'pointer', flexShrink: 0, fontSize: 14 }}>
+            ✕
+          </button>
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange([...tiers, { label: '', points: 500 }])}
+        style={{ width: '100%', height: 34, border: `1.5px dashed ${color}`, borderRadius: 8,
+          background: 'transparent', color, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+        + Add reward option
+      </button>
+    </div>
+  );
+}
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -162,6 +202,7 @@ function NewCardModal({ onClose, onCreate, businessId, allowedCardTypes, isSuper
   const [cardType, setCardType] = useState('stamp');
   const [goalStamps, setGoalStamps] = useState(10);
   const [rewardDesc, setRewardDesc] = useState('');
+  const [rewardTiers, setRewardTiers] = useState<RewardTier[]>([]);
   const [color, setColor] = useState('#1D9E75');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -173,11 +214,13 @@ function NewCardModal({ onClose, onCreate, businessId, allowedCardTypes, isSuper
     setSaving(true);
     setError('');
     try {
+      const validTiers = rewardTiers.filter(t => t.label.trim() && t.points > 0);
       const result = await api.createCard({
         name: name.trim(),
         card_type: cardType,
         goal_stamps: goalStamps,
         reward_desc: rewardDesc.trim() || undefined,
+        reward_tiers: validTiers.length ? validTiers : undefined,
         color,
         is_active: true,
         ...(businessId && businessId !== 'self' ? { business_id: businessId } : {}),
@@ -263,10 +306,17 @@ function NewCardModal({ onClose, onCreate, businessId, allowedCardTypes, isSuper
             )}
 
             <div>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>Reward description</label>
-              <input value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)} placeholder="e.g. Free latte after 10 stamps"
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>
+                {cardType === 'membership' ? 'Description (optional)' : 'Reward description'}
+              </label>
+              <input value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)}
+                placeholder={cardType === 'membership' ? 'e.g. Earn 100 pts per visit' : 'e.g. Free latte after 10 stamps'}
                 style={{ width: '100%', height: 40, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
             </div>
+
+            {cardType === 'membership' && (
+              <RewardTiersEditor tiers={rewardTiers} onChange={setRewardTiers} color={color} />
+            )}
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 8 }}>Color</label>
@@ -316,6 +366,7 @@ function EditCardModal({ card, onClose, onUpdated }: { card: Card; onClose: () =
   const [cardType, setCardType] = useState(card.type);
   const [goalStamps, setGoalStamps] = useState(card.goal_stamps || 10);
   const [rewardDesc, setRewardDesc] = useState(card.reward);
+  const [rewardTiers, setRewardTiers] = useState<RewardTier[]>((card as Card & { rewardTiers?: RewardTier[] }).rewardTiers || []);
   const [color, setColor] = useState(card.color);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -327,11 +378,13 @@ function EditCardModal({ card, onClose, onUpdated }: { card: Card; onClose: () =
     setSaving(true);
     setError('');
     try {
+      const validTiers = rewardTiers.filter(t => t.label.trim() && t.points > 0);
       const result = await api.updateCard(card.id, {
         name: name.trim(),
         card_type: cardType,
         goal_stamps: goalStamps,
         reward_desc: rewardDesc.trim() || undefined,
+        reward_tiers: validTiers,
         color,
       });
       const gradient = CARD_COLORS[result.color] ?? [darkenHex(result.color), result.color];
@@ -398,12 +451,15 @@ function EditCardModal({ card, onClose, onUpdated }: { card: Card; onClose: () =
           )}
           <div>
             <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 6 }}>
-              {cardType === 'coupon' ? 'Offer description' : cardType === 'membership' ? 'Member benefits' : 'Reward description'}
+              {cardType === 'coupon' ? 'Offer description' : cardType === 'membership' ? 'Description (optional)' : 'Reward description'}
             </label>
             <input value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)}
-              placeholder={cardType === 'coupon' ? 'e.g. 감자튀김/고로케 무료' : 'e.g. Free latte after 10 stamps'}
+              placeholder={cardType === 'membership' ? 'e.g. Earn 100 pts per visit' : cardType === 'coupon' ? 'e.g. 감자튀김/고로케 무료' : 'e.g. Free latte after 10 stamps'}
               style={{ width: '100%', height: 40, padding: '0 12px', border: '1px solid #EBEBEB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
           </div>
+          {cardType === 'membership' && (
+            <RewardTiersEditor tiers={rewardTiers} onChange={setRewardTiers} color={color} />
+          )}
           <div>
             <label style={{ fontSize: 12, fontWeight: 500, color: '#5C5F66', display: 'block', marginBottom: 8 }}>Color</label>
             <div style={{ display: 'flex', gap: 8 }}>

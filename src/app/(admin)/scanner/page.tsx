@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { api } from '@/lib/api';
+import { api, type RewardTier } from '@/lib/api';
 import { toast } from '@/lib/toast';
 
 type Mode = 'stamp' | 'coupon';
@@ -17,6 +17,7 @@ interface StampResult {
   rewardReady: boolean;
   rewardDesc: string | null;
   rewardsEarned: number;
+  rewardTiers: RewardTier[] | null;
   totalPoints: number | null;
   pointsEarned: number | null;
 }
@@ -236,9 +237,10 @@ function StampScanView({ code, setCode, onAddStamp, onCameraDetect, loading, err
   );
 }
 
-function StampSuccessView({ data, onBack, onRedeem, redeeming }: {
+function StampSuccessView({ data, onBack, onRedeem, redeeming, onRedeemTier }: {
   data: StampResult | null; onBack: () => void;
   onRedeem: () => void; redeeming: boolean;
+  onRedeemTier?: (tier: RewardTier) => void;
 }) {
   const name = data?.customerName ?? '—';
   const isMembership = data?.cardType === 'membership';
@@ -246,34 +248,69 @@ function StampSuccessView({ data, onBack, onRedeem, redeeming }: {
   if (isMembership) {
     const totalPts = data?.totalPoints ?? 0;
     const earned = data?.pointsEarned ?? 100;
+    const tiers = data?.rewardTiers ?? [];
     return (
-      <div style={{ height: 'calc(100% - 50px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-        <div style={{
-          width: 100, height: 100, borderRadius: 999,
-          background: 'rgba(99,102,241,0.18)', color: '#A5B4FC',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 0 14px rgba(99,102,241,0.06)',
-        }}>
-          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-        </div>
-        <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 22 }}>Points added!</div>
-        <div style={{ fontSize: 14, opacity: 0.65, marginTop: 6 }}>{name}</div>
-        <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
-          <div style={{ padding: '14px 22px', borderRadius: 14, background: 'rgba(99,102,241,0.15)', textAlign: 'center' }}>
-            <div style={{ fontSize: 11, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '.08em' }}>Earned</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#A5B4FC', fontFamily: 'var(--font-mono)', marginTop: 4 }}>+{earned}</div>
-            <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>pts</div>
+      <div style={{ height: 'calc(100% - 50px)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', flexDirection: 'column', paddingTop: 8 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <div style={{ width: 80, height: 80, borderRadius: 999, background: 'rgba(99,102,241,0.18)', color: '#A5B4FC', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 12px rgba(99,102,241,0.06)' }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
           </div>
-          <div style={{ padding: '14px 22px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', textAlign: 'center' }}>
-            <div style={{ fontSize: 11, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '.08em' }}>Total</div>
-            <div style={{ fontSize: 28, fontWeight: 800, fontFamily: 'var(--font-mono)', marginTop: 4 }}>{totalPts.toLocaleString()}</div>
-            <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>pts</div>
+          <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 16 }}>Points added!</div>
+          <div style={{ fontSize: 13, opacity: 0.65, marginTop: 4 }}>{name}</div>
+          <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
+            <div style={{ padding: '10px 18px', borderRadius: 12, background: 'rgba(99,102,241,0.15)', textAlign: 'center' }}>
+              <div style={{ fontSize: 10, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '.08em' }}>Earned</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#A5B4FC', fontFamily: 'var(--font-mono)', marginTop: 2 }}>+{earned}</div>
+              <div style={{ fontSize: 10, opacity: 0.6 }}>pts</div>
+            </div>
+            <div style={{ padding: '10px 18px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', textAlign: 'center' }}>
+              <div style={{ fontSize: 10, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '.08em' }}>Balance</div>
+              <div style={{ fontSize: 22, fontWeight: 800, fontFamily: 'var(--font-mono)', marginTop: 2 }}>{totalPts.toLocaleString()}</div>
+              <div style={{ fontSize: 10, opacity: 0.6 }}>pts</div>
+            </div>
           </div>
         </div>
-        <div style={{ marginTop: 20, fontSize: 12, opacity: 0.5 }}>Auto-returning in 4s</div>
-        <button onClick={onBack} style={{ marginTop: 12, fontSize: 12, background: 'none', border: 0, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontFamily: 'inherit' }}>Return now</button>
+
+        {/* Reward tiers - redeem options */}
+        {tiers.length > 0 && (
+          <div style={{ width: '100%', marginTop: 18 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', opacity: 0.55, marginBottom: 8, textAlign: 'center' }}>
+              Redeem Points
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {tiers.map((tier) => {
+                const canAfford = totalPts >= tier.points;
+                return (
+                  <button
+                    key={tier.label}
+                    onClick={() => canAfford && onRedeemTier && onRedeemTier(tier)}
+                    disabled={!canAfford || redeeming}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '12px 16px', borderRadius: 12, border: 0,
+                      background: canAfford ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
+                      color: canAfford ? 'white' : 'rgba(255,255,255,0.3)',
+                      cursor: canAfford ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
+                      transition: 'background 120ms',
+                    }}
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{tier.label}</span>
+                    <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: canAfford ? '#A5B4FC' : 'rgba(255,255,255,0.25)' }}>
+                      {tier.points.toLocaleString()} pts
+                      {!canAfford && <span style={{ fontSize: 10, marginLeft: 6, opacity: 0.6 }}>({(tier.points - totalPts).toLocaleString()} more needed)</span>}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginTop: 16, fontSize: 11, opacity: 0.4, textAlign: 'center', width: '100%' }}>Auto-returning in 4s</div>
+        <button onClick={onBack} style={{ marginTop: 6, fontSize: 11, background: 'none', border: 0, color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'center' }}>Return now</button>
       </div>
     );
   }
@@ -546,6 +583,7 @@ export default function ScannerPage() {
         rewardReady:   res.reward_ready,
         rewardDesc:    res.reward_desc ?? null,
         rewardsEarned: res.rewards_earned ?? 0,
+        rewardTiers:   res.reward_tiers ?? null,
         totalPoints:   res.total_points ?? null,
         pointsEarned:  res.points_earned ?? null,
       });
@@ -603,6 +641,23 @@ export default function ScannerPage() {
 
   // ── Redeem directly from stamp success view ───────────────
   const [redeeming, setRedeeming] = useState(false);
+
+  // ── Redeem a points tier from membership success ──────────
+  const handleRedeemTier = useCallback(async (tier: RewardTier) => {
+    if (!stampData?.customerId || redeeming) return;
+    setRedeeming(true);
+    try {
+      const res = await api.redeemPoints(stampData.customerId, tier.points, tier.label);
+      const newBalance = res.new_balance;
+      setStampData(prev => prev ? { ...prev, totalPoints: newBalance } : null);
+      toast(`"${tier.label}" redeemed! Balance: ${newBalance.toLocaleString()} pts`, 'success');
+      setTimeout(() => { setStampData(null); setStampView('scan'); }, 2500);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Redeem failed', 'error');
+    } finally {
+      setRedeeming(false);
+    }
+  }, [stampData, redeeming]);
 
   const handleRedeemFromSuccess = useCallback(async () => {
     if (!stampData?.customerId || redeeming) return;
@@ -700,7 +755,7 @@ export default function ScannerPage() {
 
             {/* Content */}
             {mode === 'stamp' && stampView === 'scan'     && <StampScanView code={code} setCode={setCode} onAddStamp={handleAddStamp} onCameraDetect={handleCamDetectStamp} loading={loading} error={error} />}
-            {mode === 'stamp' && stampView === 'success'  && <StampSuccessView data={stampData} onBack={resetStamp} onRedeem={handleRedeemFromSuccess} redeeming={redeeming} />}
+            {mode === 'stamp' && stampView === 'success'  && <StampSuccessView data={stampData} onBack={resetStamp} onRedeem={handleRedeemFromSuccess} redeeming={redeeming} onRedeemTier={handleRedeemTier} />}
             {mode === 'stamp' && stampView === 'customer' && <StampCustomerView />}
 
             {mode === 'coupon' && couponView === 'scan'             && <CouponScanView code={code} setCode={setCode} onRedeem={handleRedeemCoupon} onCameraDetect={handleCamDetectCoupon} loading={loading} error={error} />}
