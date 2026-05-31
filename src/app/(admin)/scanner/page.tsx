@@ -2,17 +2,21 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
+import { toast } from '@/lib/toast';
 
 type Mode = 'stamp' | 'coupon';
 type StampView = 'scan' | 'success' | 'customer';
 type CouponView = 'scan' | 'found' | 'success' | 'already_redeemed' | 'expired';
 
 interface StampResult {
+  customerId: string;
   customerName: string;
   cardType: string;
   newStamps: number;
   goalStamps: number;
   rewardReady: boolean;
+  rewardDesc: string | null;
+  rewardsEarned: number;
   totalPoints: number | null;
   pointsEarned: number | null;
 }
@@ -232,7 +236,10 @@ function StampScanView({ code, setCode, onAddStamp, onCameraDetect, loading, err
   );
 }
 
-function StampSuccessView({ data, onBack }: { data: StampResult | null; onBack: () => void }) {
+function StampSuccessView({ data, onBack, onRedeem, redeeming }: {
+  data: StampResult | null; onBack: () => void;
+  onRedeem: () => void; redeeming: boolean;
+}) {
   const name = data?.customerName ?? '—';
   const isMembership = data?.cardType === 'membership';
 
@@ -273,40 +280,77 @@ function StampSuccessView({ data, onBack }: { data: StampResult | null; onBack: 
 
   const stamps = data?.newStamps ?? 0;
   const goal = data?.goalStamps ?? 10;
+  const rewardsEarned = data?.rewardsEarned ?? 0;
+  const rewardDesc = data?.rewardDesc;
+
   return (
     <div style={{ height: 'calc(100% - 50px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
       <div style={{
         width: 100, height: 100, borderRadius: 999,
-        background: 'rgba(29,158,117,0.18)', color: '#7DD9B5',
+        background: data?.rewardReady ? 'rgba(255,193,7,0.18)' : 'rgba(29,158,117,0.18)',
+        color: data?.rewardReady ? '#FFD54F' : '#7DD9B5',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 0 0 14px rgba(29,158,117,0.06)',
+        boxShadow: data?.rewardReady ? '0 0 0 14px rgba(255,193,7,0.08)' : '0 0 0 14px rgba(29,158,117,0.06)',
       }}>
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m5 12 5 5L20 7" />
-        </svg>
+        {data?.rewardReady
+          ? <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12v10H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /></svg>
+          : <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
+        }
       </div>
-      <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 22 }}>
-        {data?.rewardReady ? 'Reward earned!' : 'Stamp added'}
+
+      <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 20, textAlign: 'center' }}>
+        {data?.rewardReady ? 'Reward Earned!' : 'Stamp Added'}
       </div>
-      <div style={{ fontSize: 14, opacity: 0.65, marginTop: 6 }}>
+      <div style={{ fontSize: 14, opacity: 0.65, marginTop: 5 }}>
         {name} {String.fromCharCode(183)} <span style={{ fontFamily: 'var(--font-mono)' }}>{stamps}/{goal}</span>
+        {rewardsEarned > 0 && (
+          <span style={{ marginLeft: 8, padding: '1px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', fontSize: 11 }}>
+            {rewardsEarned}x redeemed
+          </span>
+        )}
       </div>
-      <div style={{ display: 'flex', gap: 5, marginTop: 18 }}>
+
+      {/* Stamp grid */}
+      <div style={{ display: 'flex', gap: 5, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 280 }}>
         {Array.from({ length: goal }).map((_, i) => (
           <span key={i} style={{
-            width: 18, height: 18, borderRadius: 999,
+            width: 16, height: 16, borderRadius: 999,
             background: i < stamps ? '#1D9E75' : 'rgba(255,255,255,0.12)',
             border: i >= stamps ? '1px dashed rgba(255,255,255,0.2)' : 'none',
           }} />
         ))}
       </div>
+
+      {/* Reward ready — big action area */}
       {data?.rewardReady && (
-        <div style={{ marginTop: 12, padding: '6px 14px', borderRadius: 999, background: 'rgba(29,158,117,0.2)', color: '#7DD9B5', fontSize: 12 }}>
-          {'\u{1F381}'} Reward ready to redeem
+        <div style={{
+          marginTop: 18, width: '100%', maxWidth: 320,
+          background: 'rgba(255,193,7,0.12)', border: '1.5px solid rgba(255,193,7,0.35)',
+          borderRadius: 14, padding: '16px 20px', textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: '#FFD54F', opacity: 0.8 }}>Give customer</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#FFD54F', marginTop: 4, letterSpacing: '-0.01em' }}>
+            {rewardDesc || 'Free reward'}
+          </div>
+          <button
+            onClick={onRedeem}
+            disabled={redeeming}
+            style={{
+              marginTop: 12, width: '100%', height: 44, borderRadius: 10,
+              background: redeeming ? 'rgba(255,193,7,0.3)' : 'rgba(255,193,7,0.85)',
+              color: '#1A1A00', border: 0, fontSize: 14, fontWeight: 700,
+              cursor: redeeming ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {redeeming ? 'Processing...' : 'Confirm Reward Given'}
+          </button>
+          <div style={{ fontSize: 11, opacity: 0.5, marginTop: 8 }}>Tap after handing out the reward</div>
         </div>
       )}
-      <div style={{ marginTop: 20, fontSize: 12, opacity: 0.5 }}>Auto-returning in 4s</div>
-      <button onClick={onBack} style={{ marginTop: 12, fontSize: 12, background: 'none', border: 0, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontFamily: 'inherit' }}>Return now</button>
+
+      <div style={{ marginTop: 18, fontSize: 12, opacity: 0.5 }}>Auto-returning in 4s</div>
+      <button onClick={onBack} style={{ marginTop: 8, fontSize: 12, background: 'none', border: 0, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontFamily: 'inherit' }}>Return now</button>
     </div>
   );
 }
@@ -494,13 +538,16 @@ export default function ScannerPage() {
     try {
       const res = await api.scanStamp(scanCode.trim(), 'barcode');
       setStampData({
-        customerName: res.customer_name,
-        cardType:     res.card_type || 'stamp',
-        newStamps:    res.new_stamps ?? 0,
-        goalStamps:   res.goal_stamps ?? 10,
-        rewardReady:  res.reward_ready,
-        totalPoints:  res.total_points ?? null,
-        pointsEarned: res.points_earned ?? null,
+        customerId:    res.customer_id,
+        customerName:  res.customer_name,
+        cardType:      res.card_type || 'stamp',
+        newStamps:     res.new_stamps ?? 0,
+        goalStamps:    res.goal_stamps ?? 10,
+        rewardReady:   res.reward_ready,
+        rewardDesc:    res.reward_desc ?? null,
+        rewardsEarned: res.rewards_earned ?? 0,
+        totalPoints:   res.total_points ?? null,
+        pointsEarned:  res.points_earned ?? null,
       });
       setStampView('success');
       setCode('');
@@ -553,6 +600,26 @@ export default function ScannerPage() {
     setCode(detected);
     doRedeemCoupon(detected);
   }, [doRedeemCoupon]);
+
+  // ── Redeem directly from stamp success view ───────────────
+  const [redeeming, setRedeeming] = useState(false);
+
+  const handleRedeemFromSuccess = useCallback(async () => {
+    if (!stampData?.customerId || redeeming) return;
+    setRedeeming(true);
+    try {
+      const res = await api.redeemStamp(stampData.customerId);
+      // Show brief redeemed confirmation then reset
+      setStampData(prev => prev ? { ...prev, rewardReady: false } : null);
+      toast(`"${res.reward_desc || 'Reward'}" confirmed!`, 'success');
+      setTimeout(() => { setStampData(null); setStampView('scan'); }, 2500);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Redeem failed';
+      toast(msg, 'error');
+    } finally {
+      setRedeeming(false);
+    }
+  }, [stampData, redeeming]);
 
   const resetStamp  = () => { setStampView('scan');  setStampData(null);  setError(''); setCode(''); };
   const resetCoupon = () => { setCouponView('scan'); setCouponData(null); setError(''); setCode(''); };
@@ -633,7 +700,7 @@ export default function ScannerPage() {
 
             {/* Content */}
             {mode === 'stamp' && stampView === 'scan'     && <StampScanView code={code} setCode={setCode} onAddStamp={handleAddStamp} onCameraDetect={handleCamDetectStamp} loading={loading} error={error} />}
-            {mode === 'stamp' && stampView === 'success'  && <StampSuccessView data={stampData} onBack={resetStamp} />}
+            {mode === 'stamp' && stampView === 'success'  && <StampSuccessView data={stampData} onBack={resetStamp} onRedeem={handleRedeemFromSuccess} redeeming={redeeming} />}
             {mode === 'stamp' && stampView === 'customer' && <StampCustomerView />}
 
             {mode === 'coupon' && couponView === 'scan'             && <CouponScanView code={code} setCode={setCode} onRedeem={handleRedeemCoupon} onCameraDetect={handleCamDetectCoupon} loading={loading} error={error} />}
