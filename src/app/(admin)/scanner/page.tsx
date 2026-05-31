@@ -140,13 +140,17 @@ function Viewfinder({ mode, onDetect }: { mode: Mode; onDetect?: (code: string) 
         .scanner-line { animation: scan-sweep 2.4s ease-in-out infinite; }
       `}</style>
 
-      {/* Live camera feed */}
+      {/* Live camera feed — must stay visible (display:none breaks iOS Safari
+          autoplay, which makes ZXing fail to start the camera). Keep it
+          always mounted/visible; before the stream is ready it just shows
+          the dark gradient behind it. */}
       <video
         ref={videoRef}
         style={{
           position: 'absolute', inset: 0,
           width: '100%', height: '100%', objectFit: 'cover',
-          display: cameraReady ? 'block' : 'none',
+          opacity: cameraReady ? 1 : 0,
+          transition: 'opacity 200ms',
         }}
         autoPlay muted playsInline
       />
