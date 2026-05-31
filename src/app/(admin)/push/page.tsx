@@ -197,7 +197,11 @@ export default function PushPage() {
     setSendResult('');
     try {
       const res = await api.broadcast(title, body);
-      setSendResult(`Sent ${String.fromCharCode(183)} ${res.web_push_sent} push ${String.fromCharCode(183)} ${res.wallet_updated} wallets updated`);
+      if (res.scheduled) {
+        setSendResult(`예약됨 ${String.fromCharCode(183)} ${res.scheduled_for_et ?? res.scheduled_for} (동부시간 오전 8시~오후 8시 외)`);
+      } else {
+        setSendResult(`Sent ${String.fromCharCode(183)} ${res.web_push_sent ?? 0} push ${String.fromCharCode(183)} ${res.wallet_updated ?? 0} wallets updated`);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Send failed';
       try { setSendResult(`Error: ${JSON.parse(msg).error ?? msg}`); }

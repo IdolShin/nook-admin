@@ -34,9 +34,9 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export interface ApiCard { id: string; name: string; card_type: string; goal_stamps: number; reward_desc: string; color: string; is_active: boolean; created_at: string; business_id?: string; }
-export interface ApiCustomer { id: string; name: string; phone: string; card_id: string; business_id: string; wallet_type?: string; total_stamps?: number; total_points?: number | null; card_type?: string; created_at: string; }
+export interface ApiCustomer { id: string; name: string; user_id?: string; unique_key?: string; birthday_mmdd?: string; phone?: string; card_id: string; business_id: string; wallet_type?: string; total_stamps?: number; total_points?: number | null; card_type?: string; created_at: string; }
 export interface ApiRedemption { id: string; stamps_redeemed: number | null; points_redeemed: number | null; redeem_type: string; created_at: string; }
-export interface BroadcastResult { total_customers: number; web_push_sent: number; wallet_updated: number; failed: number; }
+export interface BroadcastResult { total_customers?: number; web_push_sent?: number; wallet_updated?: number; failed?: number; scheduled?: boolean; scheduled_for?: string; scheduled_for_et?: string; message?: string; }
 export interface ApiAnalytics { total_customers: number; new_customers_30d: number; new_customers_prev: number; active_cards: number; total_stamps: number; stamps_last_30d: number; stamps_prev_30d: number; total_redemptions: number; redemptions_30d: number; coupons_issued: number; coupons_redeemed: number; stamps_by_day: number[]; stamps_daily_30d?: number[]; redemptions_daily_30d?: number[]; }
 export interface ApiReviewConfig { enabled: boolean; reward_type: 'stamp' | 'coupon'; stamp_count: number; coupon_id: string | null; days_to_wait: number; }
 export interface ApiReviewPublic { google_review_url: string; reward_enabled: boolean; days_to_wait: number; reward_type: 'stamp' | 'coupon'; stamp_count: number | null; }
@@ -92,7 +92,7 @@ export const api = {
   analytics: (bizId?: string) => req<ApiAnalytics>(`/api/analytics${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),
   updateProfile: (data: { name?: string; owner_email?: string; timezone?: string; region?: string; phone?: string; address?: string }) => req<{ business: { id: string; name: string; owner_email: string; plan: string } }>('/api/auth/me', { method: 'PATCH', body: JSON.stringify(data) }),
 
-  registerCustomer: async (data: { card_id: string; name: string; phone: string; birthday?: string; consent_push?: boolean; consent_points?: boolean }): Promise<{ customer: ApiCustomer }> => {
+  registerCustomer: async (data: { card_id: string; user_id: string; birthday_mmdd?: string; consent_push?: boolean; consent_points?: boolean }): Promise<{ customer: ApiCustomer }> => {
     const res = await fetch(`${BASE}/api/customers/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ consent_push: true, consent_points: true, ...data }) });
     if (!res.ok) { let msg = res.statusText; try { const j = await res.json(); msg = j.error ?? j.message ?? msg; } catch (_) {} throw new Error(msg); }
     return res.json();

@@ -33,6 +33,15 @@ const CARD_TYPE_LABEL: Record<string, { ko: string; en: string }> = {
   membership: { ko: '멤버십 카드',        en: 'Membership Card' },
 };
 
+const MONTHS = [
+  { ko: '1월', en: 'Jan', val: '01' }, { ko: '2월', en: 'Feb', val: '02' },
+  { ko: '3월', en: 'Mar', val: '03' }, { ko: '4월', en: 'Apr', val: '04' },
+  { ko: '5월', en: 'May', val: '05' }, { ko: '6월', en: 'Jun', val: '06' },
+  { ko: '7월', en: 'Jul', val: '07' }, { ko: '8월', en: 'Aug', val: '08' },
+  { ko: '9월', en: 'Sep', val: '09' }, { ko: '10월', en: 'Oct', val: '10' },
+  { ko: '11월', en: 'Nov', val: '11' }, { ko: '12월', en: 'Dec', val: '12' },
+];
+
 function AppleWalletBadge() {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '5px 12px', border: '1px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(8px)' }}>
@@ -85,7 +94,6 @@ function CardDropdown({ cards, selectedCard, onSelect, lang, primaryColor }: {
         {T('카드 선택', 'Select card', lang)} <span style={{ color: '#E05050' }}>*</span>
       </label>
 
-      {/* Trigger */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -117,14 +125,12 @@ function CardDropdown({ cards, selectedCard, onSelect, lang, primaryColor }: {
             {selectedCard.card_type === 'stamp' && ` · ${selectedCard.goal_stamps} ${T('스탬프', 'stamps', lang)}`}
           </div>
         </div>
-        {/* Chevron */}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={primaryColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           style={{ flexShrink: 0, transition: 'transform 200ms', transform: open ? 'rotate(180deg)' : 'none' }}>
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
 
-      {/* Dropdown list */}
       {open && (
         <div style={{
           position: 'absolute', zIndex: 200, top: 'calc(100% + 6px)', left: 0, right: 0,
@@ -191,14 +197,19 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
   const [selectedCard, setSelectedCard] = useState<BizCard | null>(null);
   const [isMobile, setIsMobile] = useState(true);
 
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [birthday, setBirthday] = useState('');
+  // Form fields
+  const [userId, setUserId] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthDay, setBirthDay] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [sending, setSending] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Success data
   const [qrImage, setQrImage] = useState('');
-  const [customerName, setCustomerName] = useState('');
+  const [uniqueKey, setUniqueKey] = useState('');
+  const [registeredUserId, setRegisteredUserId] = useState('');
+  const [registeredBirthday, setRegisteredBirthday] = useState('');
 
   useEffect(() => {
     try {
@@ -220,7 +231,6 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
         setBusiness(data.business);
         const cardList: BizCard[] = data.cards ?? [];
         setCards(cardList);
-        // Default: prefer stamp (Digital Reward Card), otherwise first card
         if (cardList.length > 0) {
           const stampCard = cardList.find(c => c.card_type === 'stamp');
           setSelectedCard(stampCard ?? cardList[0]);
@@ -238,23 +248,33 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     try { localStorage.setItem('nook-lang', l); } catch {}
   }
 
+  // Build day options based on selected month
+  const daysInMonth = birthMonth ? new Date(2000, parseInt(birthMonth), 0).getDate() : 31;
+  const dayOptions = Array.from({ length: daysInMonth }, (_, i) => {
+    const d = i + 1;
+    return { val: String(d).padStart(2, '0'), label: String(d) };
+  });
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedCard) { setErrorMsg(T('카드를 선택해주세요.', 'Please select a card.', lang)); return; }
-    if (!name.trim()) { setErrorMsg(T('이름을 입력해주세요.', 'Please enter your name.', lang)); return; }
-    if (!phone.trim()) { setErrorMsg(T('전화번호를 입력해주세요.', 'Please enter your phone number.', lang)); return; }
+    if (!userId.trim()) { setErrorMsg(T('User ID를 입력해주세요.', 'Please enter your User ID.', lang)); return; }
     if (!agreed) { setErrorMsg(T('이용 동의가 필요합니다.', 'Please agree to the terms.', lang)); return; }
+
     setSending(true);
     setErrorMsg('');
     try {
       const body: Record<string, unknown> = {
-        card_id: selectedCard.id,
-        name: name.trim(),
-        phone: phone.trim(),
+        card_id:      selectedCard.id,
+        user_id:      userId.trim(),
         consent_push: true,
         consent_points: true,
       };
-      if (birthday.trim()) body.birthday = birthday.trim();
+
+      // Birthday: only send if both month and day are selected
+      if (birthMonth && birthDay) {
+        body.birthday_mmdd = `${birthMonth}-${birthDay}`;
+      }
 
       const res = await fetch(`${BASE}/api/customers/register`, {
         method: 'POST',
@@ -267,7 +287,9 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
       }
       const data = await res.json();
       setQrImage(data.qr_image ?? '');
-      setCustomerName(data.customer?.name ?? name.trim());
+      setUniqueKey(data.customer?.unique_key ?? '');
+      setRegisteredUserId(data.customer?.user_id ?? userId.trim());
+      setRegisteredBirthday(data.customer?.birthday_mmdd ?? '');
       setStep('success');
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : T('오류가 발생했습니다.', 'An error occurred.', lang));
@@ -284,8 +306,15 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     transition: 'border-color 150ms',
   };
 
+  const selectStyle: React.CSSProperties = {
+    flex: 1, padding: '13px 12px',
+    border: '1.5px solid #D4E6DB', borderRadius: 10,
+    fontSize: 14, fontFamily: 'inherit', outline: 'none',
+    background: 'white', color: '#1A1A1F',
+    cursor: 'pointer', appearance: 'none',
+  };
+
   const primaryColor = selectedCard?.color ?? '#1D9E75';
-  // Slightly darker shade for gradient depth
   const darkerColor = primaryColor === '#1D9E75' ? '#0D7A5A' : primaryColor + 'CC';
 
   const containerStyle: React.CSSProperties = {
@@ -326,6 +355,10 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
 
   // ── Success ──────────────────────────────────────────────────
   if (step === 'success') {
+    const [bMonth, bDay] = registeredBirthday ? registeredBirthday.split('-') : ['', ''];
+    const monthLabel = bMonth ? (lang === 'ko' ? `${parseInt(bMonth)}월` : MONTHS.find(m => m.val === bMonth)?.en ?? bMonth) : '';
+    const bdayDisplay = bMonth && bDay ? `${monthLabel} ${parseInt(bDay)}${lang === 'ko' ? '일' : ''}` : '';
+
     return (
       <div style={containerStyle}>
         <div style={{
@@ -333,13 +366,14 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
           background: 'white', borderRadius: isMobile ? '0 0 28px 28px' : 20,
           boxShadow: '0 8px 40px rgba(0,0,0,0.10)', overflow: 'hidden',
         }}>
+          {/* Success header */}
           <div style={{
             background: `linear-gradient(135deg, ${darkerColor} 0%, ${primaryColor} 60%, ${primaryColor}EE 100%)`,
             padding: '32px 24px 28px', textAlign: 'center', color: 'white',
           }}>
             <div style={{ fontSize: 48, marginBottom: 8 }}>🎉</div>
             <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.3 }}>
-              {T(`환영해요, ${customerName}님!`, `Welcome, ${customerName}!`, lang)}
+              {T('등록 완료!', 'Registration Complete!', lang)}
             </div>
             <div style={{ fontSize: 14, opacity: 0.9, marginTop: 6 }}>
               {T(
@@ -351,36 +385,91 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
           </div>
 
           <div style={{ padding: '28px 24px' }}>
-            {qrImage && (
-              <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <div style={{ fontSize: 13, color: '#5C5F66', marginBottom: 12, fontWeight: 500 }}>
-                  {T('QR 코드를 저장하거나 스크린샷 해두세요', 'Save or screenshot your QR code', lang)}
-                </div>
-                <img src={qrImage} alt="QR Code" style={{ width: 180, height: 180, borderRadius: 12, border: '3px solid #E8F7F2', display: 'block', margin: '0 auto' }} />
-              </div>
-            )}
+            {/* Digital card preview */}
+            <div style={{
+              background: `linear-gradient(135deg, ${darkerColor} 0%, ${primaryColor} 100%)`,
+              borderRadius: 16, padding: '20px 20px 16px', marginBottom: 20, color: 'white',
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {/* Watermark */}
+              <div style={{
+                position: 'absolute', right: -8, bottom: -20, fontSize: 90,
+                opacity: 0.08, lineHeight: 1, fontWeight: 700, color: 'white',
+                pointerEvents: 'none',
+              }}>{(business?.name ?? 'N')[0]}</div>
 
-            <div style={{ background: '#F5F7F6', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: primaryColor, flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1F' }}>{selectedCard?.name}</div>
-                  {selectedCard?.reward_desc && (
-                    <div style={{ fontSize: 12, color: '#5C5F66', marginTop: 2 }}>
-                      {T('리워드: ', 'Reward: ', lang)}{selectedCard.reward_desc}
-                    </div>
-                  )}
-                </div>
+              {/* Business name */}
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.8, marginBottom: 14 }}>
+                {business?.name}
               </div>
+
+              {/* User ID & birthday */}
+              <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
+                {registeredUserId}
+              </div>
+              {bdayDisplay && (
+                <div style={{ fontSize: 13, opacity: 0.85, marginBottom: 12, fontWeight: 500 }}>
+                  {T('생일', 'Birthday', lang)}: {bdayDisplay}
+                </div>
+              )}
+
+              {/* QR code */}
+              {qrImage && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <img src={qrImage} alt="QR Code" style={{
+                    width: 120, height: 120, borderRadius: 10,
+                    border: '3px solid rgba(255,255,255,0.3)',
+                    background: 'white', display: 'block',
+                  }} />
+                </div>
+              )}
+
+              {/* Unique key */}
+              {uniqueKey && (
+                <div style={{
+                  fontSize: 10, fontFamily: 'monospace', opacity: 0.7,
+                  letterSpacing: '0.12em', textAlign: 'center',
+                }}>
+                  {uniqueKey}
+                </div>
+              )}
             </div>
 
-            <div style={{ textAlign: 'center', color: '#5C5F66', fontSize: 13, marginBottom: 20 }}>
+            {/* Instructions */}
+            <div style={{ textAlign: 'center', color: '#5C5F66', fontSize: 13, marginBottom: 20, lineHeight: 1.6 }}>
               {T(
-                '매장 방문 시 이 QR코드를 직원에게 보여주세요. 스탬프를 모아 리워드를 받을 수 있어요!',
-                'Show this QR code to staff when you visit. Collect stamps to earn rewards!',
+                'QR코드를 스크린샷 해두세요. 매장 방문 시 직원에게 보여주시면 스탬프를 적립할 수 있습니다!',
+                'Screenshot your QR code. Show it to staff when you visit to collect stamps!',
                 lang
               )}
             </div>
+
+            {/* Unique key copy box */}
+            {uniqueKey && (
+              <div style={{
+                background: '#F5F7F6', borderRadius: 10, padding: '12px 16px', marginBottom: 20,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+              }}>
+                <div>
+                  <div style={{ fontSize: 11, color: '#8A8D94', fontWeight: 500, marginBottom: 2 }}>
+                    {T('멤버 고유번호 (수동 조회용)', 'Unique Member ID (for manual lookup)', lang)}
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1F', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
+                    {uniqueKey}
+                  </div>
+                </div>
+                <button
+                  onClick={() => { try { navigator.clipboard.writeText(uniqueKey); } catch {} }}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, border: `1.5px solid ${primaryColor}`,
+                    background: 'transparent', color: primaryColor, fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                  }}
+                >
+                  {T('복사', 'Copy', lang)}
+                </button>
+              </div>
+            )}
 
             <Link href="/" style={{
               display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
@@ -398,17 +487,15 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
   // ── Form ─────────────────────────────────────────────────────
   return (
     <div style={containerStyle}>
-      {/* Main card */}
       <div style={{
         width: isMobile ? '100%' : 420, maxWidth: 480,
         background: 'white',
         borderRadius: isMobile ? '28px 28px 0 0' : 20,
         boxShadow: '0 12px 48px rgba(0,0,0,0.12)',
         overflow: 'hidden', flex: 1,
-        marginTop: isMobile ? 0 : 0,
       }}>
 
-        {/* ── Modern header ───────────────────────────────── */}
+        {/* ── Header ───────────────────────────────────────── */}
         <div style={{
           background: `linear-gradient(145deg, ${darkerColor} 0%, ${primaryColor} 55%, ${primaryColor}F0 100%)`,
           padding: '22px 22px 26px',
@@ -416,53 +503,16 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
           position: 'relative',
           overflow: 'hidden',
         }}>
+          {/* Decorative ghost cards */}
+          <div style={{ position: 'absolute', top: -22, right: -18, width: 148, height: 92, borderRadius: 16, border: '1.5px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)', transform: 'rotate(14deg)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 4, right: 14, width: 110, height: 68, borderRadius: 12, border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)', transform: 'rotate(14deg)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: -30, left: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
 
-          {/* Decorative ghost card — top right */}
-          <div style={{
-            position: 'absolute', top: -22, right: -18,
-            width: 148, height: 92, borderRadius: 16,
-            border: '1.5px solid rgba(255,255,255,0.18)',
-            background: 'rgba(255,255,255,0.06)',
-            transform: 'rotate(14deg)',
-            pointerEvents: 'none',
-          }} />
-          {/* Inner ghost card */}
-          <div style={{
-            position: 'absolute', top: 4, right: 14,
-            width: 110, height: 68, borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.10)',
-            background: 'rgba(255,255,255,0.04)',
-            transform: 'rotate(14deg)',
-            pointerEvents: 'none',
-          }} />
-          {/* Chip dot cluster */}
-          <div style={{ position: 'absolute', top: 44, right: 30, transform: 'rotate(14deg)', pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {[0,1].map(row => (
-              <div key={row} style={{ display: 'flex', gap: 4 }}>
-                {[0,1,2].map(col => (
-                  <div key={col} style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
-                ))}
-              </div>
-            ))}
-          </div>
-          {/* Bottom-left glow */}
-          <div style={{
-            position: 'absolute', bottom: -30, left: -30,
-            width: 100, height: 100, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.06)',
-            pointerEvents: 'none',
-          }} />
-
-          {/* ── Top row: Nook Wallet + lang toggle ── */}
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginBottom: 20, position: 'relative', zIndex: 1,
-          }}>
+          {/* Top row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, position: 'relative', zIndex: 1 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Nook Wallet
             </span>
-
-            {/* Lang toggle */}
             <div style={{ display: 'flex', gap: 3 }}>
               {(['ko', 'en'] as Lang[]).map(l => (
                 <button key={l} onClick={() => switchLang(l)} style={{
@@ -470,8 +520,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
                   background: lang === l ? 'rgba(255,255,255,0.28)' : 'transparent',
                   color: lang === l ? 'white' : 'rgba(255,255,255,0.55)',
                   fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  letterSpacing: '0.04em',
-                  transition: 'background 150ms, color 150ms',
+                  letterSpacing: '0.04em', transition: 'background 150ms, color 150ms',
                 }}>
                   {l === 'ko' ? '한 KO' : 'us EN'}
                 </button>
@@ -479,21 +528,12 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
             </div>
           </div>
 
-          {/* ── Business info ── */}
+          {/* Business info */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, position: 'relative', zIndex: 1 }}>
             {business?.logo_url ? (
-              <img
-                src={business.logo_url}
-                alt={business.name}
-                style={{ width: 56, height: 56, borderRadius: 16, objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(255,255,255,0.3)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}
-              />
+              <img src={business.logo_url} alt={business.name} style={{ width: 56, height: 56, borderRadius: 16, objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(255,255,255,0.3)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }} />
             ) : (
-              <div style={{
-                width: 56, height: 56, borderRadius: 16, flexShrink: 0,
-                background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, fontWeight: 800, border: '2px solid rgba(255,255,255,0.3)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)', backdropFilter: 'blur(4px)',
-              }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, flexShrink: 0, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, border: '2px solid rgba(255,255,255,0.3)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', backdropFilter: 'blur(4px)' }}>
                 {business?.name?.[0] ?? 'N'}
               </div>
             )}
@@ -501,42 +541,30 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
                 {business?.name}
               </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)', marginTop: 5, fontWeight: 500, letterSpacing: '0.01em' }}>
-                {T('Add Digital Reward Card', 'Add Digital Reward Card', lang)}
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)', marginTop: 5, fontWeight: 500 }}>
+                {T('디지털 리워드 카드 등록', 'Add Digital Reward Card', lang)}
               </div>
             </div>
           </div>
 
-          {/* ── Wallet badges ── */}
+          {/* Wallet badges */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
             <AppleWalletBadge />
             <GoogleWalletBadge />
           </div>
         </div>
 
-        {/* ── Form body ───────────────────────────────────── */}
+        {/* ── Form body ────────────────────────────────────── */}
         <div style={{ padding: '28px 24px 32px' }}>
           <form onSubmit={handleSubmit}>
 
-            {/* Dropdown card selector — only when multiple cards */}
+            {/* Card selector */}
             {cards.length > 1 && (
-              <CardDropdown
-                cards={cards}
-                selectedCard={selectedCard}
-                onSelect={setSelectedCard}
-                lang={lang}
-                primaryColor={primaryColor}
-              />
+              <CardDropdown cards={cards} selectedCard={selectedCard} onSelect={setSelectedCard} lang={lang} primaryColor={primaryColor} />
             )}
 
-            {/* Single card info */}
             {cards.length === 1 && selectedCard && (
-              <div style={{
-                marginBottom: 22, padding: '14px 16px',
-                background: `${selectedCard.color}10`, borderRadius: 12,
-                border: `1.5px solid ${selectedCard.color}40`,
-                display: 'flex', alignItems: 'center', gap: 12,
-              }}>
+              <div style={{ marginBottom: 22, padding: '14px 16px', background: `${selectedCard.color}10`, borderRadius: 12, border: `1.5px solid ${selectedCard.color}40`, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: selectedCard.color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="5" width="20" height="14" rx="3" /><path d="M2 10h20" />
@@ -557,60 +585,79 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               </div>
             )}
 
-            {/* No cards */}
             {cards.length === 0 && (
               <div style={{ marginBottom: 22, padding: '14px 16px', background: '#FFF8E8', borderRadius: 12, fontSize: 13, color: '#8C5A11', textAlign: 'center' }}>
                 {T('현재 등록 가능한 카드가 없습니다.', 'No cards available for registration.', lang)}
               </div>
             )}
 
-            {/* Name */}
-            <div style={{ marginBottom: 14 }}>
+            {/* User ID */}
+            <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#5C5F66', display: 'block', marginBottom: 8 }}>
-                {T('이름', 'Full name', lang)} <span style={{ color: '#E05050' }}>*</span>
+                User ID <span style={{ color: '#E05050' }}>*</span>
+                <span style={{ fontSize: 11, fontWeight: 400, color: '#8A8D94', marginLeft: 6 }}>
+                  {T('(이름 또는 닉네임)', '(name or nickname)', lang)}
+                </span>
               </label>
               <input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder={T('홍길동', 'Your name', lang)}
+                value={userId}
+                onChange={e => setUserId(e.target.value)}
+                placeholder={T('예: 김철수, Mike, 단골손님', 'e.g. Mike, Jane, Loyal123', lang)}
                 style={inputStyle}
                 onFocus={e => (e.currentTarget.style.borderColor = primaryColor)}
                 onBlur={e => (e.currentTarget.style.borderColor = '#D4E6DB')}
+                maxLength={30}
               />
             </div>
 
-            {/* Phone */}
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#5C5F66', display: 'block', marginBottom: 8 }}>
-                {T('전화번호', 'Phone number', lang)} <span style={{ color: '#E05050' }}>*</span>
-              </label>
-              <input
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="010-0000-0000"
-                type="tel"
-                style={inputStyle}
-                onFocus={e => (e.currentTarget.style.borderColor = primaryColor)}
-                onBlur={e => (e.currentTarget.style.borderColor = '#D4E6DB')}
-              />
-            </div>
-
-            {/* Birthday */}
+            {/* Birthday — month + day only */}
             <div style={{ marginBottom: 22 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#5C5F66', display: 'block', marginBottom: 8 }}>
                 {T('생일', 'Birthday', lang)}{' '}
                 <span style={{ fontSize: 11, color: '#8A8D94', fontWeight: 400 }}>
-                  {T('(선택 — 생일 쿠폰 제공용)', '(optional — for birthday rewards)', lang)}
+                  {T('(선택 · 월/일만)', '(optional · month & day only)', lang)}
                 </span>
               </label>
-              <input
-                value={birthday}
-                onChange={e => setBirthday(e.target.value)}
-                type="date"
-                style={inputStyle}
-                onFocus={e => (e.currentTarget.style.borderColor = primaryColor)}
-                onBlur={e => (e.currentTarget.style.borderColor = '#D4E6DB')}
-              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                {/* Month */}
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <select
+                    value={birthMonth}
+                    onChange={e => { setBirthMonth(e.target.value); setBirthDay(''); }}
+                    style={selectStyle}
+                    onFocus={e => (e.currentTarget.style.borderColor = primaryColor)}
+                    onBlur={e => (e.currentTarget.style.borderColor = '#D4E6DB')}
+                  >
+                    <option value="">{T('월', 'Month', lang)}</option>
+                    {MONTHS.map(m => (
+                      <option key={m.val} value={m.val}>{lang === 'ko' ? m.ko : m.en}</option>
+                    ))}
+                  </select>
+                  <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8A8D94" strokeWidth="2.5"><path d="m6 9 6 6 6-6" /></svg>
+                  </div>
+                </div>
+
+                {/* Day */}
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <select
+                    value={birthDay}
+                    onChange={e => setBirthDay(e.target.value)}
+                    style={{ ...selectStyle, color: !birthMonth ? '#8A8D94' : '#1A1A1F' }}
+                    disabled={!birthMonth}
+                    onFocus={e => (e.currentTarget.style.borderColor = primaryColor)}
+                    onBlur={e => (e.currentTarget.style.borderColor = '#D4E6DB')}
+                  >
+                    <option value="">{T('일', 'Day', lang)}</option>
+                    {dayOptions.map(d => (
+                      <option key={d.val} value={d.val}>{d.label}</option>
+                    ))}
+                  </select>
+                  <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8A8D94" strokeWidth="2.5"><path d="m6 9 6 6 6-6" /></svg>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Consent */}
@@ -623,8 +670,8 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               />
               <span style={{ fontSize: 12, color: '#5C5F66', lineHeight: 1.6 }}>
                 {T(
-                  '개인정보 수집·이용 및 마케팅 목적의 정보 수신에 동의합니다. (스탬프 적립 및 리워드 알림 전송 목적)',
-                  'I agree to the collection and use of personal information for loyalty program and marketing notifications.',
+                  '스탬프 적립 및 리워드 알림 발송을 위한 마케팅 정보 수신에 동의합니다.',
+                  'I agree to receive loyalty program and marketing notifications for stamp collection and rewards.',
                   lang
                 )}
               </span>
@@ -654,7 +701,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
             >
               {sending
                 ? T('등록 중...', 'Adding...', lang)
-                : T('디지털 리워드 카드 추가하기', 'Add Digital Reward Card', lang)}
+                : T('디지털 리워드 카드 등록하기', 'Register Digital Reward Card', lang)}
             </button>
 
             <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: '#8A8D94' }}>
