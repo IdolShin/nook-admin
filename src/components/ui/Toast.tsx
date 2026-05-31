@@ -9,6 +9,7 @@ const BG: Record<ToastType, string> = {
   success: '#1D9E75',
   error:   '#C53A6B',
   info:    '#3B6BCC',
+  warning: '#C26B1F',
 };
 
 export default function Toast() {

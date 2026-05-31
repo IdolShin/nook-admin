@@ -9,6 +9,7 @@ import { Search, Plus, ChevronDown, X, Send, Lock, Pencil, Trash2 } from 'lucide
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
 import { usePlan } from '@/hooks/usePlan';
+import { toast } from '@/lib/toast';
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -182,9 +183,12 @@ function NewCardModal({ onClose, onCreate, businessId, allowedCardTypes, isSuper
         ...(businessId && businessId !== 'self' ? { business_id: businessId } : {}),
       });
       setDone(true);
+      toast('Card created!', 'success');
       setTimeout(() => { onCreate(mapApiCard(result)); onClose(); }, 1000);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to create card');
+      const msg = e instanceof Error ? e.message : 'Failed to create card';
+      setError(msg);
+      toast(msg, 'error');
       setSaving(false);
     }
   };
@@ -332,9 +336,12 @@ function EditCardModal({ card, onClose, onUpdated }: { card: Card; onClose: () =
       });
       const gradient = CARD_COLORS[result.color] ?? [darkenHex(result.color), result.color];
       onUpdated({ ...card, name: result.name, type: result.card_type, reward: result.reward_desc || '', color: result.color, gradient, goal_stamps: result.goal_stamps, stamps: result.card_type === 'stamp' ? result.goal_stamps : null });
+      toast('Card saved!', 'success');
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to update card');
+      const msg = e instanceof Error ? e.message : 'Failed to update card';
+      setError(msg);
+      toast(msg, 'error');
       setSaving(false);
     }
   };
