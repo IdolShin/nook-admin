@@ -7,7 +7,7 @@ function getToken(): string | null {
 function setToken(token: string): void {
   localStorage.setItem('nook_token', token);
   if (typeof document !== 'undefined') {
-    document.cookie = 'nook_auth=1; path=/; max-age=2592000; SameSite=Lax';
+    document.cookie = 'nook_auth=1; path=/; max-age=31536000; SameSite=Lax';
   }
 }
 function getBusinessName(): string {
