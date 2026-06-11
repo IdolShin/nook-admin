@@ -190,7 +190,7 @@ function CardDropdown({ cards, selectedCard, onSelect, lang, primaryColor }: {
 
 export default function JoinPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const [lang, setLang] = useState<Lang>('ko');
+  const [lang, setLang] = useState<Lang>('en');
   const [step, setStep] = useState<Step>('loading');
   const [business, setBusiness] = useState<Business | null>(null);
   const [cards, setCards] = useState<BizCard[]>([]);
@@ -211,7 +211,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('nook-lang') as Lang | null;
+      const saved = localStorage.getItem('nook-join-lang') as Lang | null;
       if (saved === 'ko' || saved === 'en') setLang(saved);
     } catch {}
     const check = () => setIsMobile(window.innerWidth < 720);
@@ -243,7 +243,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
 
   function switchLang(l: Lang) {
     setLang(l);
-    try { localStorage.setItem('nook-lang', l); } catch {}
+    try { localStorage.setItem('nook-join-lang', l); } catch {}
   }
 
   // Build day options based on selected month
@@ -467,16 +467,22 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Nook Wallet
             </span>
-            <div style={{ display: 'flex', gap: 3 }}>
-              {(['ko', 'en'] as Lang[]).map(l => (
+            <div style={{
+              display: 'flex', gap: 2, background: 'rgba(0,0,0,0.22)',
+              borderRadius: 22, padding: 3, border: '1px solid rgba(255,255,255,0.25)',
+            }}>
+              {(['en', 'ko'] as Lang[]).map(l => (
                 <button key={l} onClick={() => switchLang(l)} style={{
-                  padding: '3px 9px', borderRadius: 6, border: 0,
-                  background: lang === l ? 'rgba(255,255,255,0.28)' : 'transparent',
-                  color: lang === l ? 'white' : 'rgba(255,255,255,0.55)',
-                  fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                  letterSpacing: '0.04em', transition: 'background 150ms, color 150ms',
+                  padding: '6px 14px', borderRadius: 18, border: 0,
+                  background: lang === l ? 'white' : 'transparent',
+                  color: lang === l ? primaryColor : 'rgba(255,255,255,0.85)',
+                  fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+                  letterSpacing: '0.02em', transition: 'background 150ms, color 150ms',
+                  boxShadow: lang === l ? '0 2px 8px rgba(0,0,0,0.18)' : 'none',
+                  display: 'flex', alignItems: 'center', gap: 5,
                 }}>
-                  {l === 'ko' ? '한 KO' : 'us EN'}
+                  <span style={{ fontSize: 13 }}>{l === 'ko' ? '🇰🇷' : '🇺🇸'}</span>
+                  {l === 'ko' ? '한국어' : 'EN'}
                 </button>
               ))}
             </div>
