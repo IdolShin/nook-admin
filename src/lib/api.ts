@@ -7,7 +7,7 @@ function getToken(): string | null {
 function setToken(token: string): void {
   localStorage.setItem('nook_token', token);
   if (typeof document !== 'undefined') {
-    document.cookie = 'nook_auth=1; path=/; max-age=604800; SameSite=Lax';
+    document.cookie = 'nook_auth=1; path=/; max-age=2592000; SameSite=Lax';
   }
 }
 function getBusinessName(): string {
@@ -27,6 +27,13 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   if (!res.ok) {
+    // Expired/invalid token: clear session and send the owner back to login
+    if (res.status === 401 && typeof window !== 'undefined' && getToken() && !path.startsWith('/api/auth')) {
+      localStorage.removeItem('nook_token');
+      localStorage.removeItem('nook_biz');
+      document.cookie = 'nook_auth=; path=/; max-age=0';
+      window.location.href = '/auth';
+    }
     const msg = await res.text().catch(() => res.statusText);
     throw new Error(msg || String(res.status));
   }
