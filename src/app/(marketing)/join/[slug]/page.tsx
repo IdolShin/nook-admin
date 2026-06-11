@@ -633,7 +633,10 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
                   '스탬프 적립 및 리워드 알림 발송을 위한 마케팅 정보 수신에 동의합니다.',
                   'I agree to receive loyalty program and marketing notifications for stamp collection and rewards.',
                   lang
-                )}
+                )}{' '}
+                <span style={{ color: '#E05050', fontWeight: 700 }}>
+                  {T('(필수)', '(required)', lang)}
+                </span>
               </span>
             </label>
 
@@ -647,16 +650,16 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
             {/* Submit */}
             <button
               type="submit"
-              disabled={sending || cards.length === 0}
+              disabled={sending || cards.length === 0 || !agreed}
               style={{
                 width: '100%', height: 52, borderRadius: 12,
-                background: cards.length === 0 ? '#D0D0D0'
+                background: (cards.length === 0 || !agreed) ? '#D0D0D0'
                   : `linear-gradient(135deg, ${darkerColor} 0%, ${primaryColor} 100%)`,
                 color: 'white', border: 0, fontSize: 16, fontWeight: 700,
-                cursor: sending || cards.length === 0 ? 'not-allowed' : 'pointer',
+                cursor: (sending || cards.length === 0 || !agreed) ? 'not-allowed' : 'pointer',
                 fontFamily: 'inherit', letterSpacing: '-0.01em',
-                transition: 'opacity 150ms', opacity: sending ? 0.8 : 1,
-                boxShadow: cards.length === 0 ? 'none' : `0 4px 16px ${primaryColor}55`,
+                transition: 'opacity 150ms, background 150ms', opacity: sending ? 0.8 : 1,
+                boxShadow: (cards.length === 0 || !agreed) ? 'none' : `0 4px 16px ${primaryColor}55`,
               }}
             >
               {sending
