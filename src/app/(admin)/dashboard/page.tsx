@@ -303,7 +303,7 @@ export default function DashboardPage() {
           <CardHeader title="Quick stats" sub="Plan & overview" />
           <div style={{ padding: '8px 0' }}>
             {[
-              { label: 'Plan',            value: 'Starter',                                                        accent: '#1D9E75' },
+              { label: 'Plan',            value: decoded?.plan ? decoded.plan.charAt(0).toUpperCase() + decoded.plan.slice(1) : '—',  accent: '#1D9E75' },
               { label: 'Total customers', value: customerCount !== null ? customerCount.toLocaleString() : '—',    accent: undefined },
               { label: 'Active cards',    value: cardCount    !== null ? String(cardCount)                : '—',   accent: undefined },
               { label: 'All-time stamps', value: totalStamps  !== null ? totalStamps.toLocaleString()    : '—',   accent: undefined },
