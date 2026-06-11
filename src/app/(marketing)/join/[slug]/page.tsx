@@ -206,10 +206,8 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
   const [errorMsg, setErrorMsg] = useState('');
 
   // Success data
-  const [qrImage, setQrImage] = useState('');
+  const [walletLink, setWalletLink] = useState('');
   const [uniqueKey, setUniqueKey] = useState('');
-  const [registeredUserId, setRegisteredUserId] = useState('');
-  const [registeredBirthday, setRegisteredBirthday] = useState('');
 
   useEffect(() => {
     try {
@@ -286,10 +284,8 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
         throw new Error(j.error ?? T('등록에 실패했습니다.', 'Registration failed.', lang));
       }
       const data = await res.json();
-      setQrImage(data.qr_image ?? '');
+      setWalletLink(data.wallet_link ?? '');
       setUniqueKey(data.customer?.unique_key ?? '');
-      setRegisteredUserId(data.customer?.user_id ?? userId.trim());
-      setRegisteredBirthday(data.customer?.birthday_mmdd ?? '');
       setStep('success');
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : T('오류가 발생했습니다.', 'An error occurred.', lang));
@@ -355,10 +351,6 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
 
   // ── Success ──────────────────────────────────────────────────
   if (step === 'success') {
-    const [bMonth, bDay] = registeredBirthday ? registeredBirthday.split('-') : ['', ''];
-    const monthLabel = bMonth ? (lang === 'ko' ? `${parseInt(bMonth)}월` : MONTHS.find(m => m.val === bMonth)?.en ?? bMonth) : '';
-    const bdayDisplay = bMonth && bDay ? `${monthLabel} ${parseInt(bDay)}${lang === 'ko' ? '일' : ''}` : '';
-
     return (
       <div style={containerStyle}>
         <div style={{
@@ -369,105 +361,67 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
           {/* Success header */}
           <div style={{
             background: `linear-gradient(135deg, ${darkerColor} 0%, ${primaryColor} 60%, ${primaryColor}EE 100%)`,
-            padding: '32px 24px 28px', textAlign: 'center', color: 'white',
+            padding: '40px 24px 36px', textAlign: 'center', color: 'white',
           }}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>🎉</div>
-            <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.3 }}>
-              {T('등록 완료!', 'Registration Complete!', lang)}
+            <div style={{ fontSize: 52, marginBottom: 10 }}>🎉</div>
+            <div style={{ fontSize: 23, fontWeight: 700, lineHeight: 1.3 }}>
+              {T('가입이 완료되었습니다!', 'You’re all set!', lang)}
             </div>
-            <div style={{ fontSize: 14, opacity: 0.9, marginTop: 6 }}>
+            <div style={{ fontSize: 14, opacity: 0.9, marginTop: 8 }}>
               {T(
-                `${business?.name ?? ''} 디지털 리워드 카드가 추가되었습니다`,
+                `${business?.name ?? ''} 디지털 리워드 카드가 발급되었어요`,
                 `Your ${business?.name ?? ''} Digital Reward Card is ready`,
                 lang
               )}
             </div>
           </div>
 
-          <div style={{ padding: '28px 24px' }}>
-            {/* Digital card preview */}
-            <div style={{
-              background: `linear-gradient(135deg, ${darkerColor} 0%, ${primaryColor} 100%)`,
-              borderRadius: 16, padding: '20px 20px 16px', marginBottom: 20, color: 'white',
-              position: 'relative', overflow: 'hidden',
-            }}>
-              {/* Watermark */}
-              <div style={{
-                position: 'absolute', right: -8, bottom: -20, fontSize: 90,
-                opacity: 0.08, lineHeight: 1, fontWeight: 700, color: 'white',
-                pointerEvents: 'none',
-              }}>{(business?.name ?? 'N')[0]}</div>
-
-              {/* Business name */}
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.8, marginBottom: 14 }}>
-                {business?.name}
-              </div>
-
-              {/* User ID & birthday */}
-              <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
-                {registeredUserId}
-              </div>
-              {bdayDisplay && (
-                <div style={{ fontSize: 13, opacity: 0.85, marginBottom: 12, fontWeight: 500 }}>
-                  {T('생일', 'Birthday', lang)}: {bdayDisplay}
-                </div>
-              )}
-
-              {/* QR code */}
-              {qrImage && (
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-                  <img src={qrImage} alt="QR Code" style={{
-                    width: 120, height: 120, borderRadius: 10,
-                    border: '3px solid rgba(255,255,255,0.3)',
-                    background: 'white', display: 'block',
-                  }} />
-                </div>
-              )}
-
-              {/* Unique key */}
-              {uniqueKey && (
-                <div style={{
-                  fontSize: 10, fontFamily: 'monospace', opacity: 0.7,
-                  letterSpacing: '0.12em', textAlign: 'center',
-                }}>
-                  {uniqueKey}
-                </div>
-              )}
-            </div>
-
-            {/* Instructions */}
-            <div style={{ textAlign: 'center', color: '#5C5F66', fontSize: 13, marginBottom: 20, lineHeight: 1.6 }}>
-              {T(
-                'QR코드를 스크린샷 해두세요. 매장 방문 시 직원에게 보여주시면 스탬프를 적립할 수 있습니다!',
-                'Screenshot your QR code. Show it to staff when you visit to collect stamps!',
-                lang
-              )}
-            </div>
-
-            {/* Unique key copy box */}
-            {uniqueKey && (
-              <div style={{
-                background: '#F5F7F6', borderRadius: 10, padding: '12px 16px', marginBottom: 20,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-              }}>
-                <div>
-                  <div style={{ fontSize: 11, color: '#8A8D94', fontWeight: 500, marginBottom: 2 }}>
-                    {T('멤버 고유번호 (수동 조회용)', 'Unique Member ID (for manual lookup)', lang)}
-                  </div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1F', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
-                    {uniqueKey}
-                  </div>
-                </div>
-                <button
-                  onClick={() => { try { navigator.clipboard.writeText(uniqueKey); } catch {} }}
+          <div style={{ padding: '28px 24px 32px' }}>
+            {walletLink ? (
+              <>
+                {/* Add to Google Wallet button */}
+                <a
+                  href={walletLink}
                   style={{
-                    padding: '6px 12px', borderRadius: 8, border: `1.5px solid ${primaryColor}`,
-                    background: 'transparent', color: primaryColor, fontSize: 12, fontWeight: 600,
-                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    width: '100%', height: 56, borderRadius: 28, boxSizing: 'border-box',
+                    background: '#1F1F1F', color: 'white', textDecoration: 'none',
+                    fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
                   }}
                 >
-                  {T('복사', 'Copy', lang)}
-                </button>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                  </svg>
+                  {T('구글 월렛에 추가하기', 'Add to Google Wallet', lang)}
+                </a>
+
+                <div style={{ textAlign: 'center', color: '#5C5F66', fontSize: 13, marginTop: 16, marginBottom: 24, lineHeight: 1.6 }}>
+                  {T(
+                    '버튼을 눌러 카드를 구글 월렛에 저장하세요. 매장 방문 시 월렛의 카드를 보여주시면 스탬프가 적립됩니다!',
+                    'Tap the button to save your card to Google Wallet. Show it to staff when you visit to collect stamps!',
+                    lang
+                  )}
+                </div>
+              </>
+            ) : (
+              <div style={{
+                background: '#F5F7F6', borderRadius: 12, padding: '16px', marginBottom: 24,
+                textAlign: 'center', color: '#5C5F66', fontSize: 13, lineHeight: 1.6,
+              }}>
+                {T(
+                  '카드가 발급되었습니다. 매장 방문 시 직원에게 아래 멤버 번호를 알려주세요.',
+                  'Your card has been created. Tell staff your member ID below when you visit.',
+                  lang
+                )}
+                {uniqueKey && (
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#1A1A1F', fontFamily: 'monospace', letterSpacing: '0.08em', marginTop: 8 }}>
+                    {uniqueKey}
+                  </div>
+                )}
               </div>
             )}
 
@@ -714,3 +668,4 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     </div>
   );
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
