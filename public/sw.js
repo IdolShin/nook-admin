@@ -1,4 +1,4 @@
-const CACHE = 'nook-v2';
+const CACHE = 'nook-v3';
 const OFFLINE_URL = '/offline';
 
 const PRECACHE = [
@@ -67,15 +67,18 @@ self.addEventListener('push', (e) => {
   e.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Tapping the notification focuses an open tab or opens the app
+// Tapping the notification opens the customer's digital wallet pass
+// (the URL carried in the payload), not just the Nook homepage.
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
   const target = (e.notification.data && e.notification.data.url) || '/';
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      // If a tab is already on the target, just focus it.
       for (const c of list) {
-        if ('focus' in c) return c.focus();
+        if (c.url === target && 'focus' in c) return c.focus();
       }
+      // Otherwise open the target (the Google Wallet pass).
       if (self.clients.openWindow) return self.clients.openWindow(target);
     })
   );

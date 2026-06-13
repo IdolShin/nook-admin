@@ -300,6 +300,25 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     if (!userId.trim()) { setErrorMsg(T('User ID를 입력해주세요.', 'Please enter your User ID.', lang)); return; }
     if (!agreed) { setErrorMsg(T('이용 동의가 필요합니다.', 'Please agree to the terms.', lang)); return; }
 
+    // ─── 알림 허용 필수 ──────────────────────────────────────────
+    // 가입을 완료하려면 브라우저 알림을 허용해야 한다. 알림이 있어야
+    // 쿠폰/스탬프 메시지의 제목·본문이 잠금화면에 바로 표시된다.
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      let perm = Notification.permission;
+      if (perm === 'default') {
+        try { perm = await Notification.requestPermission(); } catch { /* ignore */ }
+      }
+      if (perm !== 'granted') {
+        setErrorMsg(T(
+          '가입을 완료하려면 알림을 허용해주세요. (브라우저 주소창의 알림 설정에서 허용으로 변경한 뒤 다시 시도)',
+          'Please allow notifications to complete signup. (Enable notifications in your browser settings, then try again.)',
+          lang
+        ));
+        return;
+      }
+    }
+    // ────────────────────────────────────────────────────────────
+
     setSending(true);
     setErrorMsg('');
     try {
