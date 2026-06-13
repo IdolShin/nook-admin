@@ -9,6 +9,47 @@ function T(ko: string, en: string, lang: Lang) { return lang === 'ko' ? ko : en;
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
+// ─── Web Push subscription ───────────────────────────────────
+// Subscribes the customer's browser so broadcast pushes appear as a normal
+// notification with the title + body shown directly on the lock screen
+// (not the "New message" placeholder that Google Wallet messages show).
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+async function subscribeWebPush(customerId?: string) {
+  if (!customerId) return;
+  try {
+    if (typeof window === 'undefined') return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    const reg = await navigator.serviceWorker.ready;
+    const keyRes = await fetch(`${BASE}/api/push/vapid`);
+    const { publicKey } = await keyRes.json();
+    if (!publicKey) return;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+    }
+    await fetch(`${BASE}/api/push/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id: customerId, subscription: sub }),
+    });
+  } catch (err) {
+    console.warn('Web push subscription skipped:', err);
+  }
+}
+
 interface BizCard {
   id: string;
   name: string;
@@ -287,6 +328,8 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
       setWalletLink(data.wallet_link ?? '');
       setUniqueKey(data.customer?.unique_key ?? '');
       setStep('success');
+      // Subscribe this browser for web push (shows full title/body on lock screen)
+      subscribeWebPush(data.customer?.id);
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : T('오류가 발생했습니다.', 'An error occurred.', lang));
     } finally {
