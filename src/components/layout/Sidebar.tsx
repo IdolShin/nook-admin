@@ -135,7 +135,7 @@ export default function Sidebar({
         {scanVisible && (
           <>
             <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '12px 4px' }} />
-            <NavItem href="/scan" label="Scanner" icon={QrCode} page={'scanner' as PageKey} active={isActive('/scan')} collapsed={collapsed && !mobileMode} mobile={mobileMode} accent />
+            <NavItem href="/scan" label="Collect" icon={QrCode} page={'scanner' as PageKey} active={isActive('/scan')} collapsed={collapsed && !mobileMode} mobile={mobileMode} accent />
             {bizSlug && (
               <a
                 href={`/join/${bizSlug}`}

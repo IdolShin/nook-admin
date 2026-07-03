@@ -160,6 +160,14 @@ export const api = {
   createTag: (data: { name: string; uid: string; meta_key?: string; file_key?: string }) => req<{ tag: ApiNfcTag }>('/api/tags', { method: 'POST', body: JSON.stringify(data) }).then((d) => d.tag),
   updateTag: (id: string, data: Partial<{ name: string; is_active: boolean }>) => req<{ tag: ApiNfcTag }>(`/api/tags/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.tag),
   deleteTag: (id: string) => req<{ success: boolean }>(`/api/tags/${id}`, { method: 'DELETE' }),
+
+  // ─── Customer wallet view (public) ───────────────────────────
+  walletCards: async (keys: string[]): Promise<{ cards: WalletCard[]; not_found: string[] }> => {
+    const res = await fetch(`${BASE}/api/tap/wallet`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keys }) });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error ?? res.statusText);
+    return j;
+  },
 };
 
 export interface ApiBusiness { id: string; name: string; owner_email: string; plan: string; is_superadmin: boolean; page_permissions: Record<string, string> | null; created_at: string; }
@@ -169,3 +177,5 @@ export interface ApiCouponPass { id: string; coupon_id: string; customer_id: str
 export interface ApiNfcTag { id: string; name: string; uid: string; last_ctr: number; is_active: boolean; created_at: string; taps_30d?: number; }
 export interface TapVerifyResult { valid: boolean; tap_token: string; tag_name: string | null; business: { id: string; name: string; logo_url: string | null }; cards: Array<{ id: string; name: string; card_type: string; goal_stamps: number; reward_desc: string; color: string }>; }
 export interface TapCollectResult { success: boolean; customer_id: string; customer_name: string; user_id: string | null; unique_key: string | null; business_name: string; card_name: string | null; card_color: string | null; card_type: string; reward_desc: string | null; points_earned: number | null; total_points: number | null; prev_stamps: number | null; new_stamps: number | null; goal_stamps: number | null; rewards_earned: number | null; reward_ready: boolean; }
+export interface WalletCoupon { id: string; barcode: string; status: string; expires_at: string | null; title: string; discount_type: string | null; discount_value: number | null; free_item_name: string | null; }
+export interface WalletCard { unique_key: string; user_id: string | null; business: { id: string; name: string; logo_url: string | null } | null; card_name: string; card_type: string; color: string; goal_stamps: number | null; current_stamps: number | null; total_stamps: number; total_points: number | null; reward_desc: string | null; reward_tiers: RewardTier[] | null; rewards_earned: number; rewards_redeemed: number; reward_ready: boolean; coupons: WalletCoupon[]; last_visit: string | null; joined_at: string; }

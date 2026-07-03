@@ -74,7 +74,7 @@ export default function BottomNav({ pathname, onMoreClick }: { pathname: string;
           <QrCode size={22} color="white" strokeWidth={1.8} />
         </div>
         <span style={{ fontSize: 10, marginTop: 2, letterSpacing: '-0.01em', fontWeight: scanActive ? 600 : 400, color: scanActive ? '#1D9E75' : '#9CA3AF' }}>
-          Scan
+          Collect
         </span>
       </Link>
 

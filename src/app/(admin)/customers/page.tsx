@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { customerStatusMeta } from '@/lib/utils';
 import { api, type ApiCustomer, type ApiCouponPass, type ApiCoupon, type ApiRedemption } from '@/lib/api';
 import { toast } from '@/lib/toast';
-import { Search, Gift, X, Ticket, Send, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
+import { Search, Gift, X, Ticket, Send, ArrowUp, ArrowDown, ChevronsUpDown, Plus } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
@@ -18,6 +18,7 @@ interface Customer {
   initials: string;
   color: string;
   phone: string;
+  uniqueKey: string;
   joined: string;
   biz: string[];
   cards: number;
@@ -43,7 +44,8 @@ function mapCustomer(c: ApiCustomer, i: number): Customer {
     name: c.name,
     initials,
     color: AVATAR_COLORS[i % AVATAR_COLORS.length],
-    phone: c.phone,
+    phone: c.phone ?? '',
+    uniqueKey: c.unique_key ?? '',
     joined: new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     biz: [api.getBusinessName() || 'Nook Café'],
     cards: 1,
@@ -169,7 +171,7 @@ function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose:
   );
 }
 
-function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { customer: Customer; onClose: () => void; onSendPush?: () => void; onSendCoupon?: () => void }) {
+function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon, onAddStamp }: { customer: Customer; onClose: () => void; onSendPush?: () => void; onSendCoupon?: () => void; onAddStamp?: () => void }) {
   const visits = [3, 5, 4, 6, 7, 5, 8, 6, 7, 9, 8, 10];
   const [activeTab, setActiveTab] = useState<'activity' | 'redeems' | 'coupons'>('activity');
   const [passes, setPasses] = useState<ApiCouponPass[]>([]);
@@ -375,10 +377,13 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon }: { custo
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <button onClick={onAddStamp} style={{ flex: 1, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#085041', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Plus size={14} /> Stamp +1
+          </button>
           <button onClick={onSendPush} style={{ flex: 1, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#1D9E75', color: 'white', border: 0, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
             <Send size={13} /> Send push
           </button>
-          <button onClick={() => toast('Navigate to the Scanner page to redeem a reward', 'info')} style={{ height: 34, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+          <button onClick={() => toast('Use Collect page (or customer wallet screen) to redeem a reward', 'info')} style={{ height: 34, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, border: '1px solid #EBEBEB', borderRadius: 8, background: 'white', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
             <Gift size={13} color="#5C5F66" /> Reward
           </button>
         </div>
@@ -420,6 +425,21 @@ export default function CustomersPage() {
     window.addEventListener('nook:cta', handler);
     return () => window.removeEventListener('nook:cta', handler);
   }, [router]);
+
+  const addStampManual = async (c: Customer) => {
+    if (!c.uniqueKey) { toast('This customer has no card key (re-register needed)', 'error'); return; }
+    try {
+      const r = await api.scanStamp(c.uniqueKey, 'manual');
+      toast(r.message ?? 'Stamp added', 'success');
+      const cs = await api.customers();
+      const mapped = cs.map(mapCustomer);
+      setAllCustomers(mapped);
+      const updated = mapped.find((m) => m.id === c.id);
+      if (updated) setSelected(updated);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Failed to add stamp', 'error');
+    }
+  };
 
   const handleExportCSV = () => {
     const headers = ['Name', 'Phone', 'Status', 'Stamps', 'Points', 'Joined', 'Last Visit'];
@@ -594,7 +614,7 @@ export default function CustomersPage() {
           </div>
           )}
         </div>
-        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} />}
+        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} onAddStamp={() => addStampManual(selected)} />}
       </div>
 
       {isMobile && (
@@ -604,7 +624,7 @@ export default function CustomersPage() {
           bottomOffset="calc(60px + env(safe-area-inset-bottom))"
           maxHeight="82vh"
         >
-          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} />}
+          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} onAddStamp={() => addStampManual(selected)} />}
         </BottomSheet>
       )}
     </div>

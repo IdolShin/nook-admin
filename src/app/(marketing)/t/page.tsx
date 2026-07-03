@@ -258,7 +258,14 @@ function TapPageInner() {
               )}
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: 18, fontSize: 12.5, color: '#8A8F98' }}>
+            <a href="/wallet" style={{
+              display: 'block', textAlign: 'center', marginTop: 16, padding: '14px', borderRadius: 13,
+              background: 'white', border: `1.5px solid ${color}`, color: '#085041',
+              fontSize: 14.5, fontWeight: 800, textDecoration: 'none',
+            }}>
+              내 월렛 보기 · View my wallet →
+            </a>
+            <div style={{ textAlign: 'center', marginTop: 14, fontSize: 12.5, color: '#8A8F98' }}>
               방문해 주셔서 감사합니다 · Thanks for visiting!
             </div>
           </div>
