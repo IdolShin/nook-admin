@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES = [
   '/settings',
   '/coupons',
   '/scanner',
+  '/tags',
   '/permissions',
 ];
 

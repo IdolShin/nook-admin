@@ -346,6 +346,15 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
       const data = await res.json();
       setWalletLink(data.wallet_link ?? '');
       setUniqueKey(data.customer?.unique_key ?? '');
+      // Save membership locally so NFC taps auto-credit on this device
+      try {
+        if (business?.id && data.customer?.unique_key) {
+          const raw = localStorage.getItem('nook_memberships');
+          const map = raw ? JSON.parse(raw) : {};
+          map[business.id] = { customer_id: data.customer.id, unique_key: data.customer.unique_key, user_id: userId.trim(), business_name: business.name };
+          localStorage.setItem('nook_memberships', JSON.stringify(map));
+        }
+      } catch { /* non-fatal */ }
       setStep('success');
       // Subscribe this browser for web push (shows full title/body on lock screen)
       subscribeWebPush(data.customer?.id);

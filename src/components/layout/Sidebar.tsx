@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, CreditCard, Users, Bell, Settings,
-  QrCode, BookOpen, ChevronLeft, ChevronRight, Ticket, X, LogOut, ExternalLink, Zap, UserPlus,
+  QrCode, BookOpen, ChevronLeft, ChevronRight, Ticket, X, LogOut, ExternalLink, Zap, UserPlus, Nfc,
 } from 'lucide-react';
 import NookMark from '@/components/NookMark';
 import { decodeToken, canView, PageKey } from '@/lib/permissions';
@@ -19,6 +19,7 @@ const NAV_GROWTH: { href: string; label: string; icon: React.ElementType; page: 
   { href: '/cards',   label: 'Loyalty cards', icon: CreditCard, page: 'cards'   },
   { href: '/coupons', label: 'Coupons',        icon: Ticket,     page: 'coupons' },
   { href: '/push',    label: 'Push',           icon: Bell,       page: 'push'    },
+  { href: '/tags',    label: 'NFC Stamps',     icon: Nfc,        page: 'cards'   },
 ];
 
 const NAV_SETTINGS: { href: string; label: string; icon: React.ElementType; page: PageKey | null }[] = [
