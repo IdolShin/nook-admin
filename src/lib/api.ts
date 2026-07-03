@@ -161,6 +161,11 @@ export const api = {
   updateTag: (id: string, data: Partial<{ name: string; is_active: boolean }>) => req<{ tag: ApiNfcTag }>(`/api/tags/${id}`, { method: 'PATCH', body: JSON.stringify(data) }).then((d) => d.tag),
   deleteTag: (id: string) => req<{ success: boolean }>(`/api/tags/${id}`, { method: 'DELETE' }),
 
+  // ─── Store location (proximity features) ─────────────────────
+  getLocation: () => req<{ address: string; lat: number | null; lng: number | null }>('/api/location'),
+  geocodeAddress: (address: string) => req<{ results: Array<{ lat: number; lng: number; display_name: string }> }>('/api/location/geocode', { method: 'POST', body: JSON.stringify({ address }) }).then((d) => d.results),
+  saveLocation: (data: { lat: number; lng: number; address?: string }) => req<{ business: { id: string; name: string; address: string | null; lat: number; lng: number } }>('/api/location', { method: 'PATCH', body: JSON.stringify(data) }),
+
   // ─── Customer wallet view (public) ───────────────────────────
   walletCards: async (keys: string[]): Promise<{ cards: WalletCard[]; not_found: string[] }> => {
     const res = await fetch(`${BASE}/api/tap/wallet`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keys }) });

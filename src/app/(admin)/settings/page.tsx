@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, ChevronDown, ChevronRight, AlertTriangle, Check, Eye, EyeOff, Shield, Users, Briefcase, CreditCard, Zap } from 'lucide-react';
+import { Plus, X, ChevronDown, ChevronRight, AlertTriangle, Check, Eye, EyeOff, Shield, Users, Briefcase, CreditCard, Zap, MapPin, LocateFixed } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { api, type ApiBusiness, type ApiStaffUser } from '@/lib/api';
 import { decodeToken } from '@/lib/permissions';
@@ -361,6 +361,126 @@ function FieldRow({ label, value, apiKey, readOnly }: {
 }
 
 // ─── Main Page ─────────────────────────────────────────────────
+
+// ─── Store location (for wallet proximity features) ──────────
+function StoreLocationCard() {
+  const [address, setAddress] = useState('');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [results, setResults] = useState<Array<{ lat: number; lng: number; display_name: string }>>([]);
+  const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.getLocation()
+      .then((l) => { setAddress(l.address ?? ''); setLat(l.lat); setLng(l.lng); })
+      .catch(() => { /* not critical */ });
+  }, []);
+
+  async function save(la: number, ln: number, addr?: string) {
+    setSaving(true);
+    try {
+      await api.saveLocation({ lat: la, lng: ln, ...(addr !== undefined ? { address: addr } : {}) });
+      setLat(la); setLng(ln); setResults([]);
+      toast('매장 위치가 저장되었습니다. 고객 월렛에서 거리/근처 표시가 활성화돼요.', 'success');
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Failed to save location', 'error');
+    }
+    setSaving(false);
+  }
+
+  async function findByAddress() {
+    if (address.trim().length < 3) { toast('주소를 입력해주세요', 'error'); return; }
+    setBusy(true); setResults([]);
+    try {
+      const r = await api.geocodeAddress(address.trim());
+      if (r.length === 1) { await save(r[0].lat, r[0].lng, address.trim()); }
+      else setResults(r);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : '주소를 찾지 못했어요. "현재 위치로 설정"을 사용해보세요.', 'error');
+    }
+    setBusy(false);
+  }
+
+  function useCurrent() {
+    if (!('geolocation' in navigator)) { toast('이 기기에서 위치를 사용할 수 없어요', 'error'); return; }
+    setBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => { await save(pos.coords.latitude, pos.coords.longitude, address.trim() || undefined); setBusy(false); },
+      () => { toast('위치 권한이 거부되었어요. 매장에서 이 버튼을 눌러주세요.', 'error'); setBusy(false); },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }
+
+  const hasCoords = lat != null && lng != null;
+
+  return (
+    <SCard
+      title="매장 위치 (Store location)"
+      desc="위치를 설정하면 고객 월렛에서 거리 표시 · 근처 매장 카드 자동 열림이 작동합니다."
+      right={
+        <span style={{
+          fontSize: 11.5, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
+          background: hasCoords ? '#E8F7F2' : '#FEF3E2', color: hasCoords ? '#085041' : '#B45309',
+        }}>
+          {hasCoords ? '✓ 설정됨' : '미설정'}
+        </span>
+      }
+    >
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <input
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && findByAddress()}
+          placeholder="예: 200 Main St, Fort Lee, NJ 07024"
+          style={{
+            flex: '1 1 240px', padding: '11px 13px', border: '1px solid #EBEBEB', borderRadius: 9,
+            fontSize: 13.5, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+          }}
+        />
+        <button onClick={findByAddress} disabled={busy || saving} style={{
+          height: 40, padding: '0 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
+          background: busy ? '#9CA3AF' : '#1D9E75', color: 'white', fontSize: 13, fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit',
+        }}>
+          <MapPin size={14} /> {busy ? '검색 중…' : '주소로 좌표 찾기'}
+        </button>
+        <button onClick={useCurrent} disabled={busy || saving} style={{
+          height: 40, padding: '0 14px', borderRadius: 9, cursor: 'pointer',
+          border: '1.5px solid #1D9E75', background: 'white', color: '#085041', fontSize: 13, fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit',
+        }}>
+          <LocateFixed size={14} /> 현재 위치로 설정
+        </button>
+      </div>
+
+      {results.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 12, color: '#5C5F66', marginBottom: 6 }}>주소 후보를 선택하세요:</div>
+          {results.map((r, i) => (
+            <button key={i} onClick={() => save(r.lat, r.lng, address.trim())} disabled={saving} style={{
+              display: 'block', width: '100%', textAlign: 'left', padding: '10px 13px', marginBottom: 6,
+              border: '1px solid #D4E6DB', borderRadius: 9, background: '#F8FBFA', cursor: 'pointer',
+              fontSize: 12.5, color: '#1A1A1F', fontFamily: 'inherit',
+            }}>
+              📍 {r.display_name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {hasCoords && (
+        <div style={{ marginTop: 12, fontSize: 12, color: '#5C5F66', fontFamily: 'var(--font-mono)' }}>
+          현재 좌표: {lat!.toFixed(6)}, {lng!.toFixed(6)}
+        </div>
+      )}
+      <div style={{ marginTop: 10, fontSize: 11.5, color: '#8A8D94' }}>
+        팁: 매장 안에서 &quot;현재 위치로 설정&quot;을 누르는 게 가장 정확해요.
+      </div>
+    </SCard>
+  );
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const { isMobile } = useBreakpoint();
@@ -456,6 +576,7 @@ export default function SettingsPage() {
             <FieldRow label="Region" value="us-east-1" readOnly />
             <FieldRow label="Timezone" value="America/New_York" readOnly />
           </SCard>
+          <StoreLocationCard />
           <SCard title="Danger zone" danger>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
               <div>
