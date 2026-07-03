@@ -267,7 +267,7 @@ export default function WalletPage() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={() => { setSearchOpen(!searchOpen); setQuery(''); }} aria-label="Search" style={{
+            <button onClick={() => { setSearchOpen(!searchOpen); setQuery(''); setSelected(null); }} aria-label="Search" style={{
               width: 40, height: 40, borderRadius: 13, cursor: 'pointer',
               background: searchOpen ? '#1D9E75' : 'rgba(255,255,255,0.08)',
               border: '1px solid rgba(255,255,255,0.1)', color: searchOpen ? 'white' : '#4ECBA0', fontSize: 16,
@@ -430,7 +430,7 @@ export default function WalletPage() {
         )}
 
         {/* ══ STACK VIEW — Apple Wallet-style ══ */}
-        {!loading && !sel && filtered.length > 0 && (
+        {!loading && (!sel || searchOpen) && filtered.length > 0 && (
           <div style={{ paddingTop: 6 }}>
             {filtered.map(({ c, distKm }, idx) => {
               const isLast = idx === filtered.length - 1;
