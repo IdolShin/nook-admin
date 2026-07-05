@@ -167,6 +167,12 @@ export const api = {
   saveLocation: (data: { lat?: number; lng?: number; address?: string; tap_promo?: string }) => req<{ business: { id: string; name: string; address: string | null; lat: number; lng: number } }>('/api/location', { method: 'PATCH', body: JSON.stringify(data) }),
 
   // ─── Customer wallet view (public) ───────────────────────────
+  redeemReward: async (unique_key: string): Promise<{ success: boolean; reward_desc: string; business_name: string; customer_name: string; redeemed_at: string; remaining_rewards: number }> => {
+    const res = await fetch(`${BASE}/api/tap/redeem-reward`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unique_key }) });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) { const e = new Error(j.error ?? res.statusText) as Error & { code?: string }; e.code = j.code; throw e; }
+    return j;
+  },
   walletCards: async (keys: string[]): Promise<{ cards: WalletCard[]; not_found: string[] }> => {
     const res = await fetch(`${BASE}/api/tap/wallet`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keys }) });
     const j = await res.json().catch(() => ({}));
