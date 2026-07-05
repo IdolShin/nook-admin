@@ -382,10 +382,27 @@ export default function WalletPage() {
       {/* eslint-disable-next-line @next/next/no-css-tags */}
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
       <style>{`
+        * { -webkit-tap-highlight-color: transparent; }
+        button, a { touch-action: manipulation; }
         @keyframes wk-rise { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes wk-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
-        .wk-card { transition: transform 220ms cubic-bezier(0.3,1.2,0.4,1); cursor: pointer; }
+        @keyframes wk-select {
+          0%   { transform: translateY(22px) scale(0.96); opacity: 0.55; }
+          62%  { transform: translateY(-5px) scale(1.008); opacity: 1; }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes wk-detail {
+          from { opacity: 0; transform: translateY(-14px) scale(0.985); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .wk-card { transition: transform 240ms cubic-bezier(0.3,1.25,0.45,1); cursor: pointer; }
         .wk-card:hover { transform: translateY(-6px); }
+        .wk-card:active { transform: translateY(-1px) scale(0.97); }
+        .wk-press { transition: transform 180ms cubic-bezier(0.3,1.3,0.5,1); }
+        .wk-press:active { transform: scale(0.965); }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
       `}</style>
 
       <div style={{ width: '100%', maxWidth: 460, padding: '0 18px 90px', boxSizing: 'border-box' }}>
@@ -457,14 +474,15 @@ export default function WalletPage() {
 
         {/* ══ SELECTED VIEW ══ */}
         {!loading && sel && !searchOpen && (
-          <div style={{ animation: 'wk-rise 260ms ease-out' }}>
-            <div onClick={() => setSelected(null)}>
+          <div>
+            <div onClick={() => setSelected(null)} style={{ animation: 'wk-select 520ms cubic-bezier(0.3,1.15,0.4,1)', cursor: 'pointer' }}>
               <CardFace c={sel.c} distKm={sel.distKm} nearby={sel.distKm != null && sel.distKm <= 0.25} lang={lang} />
             </div>
 
             <div style={{
               background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 18, padding: 18, marginTop: 10,
+              animation: 'wk-detail 420ms cubic-bezier(0.25,1.1,0.4,1) 120ms both',
             }}>
               {!isMembershipSel && (
                 <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(sel.c.goal_stamps ?? 10, 5)}, 1fr)`, gap: 9, marginBottom: 14 }}>
@@ -509,7 +527,7 @@ export default function WalletPage() {
               )}
 
               {sel.c.reward_ready && (
-                <button onClick={() => setRedeemFor(sel.c)} style={{
+                <button onClick={() => setRedeemFor(sel.c)} className="wk-press" style={{
                   width: '100%', marginBottom: 12, padding: '15px 16px', borderRadius: 13, cursor: 'pointer',
                   background: 'linear-gradient(135deg, #E8C578, #B8862B)', border: 'none',
                   fontFamily: FONT, textAlign: 'center',
@@ -562,9 +580,13 @@ export default function WalletPage() {
                 <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, letterSpacing: 1, marginBottom: 10, paddingLeft: 4 }}>
                   {t('OTHER CARDS', '다른 카드')}
                 </div>
-                {rest.map(({ c, distKm }) => (
-                  <div key={c.unique_key} className="wk-card" onClick={() => setSelected(c.unique_key)}
-                    style={{ height: PEEK, overflow: 'hidden', borderRadius: 22, marginBottom: 8 }}>
+                {rest.map(({ c, distKm }, idx) => (
+                  <div key={c.unique_key} className="wk-card"
+                    onClick={() => { setSelected(c.unique_key); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{
+                      height: PEEK, overflow: 'hidden', borderRadius: 22, marginBottom: 8,
+                      animation: `wk-rise 360ms cubic-bezier(0.25,1.1,0.4,1) ${220 + idx * 70}ms both`,
+                    }}>
                     <CardFace c={c} distKm={distKm} nearby={distKm != null && distKm <= 0.25} lang={lang} />
                   </div>
                 ))}
@@ -583,7 +605,7 @@ export default function WalletPage() {
                 <div
                   key={c.unique_key}
                   className="wk-card"
-                  onClick={() => { setSelected(c.unique_key); setSearchOpen(false); setQuery(''); }}
+                  onClick={() => { setSelected(c.unique_key); setSearchOpen(false); setQuery(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                   style={{
                     animation: `wk-rise 320ms ease-out ${idx * 60}ms both`,
                     position: 'relative', zIndex: idx + 1,

@@ -9,7 +9,7 @@
 // Reward redemption: customer self-redeems, then shows the staff a
 // screenshot-proof confirmation (live ticking clock).
 
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api, TapVerifyResult, TapCollectResult } from '@/lib/api';
 
@@ -54,6 +54,60 @@ function saveMembership(businessId: string, m: Membership) {
 
 type Phase = 'verifying' | 'identify' | 'collecting' | 'success' | 'error';
 
+// ── Eased number count-up (premium feel) ─────────────────────
+function useCountUp(from: number, to: number, ms = 950, delay = 150) {
+  const [v, setV] = useState(from);
+  useEffect(() => {
+    let raf = 0;
+    const timer = setTimeout(() => {
+      const start = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min(1, (now - start) / ms);
+        const e = 1 - Math.pow(1 - p, 3); // ease-out cubic
+        setV(Math.round(from + (to - from) * e));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, delay);
+    return () => { clearTimeout(timer); cancelAnimationFrame(raf); };
+  }, [from, to, ms, delay]);
+  return v;
+}
+
+// ── Confetti burst (pure CSS, brand colors) ──────────────────
+function Confetti({ big }: { big: boolean }) {
+  const pieces = useMemo(() => {
+    const colors = ['#16A377', '#0E5A43', '#E8C578', '#B8862B', '#7DE3C0'];
+    return Array.from({ length: big ? 44 : 20 }, (_, i) => ({
+      left: Math.random() * 100,
+      delay: Math.random() * 350,
+      dur: 1500 + Math.random() * 1100,
+      w: 6 + Math.random() * 6,
+      rot: Math.random() * 360,
+      color: colors[i % colors.length],
+      drift: -60 + Math.random() * 120,
+      round: Math.random() > 0.6,
+    }));
+  }, [big]);
+  return (
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 40 }}>
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          style={{
+            position: 'absolute', top: -14, left: `${p.left}%`,
+            width: p.w, height: p.round ? p.w : p.w * 0.45,
+            background: p.color, borderRadius: p.round ? 99 : 2,
+            transform: `rotate(${p.rot}deg)`,
+            animation: `nk-fall ${p.dur}ms cubic-bezier(0.25,0.4,0.45,1) ${p.delay}ms both`,
+            ['--drift' as string]: `${p.drift}px`,
+          } as React.CSSProperties}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── Infographic progress ring ─────────────────────────────────
 function ProgressRing({ from, to, max, color, children }: {
   from: number; to: number; max: number; color: string; children: React.ReactNode;
@@ -69,7 +123,10 @@ function ProgressRing({ from, to, max, color, children }: {
         <circle
           cx={78} cy={78} r={R} fill="none" stroke={color} strokeWidth={12} strokeLinecap="round"
           strokeDasharray={`${CIRC * pct} ${CIRC}`} transform="rotate(-90 78 78)"
-          style={{ transition: 'stroke-dasharray 1100ms cubic-bezier(0.22,0.9,0.28,1)' }}
+          style={{
+            transition: 'stroke-dasharray 1100ms cubic-bezier(0.22,0.9,0.28,1)',
+            filter: `drop-shadow(0 0 7px ${color}55)`,
+          }}
         />
       </svg>
       <div style={{
@@ -89,7 +146,7 @@ function Moment({ icon, title, sub, tone, delay, href, onClick }: {
 }) {
   const tint = tone === 'mint' ? C.mint : tone === 'gold' ? C.goldT : C.paper;
   const body = (
-    <div style={{
+    <div className="nk-press" style={{
       display: 'flex', alignItems: 'center', gap: 13, padding: '15px 16px',
       background: C.card, border: `1px solid ${C.line}`, borderRadius: 18,
       boxShadow: '0 1px 3px rgba(12,31,24,0.04)',
@@ -373,6 +430,13 @@ function TapPageInner() {
   const isMembership = result?.card_type === 'membership';
   const rewardAvailable = !!result?.reward_ready && !redeemed;
 
+  // premium number count-ups
+  const stampCount = useCountUp(result?.prev_stamps ?? 0, result?.new_stamps ?? 0);
+  const pointsCount = useCountUp(
+    Math.max(0, (result?.total_points ?? 0) - (result?.points_earned ?? 100)),
+    result?.total_points ?? 0
+  );
+
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '15px 16px', borderRadius: 14, boxSizing: 'border-box',
     border: `1.5px solid ${C.line}`, background: C.card, color: C.ink,
@@ -388,10 +452,21 @@ function TapPageInner() {
       {/* eslint-disable-next-line @next/next/no-css-tags */}
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
       <style>{`
+        * { -webkit-tap-highlight-color: transparent; }
+        button, a { touch-action: manipulation; }
         @keyframes nk-pop { 0% { transform: scale(0.4); opacity: 0; } 65% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
         @keyframes nk-rise { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes nk-pulse { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+        @keyframes nk-fall {
+          from { transform: translate3d(0, -14px, 0) rotate(0deg); opacity: 1; }
+          to   { transform: translate3d(var(--drift), 108vh, 0) rotate(560deg); opacity: 0.85; }
+        }
+        .nk-press { transition: transform 180ms cubic-bezier(0.3,1.3,0.5,1); }
+        .nk-press:active { transform: scale(0.965); }
         input:focus { border-color: ${C.brand} !important; box-shadow: 0 0 0 3px ${C.mint}; }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
       `}</style>
 
       <div style={{ width: '100%', maxWidth: 420, padding: '0 20px 44px', boxSizing: 'border-box', flex: 1 }}>
@@ -440,12 +515,13 @@ function TapPageInner() {
         {/* ── Success ── */}
         {phase === 'success' && result && (
           <div style={{ animation: 'nk-rise 360ms cubic-bezier(0.22,0.9,0.28,1)', paddingTop: 22 }}>
+            <Confetti big={!!result.reward_ready || !!result.next_visit_free || !!result.welcome_coupon} />
 
             {isMembership ? (
               <ProgressRing from={0.72} to={1} max={1} color={C.gold}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.sub, letterSpacing: '0.1em' }}>POINTS</div>
                 <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: C.ink, fontVariantNumeric: 'tabular-nums' }}>
-                  {(result.total_points ?? 0).toLocaleString()}
+                  {pointsCount.toLocaleString()}
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.gold, marginTop: 1 }}>+{result.points_earned ?? 100}</div>
               </ProgressRing>
@@ -457,7 +533,7 @@ function TapPageInner() {
                 color={brand}
               >
                 <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}>
-                  {result.new_stamps}
+                  {stampCount}
                   <span style={{ fontSize: 17, color: C.sub, fontWeight: 700 }}>/{result.goal_stamps}</span>
                 </div>
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: C.sub, letterSpacing: '0.1em', marginTop: 1 }}>STAMPS</div>
@@ -540,7 +616,7 @@ function TapPageInner() {
             </div>
 
             {/* CTA */}
-            <a href="/wallet" style={{
+            <a href="/wallet" className="nk-press" style={{
               display: 'block', textAlign: 'center', marginTop: 20, padding: '16px', borderRadius: 16,
               background: C.ink, color: 'white', fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em',
               textDecoration: 'none', animation: 'nk-rise 420ms ease-out 550ms both',
