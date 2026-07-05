@@ -246,9 +246,12 @@ export default function WalletPage() {
   return (
     <div style={{
       minHeight: '100dvh', background: 'linear-gradient(180deg, #0B1712 0%, #0F1E17 40%, #101C16 100%)',
-      fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+      fontFamily: "'Pretendard Variable', Pretendard, Inter, -apple-system, BlinkMacSystemFont, sans-serif",
       display: 'flex', flexDirection: 'column', alignItems: 'center',
+      WebkitFontSmoothing: 'antialiased',
     }}>
+      {/* eslint-disable-next-line @next/next/no-css-tags */}
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
       <style>{`
         @keyframes wk-rise { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes wk-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
@@ -359,11 +362,11 @@ export default function WalletPage() {
                     return (
                       <div key={i} style={{
                         display: 'flex', justifyContent: 'space-between', padding: '10px 13px', borderRadius: 10, marginBottom: 6,
-                        background: enough ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)',
-                        border: enough ? '1px solid #8B5CF6' : '1px solid rgba(255,255,255,0.08)',
+                        background: enough ? 'rgba(233,206,143,0.14)' : 'rgba(255,255,255,0.05)',
+                        border: enough ? '1px solid #C8A552' : '1px solid rgba(255,255,255,0.08)',
                       }}>
                         <span style={{ color: 'white', fontSize: 13.5, fontWeight: 700 }}>{t.label}</span>
-                        <span style={{ color: enough ? '#C4B5FD' : 'rgba(255,255,255,0.4)', fontSize: 13, fontFamily: "'JetBrains Mono', monospace" }}>
+                        <span style={{ color: enough ? '#E9CE8F' : 'rgba(255,255,255,0.4)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
                           {(t.points ?? 0).toLocaleString()}p {enough ? '· 사용 가능' : ''}
                         </span>
                       </div>
