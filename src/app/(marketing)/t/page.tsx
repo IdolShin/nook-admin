@@ -146,6 +146,17 @@ function TapPageInner() {
     setSending(false);
   }
 
+  function handleReview() {
+    if (!result?.review || !verify) return;
+    // register the review intent (reward arrives after days_to_wait), then open Google
+    fetch(`${BASE}/api/reviews/initiate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id: result.customer_id, business_id: verify.business.id }),
+    }).catch(() => { /* non-fatal */ });
+    window.open(result.review.url, '_blank');
+  }
+
   const color = result?.card_color || verify?.cards?.[0]?.color || '#1D9E75';
   const bizName = verify?.business?.name ?? '';
   const isMembership = result?.card_type === 'membership';
@@ -257,6 +268,58 @@ function TapPageInner() {
                 </>
               )}
             </div>
+
+            {/* ── Tap Moments — the 3 seconds every customer looks at ── */}
+            {result.welcome_coupon && (
+              <a href={`/pass/${result.welcome_coupon.barcode}`} style={{
+                display: 'block', marginTop: 14, padding: '15px 16px', borderRadius: 13, textDecoration: 'none',
+                background: 'linear-gradient(135deg, #7C3AED, #4C1D95)', color: 'white', textAlign: 'center',
+                animation: 'nk-rise 400ms ease-out 250ms both', boxShadow: '0 8px 24px rgba(124,58,237,0.35)',
+              }}>
+                <div style={{ fontSize: 15.5, fontWeight: 800 }}>🎁 첫 방문 선물이 도착했어요!</div>
+                <div style={{ fontSize: 13, opacity: 0.9, marginTop: 3 }}>
+                  {result.welcome_coupon.title} — 탭해서 쿠폰 받기 →
+                </div>
+              </a>
+            )}
+
+            {result.next_visit_free && (
+              <div style={{
+                marginTop: 14, padding: '14px 16px', borderRadius: 13, textAlign: 'center',
+                background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white',
+                animation: 'nk-rise 400ms ease-out 350ms both',
+              }}>
+                <div style={{ fontSize: 15.5, fontWeight: 800 }}>🔥 다음 방문은 무료!</div>
+                <div style={{ fontSize: 12.5, opacity: 0.92, marginTop: 3 }}>
+                  한 번만 더 오시면 {result.reward_desc ?? '리워드'}가 공짜예요
+                </div>
+              </div>
+            )}
+
+            {result.tap_promo && (
+              <div style={{
+                marginTop: 14, padding: '13px 16px', borderRadius: 13,
+                background: '#FFF9E8', border: '1.5px solid #F0D48A',
+                animation: 'nk-rise 400ms ease-out 450ms both',
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#8C5A11', letterSpacing: 1 }}>📣 오늘의 소식</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#5A4A1A', marginTop: 3, lineHeight: 1.5 }}>
+                  {result.tap_promo}
+                </div>
+              </div>
+            )}
+
+            {result.review && !result.welcome_coupon && (
+              <button onClick={handleReview} style={{
+                display: 'block', width: '100%', marginTop: 14, padding: '14px 16px', borderRadius: 13,
+                background: 'white', border: '1.5px solid #F0D48A', cursor: 'pointer', textAlign: 'center',
+                animation: 'nk-rise 400ms ease-out 500ms both', fontFamily: 'inherit',
+              }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#8C5A11' }}>
+                  ⭐ 구글 리뷰 남기면 {result.review.reward_label}
+                </span>
+              </button>
+            )}
 
             <a href="/wallet" style={{
               display: 'block', textAlign: 'center', marginTop: 16, padding: '14px', borderRadius: 13,

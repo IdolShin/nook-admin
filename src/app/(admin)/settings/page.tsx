@@ -362,6 +362,73 @@ function FieldRow({ label, value, apiKey, readOnly }: {
 
 // ─── Main Page ─────────────────────────────────────────────────
 
+
+// ─── Tap-screen promo (Tap Moment marketing) ─────────────────
+function TapPromoCard() {
+  const [promo, setPromo] = useState('');
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.getLocation()
+      .then((l) => { setPromo(l.tap_promo ?? ''); setLoaded(true); })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await api.saveLocation({ tap_promo: promo.trim() });
+      toast(promo.trim() ? '저장! 지금부터 적립 화면에 표시돼요.' : '프로모 메시지를 껐어요.', 'success');
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Failed to save', 'error');
+    }
+    setSaving(false);
+  }
+
+  return (
+    <SCard
+      title="적립 화면 프로모 (Tap Moment)"
+      desc="손님이 적립 직후 3초간 반드시 보는 화면에 띄울 한 줄. 오늘의 메뉴, 신메뉴, 이벤트 홍보에 쓰세요."
+      right={
+        <span style={{
+          fontSize: 11.5, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
+          background: promo.trim() ? '#FFF9E8' : '#F3F4F6', color: promo.trim() ? '#8C5A11' : '#8A8D94',
+        }}>
+          {promo.trim() ? '📣 표시 중' : '꺼짐'}
+        </span>
+      }
+    >
+      <textarea
+        value={promo}
+        onChange={(e) => setPromo(e.target.value.slice(0, 120))}
+        placeholder="예: 이번 주 신메뉴 흑임자 라떼 출시! / 금요일은 베이글 1+1"
+        rows={2}
+        disabled={!loaded}
+        style={{
+          width: '100%', padding: '11px 13px', border: '1px solid #EBEBEB', borderRadius: 9,
+          fontSize: 13.5, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', resize: 'vertical',
+        }}
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+        <span style={{ fontSize: 11.5, color: '#8A8D94' }}>{promo.length}/120 · 비우고 저장하면 배너가 사라져요</span>
+        <button onClick={save} disabled={saving || !loaded} style={{
+          height: 34, padding: '0 16px', borderRadius: 9, border: 'none', cursor: 'pointer',
+          background: saving ? '#9CA3AF' : '#1D9E75', color: 'white', fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+        }}>
+          {saving ? '저장 중…' : '저장'}
+        </button>
+      </div>
+      {promo.trim() && (
+        <div style={{ marginTop: 12, padding: '11px 14px', borderRadius: 11, background: '#FFF9E8', border: '1.5px solid #F0D48A' }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, color: '#8C5A11', letterSpacing: 1 }}>📣 오늘의 소식 — 미리보기</div>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: '#5A4A1A', marginTop: 3 }}>{promo}</div>
+        </div>
+      )}
+    </SCard>
+  );
+}
+
 // ─── Store location (for wallet proximity features) ──────────
 function StoreLocationCard() {
   const [address, setAddress] = useState('');
@@ -577,6 +644,7 @@ export default function SettingsPage() {
             <FieldRow label="Timezone" value="America/New_York" readOnly />
           </SCard>
           <StoreLocationCard />
+          <TapPromoCard />
           <SCard title="Danger zone" danger>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
               <div>

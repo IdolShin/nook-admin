@@ -35,6 +35,7 @@ const TYPE_META: Record<string, { emoji: string; label: string; bg: string; text
 
 const TRIGGER_META: Record<string, { label: string; bg: string; text: string }> = {
   manual:         { label: 'Manual',         bg: '#F0F1F4', text: '#5C5F66' },
+  welcome:        { label: 'First visit',    bg: '#EFE5FB', text: '#5B21B6' },
   birthday:       { label: 'Birthday',       bg: '#FBE2EC', text: '#9C2848' },
   stamp_complete: { label: 'Stamp complete', bg: '#E8F7F2', text: '#085041' },
   winback:        { label: 'Winback 30d',    bg: '#FBEFD9', text: '#8C5A11' },
