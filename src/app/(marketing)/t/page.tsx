@@ -122,13 +122,13 @@ function ProgressRing({ from, to, max, color, children }: {
       {/* Headspace-style floating blobs */}
       <div style={{
         position: 'absolute', width: 74, height: 74, left: -44, top: 8, borderRadius: '58% 42% 55% 45% / 52% 55% 45% 48%',
-        background: '#DFF2E9', animation: 'nk-float 4.5s ease-in-out infinite', zIndex: -1,
+        background: '#DFF2E9', animation: 'nk-float 4.5s ease-in-out infinite',
       }} />
       <div style={{
         position: 'absolute', width: 52, height: 52, right: -34, bottom: 4, borderRadius: '45% 55% 48% 52% / 55% 45% 55% 45%',
-        background: '#FBF0D7', animation: 'nk-float 5.4s ease-in-out 700ms infinite', zIndex: -1,
+        background: '#FBF0D7', animation: 'nk-float 5.4s ease-in-out 700ms infinite',
       }} />
-      <svg width={156} height={156} viewBox="0 0 156 156">
+      <svg width={156} height={156} viewBox="0 0 156 156" style={{ position: 'relative' }}>
         <circle cx={78} cy={78} r={R} fill="none" stroke={C.line} strokeWidth={12} />
         <circle
           cx={78} cy={78} r={R} fill="none" stroke={color} strokeWidth={12} strokeLinecap="round"
