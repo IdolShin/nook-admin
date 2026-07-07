@@ -1,9 +1,9 @@
 'use client';
 
-// ─── Customer Wallet — Apple Wallet-style stacked cards ──────
+// ─── Customer Wallet (Headspace-inspired warm light theme) ───
+// Stacked business cards, search, location-aware sorting, and
+// self-serve reward redemption with a live certificate.
 // English default · Korean via toggle (shared 'nook_lang').
-// Location-aware sorting, search, and self-serve reward redemption
-// with a screenshot-proof live certificate.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, WalletCard } from '@/lib/api';
@@ -11,7 +11,18 @@ import { api, WalletCard } from '@/lib/api';
 const CARD_H = 172;
 const PEEK = 66;
 const FONT = "'Pretendard Variable', Pretendard, Inter, -apple-system, BlinkMacSystemFont, sans-serif";
-const GOLD = '#E8C578';
+const DISPLAY = "Nunito, 'Pretendard Variable', Pretendard, sans-serif";
+const T = {
+  ink:   '#26332C',
+  brand: '#16A377',
+  mint:  '#DFF2E9',
+  gold:  '#E3A93C',
+  goldT: '#FBF0D7',
+  paper: '#FAF6EE',
+  card:  '#FFFFFF',
+  line:  '#EDE6D8',
+  sub:   '#7A8279',
+};
 
 type Lang = 'en' | 'ko';
 function getLang(): Lang {
@@ -49,57 +60,57 @@ function couponLabel(c: WalletCard['coupons'][number], lang: Lang): string {
   return c.title;
 }
 
-// ── Card face ─────────────────────────────────────────────────
+// ── Card face (business-branded gradient — pops on warm cream) ─
 function CardFace({ c, distKm, nearby, lang }: { c: WalletCard; distKm: number | null; nearby: boolean; lang: Lang }) {
   const isMembership = c.card_type === 'membership';
   return (
     <div style={{
-      height: CARD_H, boxSizing: 'border-box', borderRadius: 22, padding: '16px 20px',
+      height: CARD_H, boxSizing: 'border-box', borderRadius: 26, padding: '16px 20px',
       background: `linear-gradient(135deg, ${c.color} 0%, #06382E 135%)`,
-      boxShadow: '0 -6px 24px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.25)',
-      border: '1px solid rgba(255,255,255,0.12)',
+      boxShadow: '0 10px 26px rgba(38,51,44,0.18)',
+      border: '1px solid rgba(255,255,255,0.14)',
       position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column',
     }}>
-      <div style={{ position: 'absolute', right: -34, top: -34, width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+      <div style={{ position: 'absolute', right: -34, top: -34, width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,0.09)' }} />
       <div style={{ position: 'absolute', left: -50, bottom: -60, width: 160, height: 160, borderRadius: '50%', background: 'rgba(0,0,0,0.12)' }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, position: 'relative' }}>
         {c.business?.logo_url ? (
-          <img src={c.business.logo_url} alt="" style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.35)' }} />
+          <img src={c.business.logo_url} alt="" style={{ width: 38, height: 38, borderRadius: 999, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.4)' }} />
         ) : (
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 16 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 999, background: 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 16, fontFamily: DISPLAY }}>
             {c.business?.name?.[0] ?? 'N'}
           </div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ color: 'white', fontSize: 16, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.01em' }}>
+            <span style={{ color: 'white', fontSize: 16.5, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: DISPLAY }}>
               {c.business?.name ?? (lang === 'en' ? 'Store' : '매장')}
             </span>
             {nearby && (
-              <span style={{ fontSize: 10, fontWeight: 800, background: 'rgba(255,255,255,0.92)', color: '#085041', borderRadius: 99, padding: '2.5px 8px', flexShrink: 0 }}>
+              <span style={{ fontSize: 10, fontWeight: 800, background: 'rgba(255,255,255,0.94)', color: '#085041', borderRadius: 999, padding: '3px 9px', flexShrink: 0 }}>
                 📍 {lang === 'en' ? 'NEAR' : '근처'}
               </span>
             )}
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11.5 }}>
+          <div style={{ color: 'rgba(255,255,255,0.68)', fontSize: 11.5 }}>
             {c.card_name}{distKm != null ? ` · ${distKm < 1 ? `${Math.round(distKm * 1000)}m` : `${distKm.toFixed(1)}km`}` : ''}
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           {isMembership ? (
             <>
-              <div style={{ color: 'white', fontSize: 21, fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              <div style={{ color: 'white', fontSize: 22, fontWeight: 900, fontVariantNumeric: 'tabular-nums', lineHeight: 1, fontFamily: DISPLAY }}>
                 {(c.total_points ?? 0).toLocaleString()}
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 10.5, marginTop: 2 }}>POINTS</div>
+              <div style={{ color: 'rgba(255,255,255,0.68)', fontSize: 10.5, marginTop: 2 }}>POINTS</div>
             </>
           ) : (
             <>
-              <div style={{ color: 'white', fontSize: 21, fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              <div style={{ color: 'white', fontSize: 22, fontWeight: 900, fontVariantNumeric: 'tabular-nums', lineHeight: 1, fontFamily: DISPLAY }}>
                 {c.current_stamps}<span style={{ fontSize: 13, opacity: 0.7 }}>/{c.goal_stamps}</span>
               </div>
-              <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 10.5, marginTop: 2 }}>STAMPS</div>
+              <div style={{ color: 'rgba(255,255,255,0.68)', fontSize: 10.5, marginTop: 2 }}>STAMPS</div>
             </>
           )}
         </div>
@@ -107,22 +118,22 @@ function CardFace({ c, distKm, nearby, lang }: { c: WalletCard; distKm: number |
 
       <div style={{ marginTop: 'auto', position: 'relative' }}>
         {!isMembership && (
-          <div style={{ height: 7, background: 'rgba(0,0,0,0.28)', borderRadius: 99, overflow: 'hidden', marginBottom: 9 }}>
+          <div style={{ height: 8, background: 'rgba(0,0,0,0.26)', borderRadius: 99, overflow: 'hidden', marginBottom: 9 }}>
             <div style={{
               width: `${Math.min(100, ((c.current_stamps ?? 0) / (c.goal_stamps ?? 10)) * 100)}%`,
-              height: '100%', background: 'rgba(255,255,255,0.92)', borderRadius: 99, transition: 'width 400ms ease',
+              height: '100%', background: 'rgba(255,255,255,0.94)', borderRadius: 99, transition: 'width 400ms ease',
             }} />
           </div>
         )}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11.5 }}>
+          <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 11.5 }}>
             {c.reward_ready
               ? (lang === 'en' ? '🏆 Reward ready!' : '🏆 리워드 사용 가능!')
               : c.reward_desc
                 ? (lang === 'en' ? `Reward · ${c.reward_desc}` : `리워드 · ${c.reward_desc}`)
                 : ''}
           </span>
-          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11.5 }}>
+          <span style={{ color: 'rgba(255,255,255,0.62)', fontSize: 11.5 }}>
             {c.coupons.length > 0 ? `🎟️ ${c.coupons.length} · ` : ''}{lang === 'en' ? 'visited' : '방문'} {timeAgo(c.last_visit, lang)}
           </span>
         </div>
@@ -163,41 +174,41 @@ function RedeemOverlay({ rewardDesc, businessName, uniqueKey, lang, onClose, onR
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(4,10,8,0.7)',
+      position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(38,51,44,0.45)',
       backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
       display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontFamily: FONT,
     }}>
       <div style={{
-        width: '100%', maxWidth: 420, background: step === 'done' ? '#14100A' : 'white',
-        borderRadius: '26px 26px 0 0', padding: '26px 22px calc(30px + env(safe-area-inset-bottom, 0px))',
+        width: '100%', maxWidth: 420, background: step === 'done' ? '#14100A' : T.card,
+        borderRadius: '30px 30px 0 0', padding: '26px 22px calc(30px + env(safe-area-inset-bottom, 0px))',
         boxSizing: 'border-box', animation: 'wk-rise 320ms cubic-bezier(0.22,0.9,0.28,1)',
       }}>
         {step === 'confirm' ? (
           <>
-            <div style={{ width: 44, height: 5, borderRadius: 99, background: '#E8ECEA', margin: '0 auto 20px' }} />
+            <div style={{ width: 44, height: 5, borderRadius: 99, background: T.line, margin: '0 auto 20px' }} />
             <div style={{ textAlign: 'center' }}>
               <div style={{
-                width: 62, height: 62, borderRadius: 20, background: '#FBF3DD', margin: '0 auto',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28,
+                width: 66, height: 66, borderRadius: 999, background: T.goldT, margin: '0 auto',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 29,
               }}>🏆</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#0C1F18', marginTop: 14, letterSpacing: '-0.02em' }}>
+              <div style={{ fontSize: 21, fontWeight: 900, color: T.ink, marginTop: 14, fontFamily: DISPLAY }}>
                 {t('Use your reward?', '리워드를 사용할까요?')}
               </div>
-              <div style={{ fontSize: 14, color: '#6E7A74', marginTop: 6, lineHeight: 1.6 }}>
-                <b style={{ color: '#0C1F18' }}>{rewardDesc}</b> · {businessName}<br />
+              <div style={{ fontSize: 14, color: T.sub, marginTop: 6, lineHeight: 1.6 }}>
+                <b style={{ color: T.ink }}>{rewardDesc}</b> · {businessName}<br />
                 {t('Press this at the counter, in front of staff.', '카운터에서 직원이 보는 앞에서 눌러주세요.')}
               </div>
             </div>
             {err && <div style={{ color: '#C0392B', fontSize: 13, textAlign: 'center', marginTop: 12 }}>{err}</div>}
-            <button onClick={confirm} disabled={busy} style={{
-              width: '100%', marginTop: 20, padding: '17px', borderRadius: 16, border: 'none', cursor: 'pointer',
-              background: busy ? '#9AA5A0' : '#0C1F18', color: 'white', fontSize: 15.5, fontWeight: 800, fontFamily: FONT,
+            <button className="wk-press" onClick={confirm} disabled={busy} style={{
+              width: '100%', marginTop: 20, padding: '18px', borderRadius: 999, border: 'none', cursor: 'pointer',
+              background: busy ? '#9AA5A0' : T.ink, color: 'white', fontSize: 15.5, fontWeight: 800, fontFamily: DISPLAY,
             }}>
               {busy ? t('Redeeming…', '사용 처리 중…') : t('Redeem now', '지금 사용하기')}
             </button>
             <button onClick={onClose} style={{
               width: '100%', marginTop: 8, padding: 12, border: 'none', background: 'none',
-              color: '#6E7A74', fontSize: 13.5, cursor: 'pointer', fontFamily: FONT,
+              color: T.sub, fontSize: 13.5, cursor: 'pointer', fontFamily: FONT,
             }}>
               {t('Not yet', '나중에 쓸게요')}
             </button>
@@ -207,20 +218,20 @@ function RedeemOverlay({ rewardDesc, businessName, uniqueKey, lang, onClose, onR
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 15px', borderRadius: 999,
               background: 'rgba(232,197,120,0.15)', border: '1px solid rgba(232,197,120,0.45)',
-              fontSize: 12, fontWeight: 800, color: GOLD, letterSpacing: '0.08em',
+              fontSize: 12, fontWeight: 800, color: '#E8C578', letterSpacing: '0.08em',
             }}>
-              <span style={{ width: 8, height: 8, borderRadius: 99, background: GOLD, animation: 'wk-pulse 1s ease-in-out infinite' }} />
+              <span style={{ width: 8, height: 8, borderRadius: 99, background: '#E8C578', animation: 'wk-pulse 1s ease-in-out infinite' }} />
               {t('LIVE · SHOW TO STAFF', 'LIVE · 직원에게 보여주세요')}
             </div>
             <div style={{ fontSize: 52, marginTop: 18 }}>🏆</div>
-            <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-0.02em', marginTop: 8 }}>{rewardDesc}</div>
+            <div style={{ fontSize: 24, fontWeight: 900, marginTop: 8, fontFamily: DISPLAY }}>{rewardDesc}</div>
             <div style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.55)', marginTop: 4 }}>{businessName}</div>
 
             <div style={{
-              margin: '20px auto 0', padding: '14px 18px', borderRadius: 16, maxWidth: 260,
+              margin: '20px auto 0', padding: '14px 18px', borderRadius: 20, maxWidth: 260,
               background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
             }}>
-              <div style={{ fontSize: 30, fontWeight: 800, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.02em' }}>
+              <div style={{ fontSize: 31, fontWeight: 900, fontVariantNumeric: 'tabular-nums', fontFamily: DISPLAY }}>
                 {now.toLocaleTimeString(lang === 'en' ? 'en-US' : 'ko-KR', { hour12: false })}
               </div>
               <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', marginTop: 3 }}>
@@ -232,8 +243,8 @@ function RedeemOverlay({ rewardDesc, businessName, uniqueKey, lang, onClose, onR
               {t('Redeemed — hand the customer their reward 🎉', '사용 완료 — 손님에게 리워드를 전달해주세요 🎉')}
             </div>
             <button onClick={onClose} style={{
-              width: '100%', marginTop: 18, padding: '15px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.2)',
-              background: 'none', color: 'rgba(255,255,255,0.85)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+              width: '100%', marginTop: 18, padding: '16px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.2)',
+              background: 'none', color: 'rgba(255,255,255,0.85)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', fontFamily: DISPLAY,
             }}>
               {t('Done', '확인')}
             </button>
@@ -253,11 +264,9 @@ export default function WalletPage() {
   const [autoOpened, setAutoOpened] = useState(false);
   const [redeemFor, setRedeemFor] = useState<WalletCard | null>(null);
 
-  // search
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
 
-  // add-card
   const [showAdd, setShowAdd] = useState(false);
   const [keyInput, setKeyInput] = useState('');
   const [adding, setAdding] = useState(false);
@@ -301,7 +310,7 @@ export default function WalletPage() {
     if (!('geolocation' in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => { /* denied — fall back to recent-visit order */ },
+      () => { /* denied — recent-visit order */ },
       { timeout: 5000, maximumAge: 120000 }
     );
   }, []);
@@ -354,7 +363,7 @@ export default function WalletPage() {
       const r = await api.walletCards([k]);
       const card = r.cards[0];
       if (!card) {
-        setAddError(t("Card not found. Check the number (e.g. NOO12345)", '카드를 찾을 수 없어요. 번호를 확인해주세요 (예: NOO12345)'));
+        setAddError(t('Card not found. Check the number (e.g. NOO12345)', '카드를 찾을 수 없어요. 번호를 확인해주세요 (예: NOO12345)'));
         setAdding(false);
         return;
       }
@@ -375,17 +384,20 @@ export default function WalletPage() {
 
   return (
     <div style={{
-      minHeight: '100dvh', background: 'linear-gradient(180deg, #0B1712 0%, #0F1E17 40%, #101C16 100%)',
-      fontFamily: FONT, display: 'flex', flexDirection: 'column', alignItems: 'center',
-      WebkitFontSmoothing: 'antialiased',
+      minHeight: '100dvh', background: T.paper,
+      fontFamily: FONT, color: T.ink, display: 'flex', flexDirection: 'column', alignItems: 'center',
+      WebkitFontSmoothing: 'antialiased', position: 'relative', overflow: 'hidden',
     }}>
       {/* eslint-disable-next-line @next/next/no-css-tags */}
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+      {/* eslint-disable-next-line @next/next/no-css-tags */}
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" />
       <style>{`
         * { -webkit-tap-highlight-color: transparent; }
         button, a { touch-action: manipulation; }
         @keyframes wk-rise { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes wk-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes wk-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes wk-select {
           0%   { transform: translateY(22px) scale(0.96); opacity: 0.55; }
           62%  { transform: translateY(-5px) scale(1.008); opacity: 1; }
@@ -405,37 +417,40 @@ export default function WalletPage() {
         }
       `}</style>
 
-      <div style={{ width: '100%', maxWidth: 460, padding: '0 18px 90px', boxSizing: 'border-box' }}>
+      {/* soft background blobs */}
+      <div style={{ position: 'absolute', width: 260, height: 260, left: -120, top: -80, borderRadius: '58% 42% 55% 45% / 52% 55% 45% 48%', background: T.mint, opacity: 0.55, animation: 'wk-float 7s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', width: 180, height: 180, right: -90, top: 140, borderRadius: '45% 55% 48% 52% / 55% 45% 55% 45%', background: T.goldT, opacity: 0.6, animation: 'wk-float 8.5s ease-in-out 900ms infinite' }} />
+
+      <div style={{ width: '100%', maxWidth: 460, padding: '0 18px calc(60px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box', position: 'relative' }}>
 
         {/* ── Header ── */}
         <div style={{ padding: '26px 4px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 11.5, letterSpacing: 2, fontWeight: 700, color: '#4ECBA0' }}>NOOK WALLET</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: 'white', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.16em', fontWeight: 800, color: T.brand }}>NOOK WALLET</div>
+            <div className="nk" style={{ fontSize: 24, fontWeight: 900, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: DISPLAY }}>
               {ownerName
                 ? (lang === 'en' ? `${ownerName}'s Wallet` : `${ownerName}님의 월렛`)
                 : t('My Wallet', '내 월렛')}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
-            <button onClick={toggleLang} style={{
-              padding: '8px 13px', borderRadius: 999, cursor: 'pointer', fontFamily: FONT,
-              background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700,
+            <button className="wk-press" onClick={toggleLang} style={{
+              padding: '9px 14px', borderRadius: 999, cursor: 'pointer', fontFamily: FONT,
+              background: T.card, border: `1px solid ${T.line}`, color: T.sub, fontSize: 12, fontWeight: 700,
             }}>
               {lang === 'en' ? '한국어' : 'EN'}
             </button>
-            <button onClick={() => { setSearchOpen(!searchOpen); setQuery(''); setSelected(null); }} aria-label="Search" style={{
-              width: 40, height: 40, borderRadius: 13, cursor: 'pointer',
-              background: searchOpen ? '#1D9E75' : 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.1)', color: searchOpen ? 'white' : '#4ECBA0', fontSize: 16,
+            <button className="wk-press" onClick={() => { setSearchOpen(!searchOpen); setQuery(''); setSelected(null); }} aria-label="Search" style={{
+              width: 42, height: 42, borderRadius: 999, cursor: 'pointer',
+              background: searchOpen ? T.brand : T.card,
+              border: `1px solid ${searchOpen ? T.brand : T.line}`, color: searchOpen ? 'white' : T.sub, fontSize: 16,
             }}>
               🔍
             </button>
           </div>
         </div>
 
-        {/* ── Search bar ── */}
+        {/* ── Search ── */}
         {searchOpen && (
           <input
             value={query}
@@ -443,9 +458,9 @@ export default function WalletPage() {
             placeholder={t('Search by store name…', '매장 이름으로 검색…')}
             autoFocus
             style={{
-              width: '100%', boxSizing: 'border-box', marginBottom: 16, padding: '13px 16px',
-              borderRadius: 13, border: '1.5px solid rgba(255,255,255,0.18)', outline: 'none',
-              background: 'rgba(255,255,255,0.07)', color: 'white', fontSize: 15, fontFamily: FONT,
+              width: '100%', boxSizing: 'border-box', marginBottom: 16, padding: '14px 18px',
+              borderRadius: 999, border: `1.5px solid ${T.line}`, outline: 'none',
+              background: T.card, color: T.ink, fontSize: 15, fontFamily: FONT,
               animation: 'wk-rise 200ms ease-out',
             }}
           />
@@ -454,20 +469,28 @@ export default function WalletPage() {
         {/* ── Loading ── */}
         {loading && (
           <div style={{ textAlign: 'center', paddingTop: 90 }}>
-            <div style={{ fontSize: 38, animation: 'wk-pulse 1.1s ease-in-out infinite' }}>💳</div>
-            <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13.5, marginTop: 12 }}>{t('Loading your cards…', '카드 불러오는 중…')}</div>
+            <div style={{
+              width: 66, height: 66, borderRadius: 999, background: T.mint, margin: '0 auto',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28,
+              animation: 'wk-pulse 1.1s ease-in-out infinite',
+            }}>💳</div>
+            <div style={{ color: T.sub, fontSize: 13.5, marginTop: 14 }}>{t('Loading your cards…', '카드 불러오는 중…')}</div>
           </div>
         )}
 
         {/* ── Empty ── */}
         {!loading && cards.length === 0 && (
           <div style={{ textAlign: 'center', paddingTop: 50, animation: 'wk-rise 350ms ease-out' }}>
-            <div style={{ fontSize: 46 }}>👋</div>
-            <div style={{ color: 'white', fontSize: 18, fontWeight: 800, marginTop: 14 }}>{t('No cards yet', '아직 카드가 없어요')}</div>
-            <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13.5, marginTop: 8, lineHeight: 1.7 }}>
+            <div style={{
+              width: 84, height: 84, borderRadius: '58% 42% 55% 45% / 52% 55% 45% 48%', background: T.mint,
+              margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38,
+              animation: 'wk-float 4.5s ease-in-out infinite',
+            }}>👋</div>
+            <div style={{ fontSize: 20, fontWeight: 900, marginTop: 16, fontFamily: DISPLAY }}>{t('No cards yet', '아직 카드가 없어요')}</div>
+            <div style={{ color: T.sub, fontSize: 13.5, marginTop: 8, lineHeight: 1.7 }}>
               {lang === 'en'
-                ? <><b style={{ color: '#4ECBA0' }}>Tap your phone on the store&apos;s NFC stamp</b><br />and a card appears automatically.<br />Already have one? Add it below.</>
-                : <>매장의 <b style={{ color: '#4ECBA0' }}>NFC 스탬프에 휴대폰을 탭</b>하면<br />카드가 자동으로 생겨요.<br />이미 카드가 있다면 아래에서 추가하세요.</>}
+                ? <><b style={{ color: T.brand }}>Tap your phone on the store&apos;s NFC stamp</b><br />and a card appears automatically.<br />Already have one? Add it below.</>
+                : <>매장의 <b style={{ color: T.brand }}>NFC 스탬프에 휴대폰을 탭</b>하면<br />카드가 자동으로 생겨요.<br />이미 카드가 있다면 아래에서 추가하세요.</>}
             </div>
           </div>
         )}
@@ -480,8 +503,9 @@ export default function WalletPage() {
             </div>
 
             <div style={{
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 18, padding: 18, marginTop: 10,
+              background: T.card, border: `1px solid ${T.line}`,
+              borderRadius: 24, padding: 18, marginTop: 10,
+              boxShadow: '0 2px 10px rgba(38,51,44,0.05)',
               animation: 'wk-detail 420ms cubic-bezier(0.25,1.1,0.4,1) 120ms both',
             }}>
               {!isMembershipSel && (
@@ -491,10 +515,10 @@ export default function WalletPage() {
                     return (
                       <div key={i} style={{
                         aspectRatio: '1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 15, fontWeight: 700,
-                        background: filled ? sel.c.color : 'rgba(255,255,255,0.06)',
-                        color: filled ? 'white' : 'rgba(255,255,255,0.35)',
-                        border: filled ? 'none' : '1.5px dashed rgba(255,255,255,0.2)',
+                        fontSize: 15, fontWeight: 800, fontFamily: DISPLAY,
+                        background: filled ? sel.c.color : T.paper,
+                        color: filled ? 'white' : '#C9C2B2',
+                        border: filled ? 'none' : `1.5px dashed ${T.line}`,
                       }}>
                         {filled ? '✓' : i + 1}
                       </div>
@@ -505,19 +529,19 @@ export default function WalletPage() {
 
               {isMembershipSel && (sel.c.reward_tiers?.length ?? 0) > 0 && (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>
+                  <div style={{ color: T.sub, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.08em', marginBottom: 8 }}>
                     {t('POINT REWARDS', '포인트 리워드')}
                   </div>
                   {sel.c.reward_tiers!.map((tier, i) => {
                     const enough = (sel.c.total_points ?? 0) >= (tier.points ?? 0);
                     return (
                       <div key={i} style={{
-                        display: 'flex', justifyContent: 'space-between', padding: '10px 13px', borderRadius: 10, marginBottom: 6,
-                        background: enough ? 'rgba(233,206,143,0.14)' : 'rgba(255,255,255,0.05)',
-                        border: enough ? '1px solid #C8A552' : '1px solid rgba(255,255,255,0.08)',
+                        display: 'flex', justifyContent: 'space-between', padding: '11px 15px', borderRadius: 16, marginBottom: 6,
+                        background: enough ? T.goldT : T.paper,
+                        border: enough ? `1.5px solid ${T.gold}` : `1px solid ${T.line}`,
                       }}>
-                        <span style={{ color: 'white', fontSize: 13.5, fontWeight: 700 }}>{tier.label}</span>
-                        <span style={{ color: enough ? '#E9CE8F' : 'rgba(255,255,255,0.4)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                        <span style={{ color: T.ink, fontSize: 13.5, fontWeight: 700 }}>{tier.label}</span>
+                        <span style={{ color: enough ? '#A97B17' : T.sub, fontSize: 13, fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>
                           {(tier.points ?? 0).toLocaleString()}p {enough ? t('· available', '· 사용 가능') : ''}
                         </span>
                       </div>
@@ -527,12 +551,12 @@ export default function WalletPage() {
               )}
 
               {sel.c.reward_ready && (
-                <button onClick={() => setRedeemFor(sel.c)} className="wk-press" style={{
-                  width: '100%', marginBottom: 12, padding: '15px 16px', borderRadius: 13, cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #E8C578, #B8862B)', border: 'none',
-                  fontFamily: FONT, textAlign: 'center',
+                <button className="wk-press" onClick={() => setRedeemFor(sel.c)} style={{
+                  width: '100%', marginBottom: 12, padding: '17px', borderRadius: 999, cursor: 'pointer',
+                  background: `linear-gradient(135deg, ${T.gold}, #C98F1F)`, border: 'none',
+                  fontFamily: DISPLAY, textAlign: 'center', boxShadow: '0 6px 18px rgba(227,169,60,0.35)',
                 }}>
-                  <span style={{ fontSize: 14.5, fontWeight: 800, color: '#231803' }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: '#3A2A05' }}>
                     🏆 {lang === 'en' ? `Use reward — ${sel.c.reward_desc ?? 'free item'}` : `리워드 사용하기 — ${sel.c.reward_desc ?? '무료 상품'}`}
                   </span>
                 </button>
@@ -540,51 +564,50 @@ export default function WalletPage() {
 
               {sel.c.coupons.length > 0 && (
                 <div style={{ marginBottom: 12 }}>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>
+                  <div style={{ color: T.sub, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.08em', marginBottom: 8 }}>
                     {t('MY COUPONS', '내 쿠폰')} ({sel.c.coupons.length})
                   </div>
                   {sel.c.coupons.map((cp) => (
-                    <a key={cp.id} href={`/pass/${cp.barcode}`} style={{
+                    <a key={cp.id} href={`/pass/${cp.barcode}`} className="wk-press" style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '11px 13px', marginBottom: 7,
-                      textDecoration: 'none', border: '1px dashed rgba(255,255,255,0.2)',
+                      background: T.paper, borderRadius: 18, padding: '12px 15px', marginBottom: 7,
+                      textDecoration: 'none', border: `1.5px dashed ${T.line}`,
                     }}>
                       <div>
-                        <div style={{ color: 'white', fontSize: 13.5, fontWeight: 700 }}>🎟️ {couponLabel(cp, lang)}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 2 }}>
+                        <div style={{ color: T.ink, fontSize: 13.5, fontWeight: 700 }}>🎟️ {couponLabel(cp, lang)}</div>
+                        <div style={{ color: T.sub, fontSize: 11, marginTop: 2 }}>
                           {cp.expires_at ? `~${new Date(cp.expires_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'ko-KR', { month: 'short', day: 'numeric' })}` : ''}
                         </div>
                       </div>
-                      <span style={{ color: '#4ECBA0', fontSize: 12, fontWeight: 700 }}>{t('Use →', '사용하기 →')}</span>
+                      <span style={{ color: T.brand, fontSize: 12, fontWeight: 800 }}>{t('Use →', '사용하기 →')}</span>
                     </a>
                   ))}
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
-                <span>{t('Card no.', '카드 번호')} <b style={{ fontVariantNumeric: 'tabular-nums', color: 'rgba(255,255,255,0.7)' }}>{sel.c.unique_key}</b></span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: T.sub, fontSize: 11.5 }}>
+                <span>{t('Card no.', '카드 번호')} <b style={{ fontVariantNumeric: 'tabular-nums', color: T.ink }}>{sel.c.unique_key}</b></span>
                 <span>{lang === 'en' ? `${sel.c.total_stamps} visits total` : `누적 ${sel.c.total_stamps}회 적립`}</span>
               </div>
             </div>
 
-            <button onClick={() => setSelected(null)} style={{
-              width: '100%', marginTop: 12, padding: '13px', borderRadius: 13, cursor: 'pointer', fontFamily: FONT,
-              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
-              color: 'rgba(255,255,255,0.7)', fontSize: 13.5, fontWeight: 700,
+            <button className="wk-press" onClick={() => setSelected(null)} style={{
+              width: '100%', marginTop: 12, padding: '14px', borderRadius: 999, cursor: 'pointer', fontFamily: DISPLAY,
+              background: T.card, border: `1px solid ${T.line}`, color: T.sub, fontSize: 13.5, fontWeight: 800,
             }}>
               ✕ {t('All cards', '모든 카드 보기')}
             </button>
 
             {rest.length > 0 && (
               <div style={{ marginTop: 18 }}>
-                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11.5, fontWeight: 700, letterSpacing: 1, marginBottom: 10, paddingLeft: 4 }}>
+                <div style={{ color: T.sub, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.08em', marginBottom: 10, paddingLeft: 4 }}>
                   {t('OTHER CARDS', '다른 카드')}
                 </div>
                 {rest.map(({ c, distKm }, idx) => (
                   <div key={c.unique_key} className="wk-card"
                     onClick={() => { setSelected(c.unique_key); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     style={{
-                      height: PEEK, overflow: 'hidden', borderRadius: 22, marginBottom: 8,
+                      height: PEEK, overflow: 'hidden', borderRadius: 26, marginBottom: 8,
                       animation: `wk-rise 360ms cubic-bezier(0.25,1.1,0.4,1) ${220 + idx * 70}ms both`,
                     }}>
                     <CardFace c={c} distKm={distKm} nearby={distKm != null && distKm <= 0.25} lang={lang} />
@@ -611,7 +634,7 @@ export default function WalletPage() {
                     position: 'relative', zIndex: idx + 1,
                     height: stackMode && !isLast ? PEEK : CARD_H,
                     overflow: stackMode && !isLast ? 'hidden' : 'visible',
-                    borderRadius: 22,
+                    borderRadius: 26,
                     marginBottom: stackMode ? 0 : 12,
                   }}
                 >
@@ -623,7 +646,7 @@ export default function WalletPage() {
         )}
 
         {!loading && !sel && query && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255,255,255,0.45)', fontSize: 13.5 }}>
+          <div style={{ textAlign: 'center', padding: '40px 0', color: T.sub, fontSize: 13.5 }}>
             {lang === 'en' ? `No results for "${query}"` : `"${query}" 검색 결과가 없어요`}
           </div>
         )}
@@ -632,17 +655,17 @@ export default function WalletPage() {
         {!loading && !sel && (
           <div style={{ marginTop: 18, animation: 'wk-rise 350ms ease-out 200ms both' }}>
             {!showAdd ? (
-              <button onClick={() => setShowAdd(true)} style={{
-                width: '100%', padding: '15px', borderRadius: 15, cursor: 'pointer', fontFamily: FONT,
-                background: 'rgba(255,255,255,0.05)', border: '1.5px dashed rgba(255,255,255,0.25)',
-                color: 'rgba(255,255,255,0.75)', fontSize: 14.5, fontWeight: 700,
+              <button className="wk-press" onClick={() => setShowAdd(true)} style={{
+                width: '100%', padding: '16px', borderRadius: 999, cursor: 'pointer', fontFamily: DISPLAY,
+                background: T.card, border: `1.5px dashed #D8CFBC`,
+                color: T.sub, fontSize: 14.5, fontWeight: 800,
               }}>
                 + {t('Add a card', '카드 추가하기')}
               </button>
             ) : (
-              <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 15, padding: 16, border: '1px solid rgba(255,255,255,0.12)' }}>
-                <div style={{ color: 'white', fontSize: 13.5, fontWeight: 700 }}>{t('Add by card number', '카드 번호로 추가')}</div>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 3 }}>
+              <div style={{ background: T.card, borderRadius: 24, padding: 18, border: `1px solid ${T.line}`, boxShadow: '0 2px 10px rgba(38,51,44,0.05)' }}>
+                <div style={{ color: T.ink, fontSize: 14, fontWeight: 800, fontFamily: DISPLAY }}>{t('Add by card number', '카드 번호로 추가')}</div>
+                <div style={{ color: T.sub, fontSize: 12, marginTop: 3 }}>
                   {lang === 'en'
                     ? 'The number from sign-up (e.g. NOO12345). New store? Just tap their NFC stamp!'
                     : '가입 시 받은 번호 입력 (예: NOO12345). 새 매장은 NFC 탭이나 가입 QR로!'}
@@ -653,23 +676,24 @@ export default function WalletPage() {
                   placeholder="NOO12345"
                   autoFocus
                   style={{
-                    width: '100%', marginTop: 10, padding: '12px 14px', borderRadius: 10, boxSizing: 'border-box',
-                    border: '1.5px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.25)', color: 'white',
+                    width: '100%', marginTop: 10, padding: '13px 16px', borderRadius: 18, boxSizing: 'border-box',
+                    border: `1.5px solid ${T.line}`, background: T.paper, color: T.ink,
                     fontSize: 15, fontVariantNumeric: 'tabular-nums', letterSpacing: 1, outline: 'none', fontFamily: FONT,
                   }}
                 />
-                {addError && <div style={{ color: '#FCA5A5', fontSize: 12, marginTop: 8 }}>{addError}</div>}
+                {addError && <div style={{ color: '#C0392B', fontSize: 12, marginTop: 8 }}>{addError}</div>}
                 <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button onClick={handleAdd} disabled={adding} style={{
-                    flex: 1, padding: '13px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: FONT,
-                    background: adding ? '#6B7280' : 'linear-gradient(135deg, #1D9E75, #0E6B4F)',
+                  <button className="wk-press" onClick={handleAdd} disabled={adding} style={{
+                    flex: 1, padding: '14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: DISPLAY,
+                    background: adding ? '#9AA5A0' : T.brand,
+                    boxShadow: '0 6px 18px rgba(22,163,119,0.28)',
                     color: 'white', fontSize: 14, fontWeight: 800,
                   }}>
                     {adding ? t('Checking…', '확인 중…') : t('Add card', '추가하기')}
                   </button>
                   <button onClick={() => { setShowAdd(false); setAddError(''); }} style={{
-                    padding: '13px 16px', borderRadius: 10, cursor: 'pointer', fontFamily: FONT,
-                    background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.6)', fontSize: 13,
+                    padding: '14px 18px', borderRadius: 999, cursor: 'pointer', fontFamily: FONT,
+                    background: 'none', border: `1px solid ${T.line}`, color: T.sub, fontSize: 13,
                   }}>
                     {t('Cancel', '취소')}
                   </button>
@@ -679,7 +703,7 @@ export default function WalletPage() {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: 28, color: 'rgba(255,255,255,0.3)', fontSize: 11.5, lineHeight: 1.8 }}>
+        <div style={{ textAlign: 'center', marginTop: 28, color: '#B9B29F', fontSize: 11.5, lineHeight: 1.8 }}>
           {t('Tap the NFC stamp at any store — your card opens and collects automatically', '매장 NFC 스탬프에 탭하면 카드가 자동으로 열리고 적립됩니다')}<br />
           Powered by <b>Nook</b>
         </div>

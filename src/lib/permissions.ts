@@ -15,7 +15,7 @@ export const ALL_PAGES: { key: PageKey; label: string; href: string }[] = [
   { key: 'analytics',  label: 'Analytics',            href: '/analytics' },
   { key: 'coupons',    label: 'Coupons',              href: '/coupons' },
   { key: 'settings',   label: 'Settings',             href: '/settings' },
-  { key: 'scanner',    label: 'Scanner',              href: '/scanner' },
+  { key: 'scanner',    label: 'Collect',              href: '/scan' },
 ];
 
 export const LEVEL_ORDER: PermLevel[] = ['none', 'view', 'edit', 'admin'];

@@ -13,7 +13,7 @@ const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
   '/push':       { t: 'Push notifications', s: 'Reach customers right inside Apple & Google Wallet.' },
   '/analytics':  { t: 'Analytics',          s: 'Performance across cards, businesses, and time.' },
   '/settings':   { t: 'Settings',           s: 'Account, billing, and platform configuration.' },
-  '/scanner':    { t: 'Staff scanner',      s: "Scan a customer's QR or barcode to add stamps." },
+  '/scan':       { t: 'Manual collect',     s: 'Add stamps or redeem coupons by number — NFC tap is automatic.' },
   '/register':   { t: 'How to use',         s: 'Customer onboarding flow and QR setup.' },
 };
 

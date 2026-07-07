@@ -15,19 +15,20 @@ import { api, TapVerifyResult, TapCollectResult } from '@/lib/api';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
-// ── Design tokens ─────────────────────────────────────────────
+// ── Design tokens (Headspace-inspired: warm, round, friendly) ─
 const FONT = "'Pretendard Variable', Pretendard, Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+const DISPLAY = "Nunito, 'Pretendard Variable', Pretendard, sans-serif";
 const C = {
-  ink:   '#0C1F18',
+  ink:   '#26332C',   // soft dark green-charcoal
   deep:  '#0E5A43',
-  brand: '#16A377',
-  mint:  '#E2F5EC',
-  gold:  '#B8862B',
-  goldT: '#FBF3DD',
-  paper: '#F6F8F7',
+  brand: '#16A377',   // signature green (kept)
+  mint:  '#DFF2E9',
+  gold:  '#E3A93C',   // warm sunshine accent
+  goldT: '#FBF0D7',
+  paper: '#FAF6EE',   // warm cream (Headspace-style)
   card:  '#FFFFFF',
-  line:  '#E8ECEA',
-  sub:   '#6E7A74',
+  line:  '#EDE6D8',
+  sub:   '#7A8279',
 };
 
 type Lang = 'en' | 'ko';
@@ -118,6 +119,15 @@ function ProgressRing({ from, to, max, color, children }: {
   const pct = Math.max(0.015, Math.min(1, (on ? to : from) / max));
   return (
     <div style={{ position: 'relative', width: 156, height: 156, margin: '0 auto' }}>
+      {/* Headspace-style floating blobs */}
+      <div style={{
+        position: 'absolute', width: 74, height: 74, left: -44, top: 8, borderRadius: '58% 42% 55% 45% / 52% 55% 45% 48%',
+        background: '#DFF2E9', animation: 'nk-float 4.5s ease-in-out infinite', zIndex: -1,
+      }} />
+      <div style={{
+        position: 'absolute', width: 52, height: 52, right: -34, bottom: 4, borderRadius: '45% 55% 48% 52% / 55% 45% 55% 45%',
+        background: '#FBF0D7', animation: 'nk-float 5.4s ease-in-out 700ms infinite', zIndex: -1,
+      }} />
       <svg width={156} height={156} viewBox="0 0 156 156">
         <circle cx={78} cy={78} r={R} fill="none" stroke={C.line} strokeWidth={12} />
         <circle
@@ -148,14 +158,14 @@ function Moment({ icon, title, sub, tone, delay, href, onClick }: {
   const body = (
     <div className="nk-press" style={{
       display: 'flex', alignItems: 'center', gap: 13, padding: '15px 16px',
-      background: C.card, border: `1px solid ${C.line}`, borderRadius: 18,
-      boxShadow: '0 1px 3px rgba(12,31,24,0.04)',
+      background: C.card, border: `1px solid ${C.line}`, borderRadius: 24,
+      boxShadow: '0 2px 8px rgba(38,51,44,0.05)',
       animation: `nk-rise 420ms cubic-bezier(0.22,0.9,0.28,1) ${delay}ms both`,
       cursor: href || onClick ? 'pointer' : 'default',
     }}>
       <div style={{
-        width: 42, height: 42, borderRadius: 13, flexShrink: 0, background: tint,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19,
+        width: 46, height: 46, borderRadius: 999, flexShrink: 0, background: tint,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
       }}>
         {icon}
       </div>
@@ -229,9 +239,9 @@ function RedeemOverlay({ rewardDesc, businessName, uniqueKey, lang, onClose, onR
               </div>
             </div>
             {err && <div style={{ color: '#C0392B', fontSize: 13, textAlign: 'center', marginTop: 12 }}>{err}</div>}
-            <button onClick={confirm} disabled={busy} style={{
-              width: '100%', marginTop: 20, padding: '17px', borderRadius: 16, border: 'none', cursor: 'pointer',
-              background: busy ? '#9AA5A0' : C.ink, color: 'white', fontSize: 15.5, fontWeight: 800, fontFamily: FONT,
+            <button className="nk-press" onClick={confirm} disabled={busy} style={{
+              width: '100%', marginTop: 20, padding: '18px', borderRadius: 999, border: 'none', cursor: 'pointer',
+              background: busy ? '#9AA5A0' : C.ink, color: 'white', fontSize: 15.5, fontWeight: 800, fontFamily: DISPLAY,
             }}>
               {busy ? t('Redeeming…', '사용 처리 중…') : t('Redeem now', '지금 사용하기')}
             </button>
@@ -438,7 +448,7 @@ function TapPageInner() {
   );
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '15px 16px', borderRadius: 14, boxSizing: 'border-box',
+    width: '100%', padding: '15px 18px', borderRadius: 18, boxSizing: 'border-box',
     border: `1.5px solid ${C.line}`, background: C.card, color: C.ink,
     fontSize: 16, fontFamily: FONT, outline: 'none',
   };
@@ -451,9 +461,13 @@ function TapPageInner() {
     }}>
       {/* eslint-disable-next-line @next/next/no-css-tags */}
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+      {/* eslint-disable-next-line @next/next/no-css-tags */}
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" />
       <style>{`
         * { -webkit-tap-highlight-color: transparent; }
         button, a { touch-action: manipulation; }
+        .nk-display { font-family: ${DISPLAY}; }
+        @keyframes nk-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
         @keyframes nk-pop { 0% { transform: scale(0.4); opacity: 0; } 65% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
         @keyframes nk-rise { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes nk-pulse { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
@@ -520,7 +534,7 @@ function TapPageInner() {
             {isMembership ? (
               <ProgressRing from={0.72} to={1} max={1} color={C.gold}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.sub, letterSpacing: '0.1em' }}>POINTS</div>
-                <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: C.ink, fontVariantNumeric: 'tabular-nums' }}>
+                <div className="nk-display" style={{ fontSize: 31, fontWeight: 900, letterSpacing: '-0.02em', color: C.ink, fontVariantNumeric: 'tabular-nums' }}>
                   {pointsCount.toLocaleString()}
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.gold, marginTop: 1 }}>+{result.points_earned ?? 100}</div>
@@ -532,9 +546,9 @@ function TapPageInner() {
                 max={result.goal_stamps ?? 10}
                 color={brand}
               >
-                <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}>
+                <div className="nk-display" style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>
                   {stampCount}
-                  <span style={{ fontSize: 17, color: C.sub, fontWeight: 700 }}>/{result.goal_stamps}</span>
+                  <span style={{ fontSize: 17, color: C.sub, fontWeight: 800 }}>/{result.goal_stamps}</span>
                 </div>
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: C.sub, letterSpacing: '0.1em', marginTop: 1 }}>STAMPS</div>
               </ProgressRing>
@@ -548,8 +562,8 @@ function TapPageInner() {
               }}>
                 ✓ {t('Collected', '적립 완료')}
               </div>
-              <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 10 }}>
-                {isMembership ? t('Points added', '포인트가 쌓였어요') : t('Stamp collected', '스탬프가 찍혔어요')}
+              <div className="nk-display" style={{ fontSize: 23, fontWeight: 900, letterSpacing: '-0.02em', marginTop: 10 }}>
+                {isMembership ? t('Points added!', '포인트가 쌓였어요!') : t('Stamp collected!', '스탬프가 찍혔어요!')}
               </div>
               <div style={{ fontSize: 13, color: C.sub, marginTop: 4 }}>
                 {result.user_id ? `${result.user_id} · ` : ''}{result.business_name}
@@ -616,9 +630,10 @@ function TapPageInner() {
             </div>
 
             {/* CTA */}
-            <a href="/wallet" className="nk-press" style={{
-              display: 'block', textAlign: 'center', marginTop: 20, padding: '16px', borderRadius: 16,
-              background: C.ink, color: 'white', fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em',
+            <a href="/wallet" className="nk-press nk-display" style={{
+              display: 'block', textAlign: 'center', marginTop: 20, padding: '17px', borderRadius: 999,
+              background: C.brand, color: 'white', fontSize: 15.5, fontWeight: 800, letterSpacing: '0.01em',
+              boxShadow: '0 6px 18px rgba(22,163,119,0.32)',
               textDecoration: 'none', animation: 'nk-rise 420ms ease-out 550ms both',
             }}>
               {t('Open my wallet', '내 월렛 보기')}
@@ -633,8 +648,8 @@ function TapPageInner() {
         {phase === 'identify' && verify && (
           <div style={{ animation: 'nk-rise 360ms ease-out', paddingTop: 34 }}>
             <div style={{ marginBottom: 22 }}>
-              <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.3 }}>
-                {t('Almost there', '거의 다 됐어요')}
+              <div className="nk-display" style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+                {t('Almost there!', '거의 다 됐어요!')}
               </div>
               <div style={{ fontSize: 13.5, color: C.sub, marginTop: 6, lineHeight: 1.6 }}>
                 {lang === 'en'
@@ -645,16 +660,16 @@ function TapPageInner() {
 
             {mode === 'choose' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button onClick={() => { setMode('new'); setFormError(''); }} style={{
-                  padding: '17px', borderRadius: 16, border: 'none', cursor: 'pointer',
-                  background: C.ink, color: 'white', fontSize: 15.5, fontWeight: 800, fontFamily: FONT,
-                  letterSpacing: '-0.01em',
+                <button className="nk-press" onClick={() => { setMode('new'); setFormError(''); }} style={{
+                  padding: '18px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                  background: C.brand, color: 'white', fontSize: 15.5, fontWeight: 800, fontFamily: DISPLAY,
+                  boxShadow: '0 6px 18px rgba(22,163,119,0.32)',
                 }}>
                   {t("I'm new · 10-second sign-up", '처음이에요 · 10초 가입')}
                 </button>
-                <button onClick={() => { setMode('existing'); setFormError(''); }} style={{
-                  padding: '17px', borderRadius: 16, border: `1.5px solid ${C.line}`, cursor: 'pointer',
-                  background: C.card, color: C.ink, fontSize: 15.5, fontWeight: 700, fontFamily: FONT,
+                <button className="nk-press" onClick={() => { setMode('existing'); setFormError(''); }} style={{
+                  padding: '18px', borderRadius: 999, border: `1.5px solid ${C.line}`, cursor: 'pointer',
+                  background: C.card, color: C.ink, fontSize: 15.5, fontWeight: 800, fontFamily: DISPLAY,
                 }}>
                   {t('I already have a card', '이미 카드가 있어요')}
                 </button>
@@ -676,9 +691,10 @@ function TapPageInner() {
                 />
                 {formError && <div style={{ color: '#C0392B', fontSize: 12.5, marginTop: 8 }}>{formError}</div>}
                 <button onClick={handleNewJoin} disabled={sending} style={{
-                  width: '100%', marginTop: 14, padding: '16px', borderRadius: 14, border: 'none',
-                  cursor: 'pointer', fontFamily: FONT,
-                  background: sending ? '#9AA5A0' : C.ink, color: 'white', fontSize: 15, fontWeight: 800,
+                  width: '100%', marginTop: 14, padding: '17px', borderRadius: 999, border: 'none',
+                  cursor: 'pointer', fontFamily: DISPLAY,
+                  boxShadow: '0 6px 18px rgba(22,163,119,0.28)',
+                  background: sending ? '#9AA5A0' : C.brand, color: 'white', fontSize: 15, fontWeight: 800,
                 }}>
                   {sending ? t('Collecting…', '적립 중…') : t('Join & collect', '가입하고 바로 적립')}
                 </button>
@@ -703,9 +719,10 @@ function TapPageInner() {
                 />
                 {formError && <div style={{ color: '#C0392B', fontSize: 12.5, marginTop: 8 }}>{formError}</div>}
                 <button onClick={handleExisting} disabled={sending} style={{
-                  width: '100%', marginTop: 14, padding: '16px', borderRadius: 14, border: 'none',
-                  cursor: 'pointer', fontFamily: FONT,
-                  background: sending ? '#9AA5A0' : C.ink, color: 'white', fontSize: 15, fontWeight: 800,
+                  width: '100%', marginTop: 14, padding: '17px', borderRadius: 999, border: 'none',
+                  cursor: 'pointer', fontFamily: DISPLAY,
+                  boxShadow: '0 6px 18px rgba(22,163,119,0.28)',
+                  background: sending ? '#9AA5A0' : C.brand, color: 'white', fontSize: 15, fontWeight: 800,
                 }}>
                   {sending ? t('Collecting…', '적립 중…') : t('Collect stamp', '적립하기')}
                 </button>
