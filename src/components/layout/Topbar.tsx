@@ -14,7 +14,6 @@ const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
   '/analytics':  { t: 'Analytics',          s: 'Performance across cards, businesses, and time.' },
   '/settings':   { t: 'Settings',           s: 'Account, billing, and platform configuration.' },
   '/scan':       { t: 'Manual collect',     s: 'Add stamps or redeem coupons by number — NFC tap is automatic.' },
-  '/register':   { t: 'How to use',         s: 'Customer onboarding flow and QR setup.' },
 };
 
 // Hard-coded alerts (will match integrations in settings)

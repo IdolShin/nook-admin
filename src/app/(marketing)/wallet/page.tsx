@@ -466,6 +466,27 @@ export default function WalletPage() {
           />
         )}
 
+        {/* ── At-a-glance summary (simple status) ── */}
+        {!loading && cards.length > 0 && !sel && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16, animation: 'wk-rise 320ms ease-out' }}>
+            {[
+              { icon: '💳', num: cards.length, label: t('cards', '카드') },
+              { icon: '✅', num: cards.reduce((sum, c) => sum + c.total_stamps, 0), label: t('stamps', '스탬프') },
+              { icon: '🎟️', num: cards.reduce((sum, c) => sum + c.coupons.length, 0), label: t('coupons', '쿠폰') },
+            ].map((k, i) => (
+              <div key={i} className="wk-press" style={{
+                flex: 1, background: T.card, border: `1px solid ${T.line}`, borderRadius: 22,
+                padding: '12px 8px', textAlign: 'center', boxShadow: '0 2px 8px rgba(38,51,44,0.04)',
+                animation: `wk-rise 360ms cubic-bezier(0.25,1.1,0.4,1) ${i * 70}ms both`,
+              }}>
+                <div style={{ fontSize: 17 }}>{k.icon}</div>
+                <div style={{ fontSize: 20, fontWeight: 900, fontFamily: DISPLAY, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{k.num}</div>
+                <div style={{ fontSize: 10.5, color: T.sub, fontWeight: 800, letterSpacing: '0.07em', textTransform: 'uppercase' }}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── Loading ── */}
         {loading && (
           <div style={{ textAlign: 'center', paddingTop: 90 }}>

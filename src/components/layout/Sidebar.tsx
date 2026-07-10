@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, CreditCard, Users, Bell, Settings,
-  QrCode, BookOpen, ChevronLeft, ChevronRight, Ticket, X, LogOut, ExternalLink, Zap, UserPlus, Nfc,
+  QrCode, ChevronLeft, ChevronRight, Ticket, X, LogOut, ExternalLink, Zap, UserPlus, Nfc,
 } from 'lucide-react';
 import NookMark from '@/components/NookMark';
 import { decodeToken, canView, PageKey } from '@/lib/permissions';
@@ -16,15 +16,14 @@ const NAV_MAIN: { href: string; label: string; icon: React.ElementType; page: Pa
 ];
 
 const NAV_GROWTH: { href: string; label: string; icon: React.ElementType; page: PageKey }[] = [
+  { href: '/tags',    label: 'NFC Stamps',    icon: Nfc,        page: 'cards'   },
   { href: '/cards',   label: 'Loyalty cards', icon: CreditCard, page: 'cards'   },
-  { href: '/coupons', label: 'Coupons',        icon: Ticket,     page: 'coupons' },
-  { href: '/push',    label: 'Push',           icon: Bell,       page: 'push'    },
-  { href: '/tags',    label: 'NFC Stamps',     icon: Nfc,        page: 'cards'   },
+  { href: '/coupons', label: 'Coupons',       icon: Ticket,     page: 'coupons' },
+  { href: '/push',    label: 'Push',          icon: Bell,       page: 'push'    },
 ];
 
 const NAV_SETTINGS: { href: string; label: string; icon: React.ElementType; page: PageKey | null }[] = [
   { href: '/settings', label: 'Settings',   icon: Settings, page: 'settings' },
-  { href: '/register', label: 'How to use', icon: BookOpen, page: null       },
 ];
 
 export default function Sidebar({
@@ -61,7 +60,7 @@ export default function Sidebar({
     window.location.replace('/auth');
   }
 
-  const sidebarBg = 'linear-gradient(175deg, #1A1C2E 0%, #141627 100%)';
+  const sidebarBg = 'linear-gradient(175deg, #10382B 0%, #0C2C21 100%)';
 
   return (
     <aside style={{

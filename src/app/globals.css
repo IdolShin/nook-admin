@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap");
 
 @theme {
   /* Brand palette */
@@ -7,10 +9,10 @@
   --color-accent-dark:  #085041;
 
   /* Surface palette */
-  --color-bg:          #EFF3F1;
+  --color-bg:          #FAF6EE;
   --color-surface:     #FFFFFF;
-  --color-border:      #EBEBEB;
-  --color-border-soft: #F0F0F2;
+  --color-border:      #EDE6D8;
+  --color-border-soft: #F3EEE2;
 
   /* Text scale */
   --color-text:   #1A1A1F;
@@ -40,7 +42,7 @@
   --radius-badge: 9999px;
 
   /* Fonts */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  --font-sans: 'Pretendard Variable', Pretendard, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
 }
 

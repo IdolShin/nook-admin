@@ -10,7 +10,7 @@ import Toast from '@/components/ui/Toast';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import Link from 'next/link';
 import {
-BarChart2, Settings, BookOpen, X,
+BarChart2, Settings, X,
 ChevronDown, ChevronRight,
 } from 'lucide-react';
 
@@ -27,7 +27,7 @@ items: [
 label: 'Admin',
 items: [
 { href: '/settings', label: 'Settings',   icon: Settings, page: null },
-{ href: '/register', label: 'How to use', icon: BookOpen, page: null },
+
 ],
 },
 ];
