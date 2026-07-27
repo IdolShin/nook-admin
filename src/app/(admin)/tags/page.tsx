@@ -172,6 +172,11 @@ export default function TagsPage() {
                 <div style={{ fontSize: 12, color: '#8A8F98', fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>
                   UID {t.uid} · ctr {t.last_ctr}
                 </div>
+                <div style={{ fontSize: 11.5, color: t.last_tap_at ? '#085041' : '#B45309', marginTop: 3, fontWeight: 600 }}>
+                  {t.last_tap_at
+                    ? `마지막 탭 ${new Date(t.last_tap_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                    : '아직 탭 기록 없음 — 폰을 대보세요'}
+                </div>
               </div>
               <div style={{ textAlign: 'right', marginRight: 4 }}>
                 <div style={{ fontSize: 17, fontWeight: 800, color: '#1D9E75', fontFamily: "'JetBrains Mono', monospace" }}>{t.taps_30d ?? 0}</div>

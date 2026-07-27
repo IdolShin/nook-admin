@@ -45,7 +45,7 @@ export interface ApiCard { id: string; name: string; card_type: string; goal_sta
 export interface ApiCustomer { id: string; name: string; user_id?: string; unique_key?: string; birthday_mmdd?: string; phone?: string; card_id: string; business_id: string; wallet_type?: string; total_stamps?: number; total_points?: number | null; card_type?: string; created_at: string; }
 export interface ApiRedemption { id: string; stamps_redeemed: number | null; points_redeemed: number | null; redeem_type: string; created_at: string; }
 export interface BroadcastResult { total_customers?: number; web_push_sent?: number; wallet_updated?: number; failed?: number; scheduled?: boolean; scheduled_for?: string; scheduled_for_et?: string; message?: string; }
-export interface ApiAnalytics { total_customers: number; new_customers_30d: number; new_customers_prev: number; active_cards: number; total_stamps: number; stamps_last_30d: number; stamps_prev_30d: number; total_redemptions: number; redemptions_30d: number; coupons_issued: number; coupons_redeemed: number; stamps_by_day: number[]; stamps_daily_30d?: number[]; redemptions_daily_30d?: number[]; }
+export interface ApiAnalytics { taps_30d?: number; active_tags?: number; total_tags?: number; nfc_share_30d?: number; total_customers: number; new_customers_30d: number; new_customers_prev: number; active_cards: number; total_stamps: number; stamps_last_30d: number; stamps_prev_30d: number; total_redemptions: number; redemptions_30d: number; coupons_issued: number; coupons_redeemed: number; stamps_by_day: number[]; stamps_daily_30d?: number[]; redemptions_daily_30d?: number[]; }
 export interface ApiReviewConfig { enabled: boolean; reward_type: 'stamp' | 'coupon'; stamp_count: number; coupon_id: string | null; days_to_wait: number; }
 export interface ApiReviewPublic { google_review_url: string; reward_enabled: boolean; days_to_wait: number; reward_type: 'stamp' | 'coupon'; stamp_count: number | null; }
 
@@ -167,6 +167,12 @@ export const api = {
   saveLocation: (data: { lat?: number; lng?: number; address?: string; tap_promo?: string }) => req<{ business: { id: string; name: string; address: string | null; lat: number; lng: number } }>('/api/location', { method: 'PATCH', body: JSON.stringify(data) }),
 
   // ─── Customer wallet view (public) ───────────────────────────
+  redeemPointsPublic: async (unique_key: string, points: number, reward_label?: string): Promise<{ success: boolean; points_spent: number; new_balance: number; reward_label: string | null; business_name: string; customer_name: string; redeemed_at: string }> => {
+    const res = await fetch(`${BASE}/api/tap/redeem-points`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unique_key, points, reward_label }) });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) { const e = new Error(j.error ?? res.statusText) as Error & { code?: string }; e.code = j.code; throw e; }
+    return j;
+  },
   redeemReward: async (unique_key: string): Promise<{ success: boolean; reward_desc: string; business_name: string; customer_name: string; redeemed_at: string; remaining_rewards: number }> => {
     const res = await fetch(`${BASE}/api/tap/redeem-reward`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unique_key }) });
     const j = await res.json().catch(() => ({}));
@@ -184,8 +190,8 @@ export const api = {
 export interface ApiBusiness { id: string; name: string; owner_email: string; plan: string; is_superadmin: boolean; page_permissions: Record<string, string> | null; created_at: string; }
 export interface ApiStaffUser { id: string; email: string; name: string; role: 'viewer' | 'editor' | 'admin'; page_permissions: Record<string, string>; is_active: boolean; created_at: string; }
 export interface ApiCoupon { id: string; title: string; name?: string; description?: string; coupon_type: 'percent' | 'fixed' | 'bogo' | 'free_item'; discount_type?: 'percent' | 'fixed'; discount_value?: number; free_item_name?: string; trigger_type: string; trigger_config?: Record<string, unknown>; valid_days?: number; expires_at?: string | null; is_active: boolean; color?: string; terms?: string; max_redemptions?: number | null; total_issued?: number; total_redeemed?: number; created_at: string; }
-export interface ApiCouponPass { id: string; coupon_id: string; customer_id: string; barcode: string; status: 'active' | 'used' | 'expired'; issued_at: string; expires_at: string | null; }
-export interface ApiNfcTag { id: string; name: string; uid: string; last_ctr: number; is_active: boolean; created_at: string; taps_30d?: number; }
+export interface ApiCouponPass { id: string; coupon_id: string; customer_id: string; barcode: string; status: 'active' | 'used' | 'expired'; issued_at: string; expires_at: string | null; redeemed_at?: string | null; wallet_link?: string | null; coupons?: { id: string; title: string; color?: string; coupon_type?: string; description?: string; discount_value?: number; free_item_name?: string } | null; }
+export interface ApiNfcTag { id: string; name: string; uid: string; last_ctr: number; is_active: boolean; created_at: string; taps_30d?: number; last_tap_at?: string | null; }
 export interface TapVerifyResult { valid: boolean; tap_token: string; tag_name: string | null; business: { id: string; name: string; logo_url: string | null }; cards: Array<{ id: string; name: string; card_type: string; goal_stamps: number; reward_desc: string; color: string }>; }
 export interface TapCollectResult { success: boolean; customer_id: string; customer_name: string; user_id: string | null; unique_key: string | null; business_name: string; card_name: string | null; card_color: string | null; card_type: string; reward_desc: string | null; points_earned: number | null; total_points: number | null; prev_stamps: number | null; new_stamps: number | null; goal_stamps: number | null; rewards_earned: number | null; reward_ready: boolean; welcome_coupon: { title: string; barcode: string; expires_at: string } | null; next_visit_free: boolean; tap_promo: string | null; review: { url: string; reward_label: string } | null; }
 export interface WalletCoupon { id: string; barcode: string; status: string; expires_at: string | null; title: string; discount_type: string | null; discount_value: number | null; free_item_name: string | null; }

@@ -143,8 +143,10 @@ function CardFace({ c, distKm, nearby, lang }: { c: WalletCard; distKm: number |
 }
 
 // ── Redeem overlay (confirm → live gold certificate) ─────────
-function RedeemOverlay({ rewardDesc, businessName, uniqueKey, lang, onClose, onRedeemed }: {
+// Handles both stamp rewards and membership point tiers.
+function RedeemOverlay({ rewardDesc, businessName, uniqueKey, lang, points, onClose, onRedeemed }: {
   rewardDesc: string; businessName: string; uniqueKey: string; lang: Lang;
+  points?: number;   // when set → membership point redemption
   onClose: () => void; onRedeemed?: () => void;
 }) {
   const t = (en: string, ko: string) => (lang === 'en' ? en : ko);
@@ -162,7 +164,8 @@ function RedeemOverlay({ rewardDesc, businessName, uniqueKey, lang, onClose, onR
   async function confirm() {
     setBusy(true); setErr('');
     try {
-      await api.redeemReward(uniqueKey);
+      if (points) await api.redeemPointsPublic(uniqueKey, points, rewardDesc);
+      else await api.redeemReward(uniqueKey);
       setStep('done');
       if (navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 120]);
       onRedeemed?.();
@@ -195,7 +198,7 @@ function RedeemOverlay({ rewardDesc, businessName, uniqueKey, lang, onClose, onR
                 {t('Use your reward?', '리워드를 사용할까요?')}
               </div>
               <div style={{ fontSize: 14, color: T.sub, marginTop: 6, lineHeight: 1.6 }}>
-                <b style={{ color: T.ink }}>{rewardDesc}</b> · {businessName}<br />
+                <b style={{ color: T.ink }}>{rewardDesc}</b>{points ? ` · ${points.toLocaleString()}p` : ''} · {businessName}<br />
                 {t('Press this at the counter, in front of staff.', '카운터에서 직원이 보는 앞에서 눌러주세요.')}
               </div>
             </div>
@@ -263,6 +266,9 @@ export default function WalletPage() {
   const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
   const [autoOpened, setAutoOpened] = useState(false);
   const [redeemFor, setRedeemFor] = useState<WalletCard | null>(null);
+  const [redeemTier, setRedeemTier] = useState<{ label: string; points: number } | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<WalletCard | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -382,6 +388,27 @@ export default function WalletPage() {
 
   const isMembershipSel = sel?.c.card_type === 'membership';
 
+  async function handleRefresh() {
+    setRefreshing(true);
+    await load();
+    if (navigator.vibrate) navigator.vibrate(20);
+    setTimeout(() => setRefreshing(false), 450);
+  }
+
+  function removeCard(card: WalletCard) {
+    try {
+      const map = getMemberships();
+      const bizId = card.business?.id;
+      if (bizId && map[bizId]) delete map[bizId];
+      // also clear any entry stored under the raw key
+      if (map[card.unique_key]) delete map[card.unique_key];
+      localStorage.setItem('nook_memberships', JSON.stringify(map));
+    } catch { /* non-fatal */ }
+    setConfirmRemove(null);
+    setSelected(null);
+    setCards((prev) => prev.filter((c) => c.unique_key !== card.unique_key));
+  }
+
   return (
     <div style={{
       minHeight: '100dvh', background: T.paper,
@@ -434,6 +461,12 @@ export default function WalletPage() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
+            <button className="wk-press" onClick={handleRefresh} aria-label="Refresh" style={{
+              width: 42, height: 42, borderRadius: 999, cursor: 'pointer',
+              background: T.card, border: `1px solid ${T.line}`, color: T.sub, fontSize: 15,
+            }}>
+              <span style={{ display: 'inline-block', transition: 'transform 600ms cubic-bezier(0.3,1.1,0.4,1)', transform: refreshing ? 'rotate(360deg)' : 'none' }}>↻</span>
+            </button>
             <button className="wk-press" onClick={toggleLang} style={{
               padding: '9px 14px', borderRadius: 999, cursor: 'pointer', fontFamily: FONT,
               background: T.card, border: `1px solid ${T.line}`, color: T.sub, fontSize: 12, fontWeight: 700,
@@ -556,16 +589,21 @@ export default function WalletPage() {
                   {sel.c.reward_tiers!.map((tier, i) => {
                     const enough = (sel.c.total_points ?? 0) >= (tier.points ?? 0);
                     return (
-                      <div key={i} style={{
-                        display: 'flex', justifyContent: 'space-between', padding: '11px 15px', borderRadius: 16, marginBottom: 6,
-                        background: enough ? T.goldT : T.paper,
-                        border: enough ? `1.5px solid ${T.gold}` : `1px solid ${T.line}`,
-                      }}>
+                      <button key={i} className={enough ? 'wk-press' : undefined}
+                        onClick={() => { if (enough) { setRedeemTier({ label: tier.label, points: tier.points ?? 0 }); setRedeemFor(sel.c); } }}
+                        disabled={!enough}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
+                          padding: '13px 15px', borderRadius: 16, marginBottom: 6, textAlign: 'left',
+                          background: enough ? T.goldT : T.paper,
+                          border: enough ? `1.5px solid ${T.gold}` : `1px solid ${T.line}`,
+                          cursor: enough ? 'pointer' : 'default', fontFamily: FONT,
+                        }}>
                         <span style={{ color: T.ink, fontSize: 13.5, fontWeight: 700 }}>{tier.label}</span>
-                        <span style={{ color: enough ? '#A97B17' : T.sub, fontSize: 13, fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>
-                          {(tier.points ?? 0).toLocaleString()}p {enough ? t('· available', '· 사용 가능') : ''}
+                        <span style={{ color: enough ? '#A97B17' : T.sub, fontSize: 13, fontVariantNumeric: 'tabular-nums', fontWeight: 800 }}>
+                          {(tier.points ?? 0).toLocaleString()}p {enough ? t('· Use →', '· 사용하기 →') : ''}
                         </span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -612,12 +650,20 @@ export default function WalletPage() {
               </div>
             </div>
 
-            <button className="wk-press" onClick={() => setSelected(null)} style={{
-              width: '100%', marginTop: 12, padding: '14px', borderRadius: 999, cursor: 'pointer', fontFamily: DISPLAY,
-              background: T.card, border: `1px solid ${T.line}`, color: T.sub, fontSize: 13.5, fontWeight: 800,
-            }}>
-              ✕ {t('All cards', '모든 카드 보기')}
-            </button>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button className="wk-press" onClick={() => setSelected(null)} style={{
+                flex: 1, padding: '14px', borderRadius: 999, cursor: 'pointer', fontFamily: DISPLAY,
+                background: T.card, border: `1px solid ${T.line}`, color: T.sub, fontSize: 13.5, fontWeight: 800,
+              }}>
+                ✕ {t('All cards', '모든 카드 보기')}
+              </button>
+              <button className="wk-press" onClick={() => setConfirmRemove(sel.c)} aria-label="Remove card" style={{
+                padding: '14px 18px', borderRadius: 999, cursor: 'pointer', fontFamily: FONT,
+                background: T.card, border: `1px solid ${T.line}`, color: '#B4483C', fontSize: 13.5, fontWeight: 700,
+              }}>
+                🗑
+              </button>
+            </div>
 
             {rest.length > 0 && (
               <div style={{ marginTop: 18 }}>
@@ -730,16 +776,60 @@ export default function WalletPage() {
         </div>
       </div>
 
-      {/* ── Redeem overlay ── */}
+      {/* ── Redeem overlay (stamp reward or point tier) ── */}
       {redeemFor && (
         <RedeemOverlay
-          rewardDesc={redeemFor.reward_desc ?? 'Reward'}
+          rewardDesc={redeemTier?.label ?? redeemFor.reward_desc ?? 'Reward'}
           businessName={redeemFor.business?.name ?? ''}
           uniqueKey={redeemFor.unique_key}
+          points={redeemTier?.points}
           lang={lang}
-          onClose={() => { setRedeemFor(null); load(); }}
+          onClose={() => { setRedeemFor(null); setRedeemTier(null); load(); }}
           onRedeemed={() => { /* refreshed on close */ }}
         />
+      )}
+
+      {/* ── Remove card confirm ── */}
+      {confirmRemove && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(38,51,44,0.45)',
+          backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontFamily: FONT,
+        }}>
+          <div style={{
+            width: '100%', maxWidth: 420, background: T.card,
+            borderRadius: '30px 30px 0 0', padding: '26px 22px calc(30px + env(safe-area-inset-bottom, 0px))',
+            boxSizing: 'border-box', animation: 'wk-rise 320ms cubic-bezier(0.22,0.9,0.28,1)',
+          }}>
+            <div style={{ width: 44, height: 5, borderRadius: 99, background: T.line, margin: '0 auto 20px' }} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: 62, height: 62, borderRadius: 999, background: '#FBEDEB', margin: '0 auto',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
+              }}>🗑</div>
+              <div style={{ fontSize: 19, fontWeight: 900, color: T.ink, marginTop: 14, fontFamily: DISPLAY }}>
+                {t('Remove this card?', '이 카드를 지울까요?')}
+              </div>
+              <div style={{ fontSize: 13.5, color: T.sub, marginTop: 6, lineHeight: 1.6 }}>
+                {lang === 'en'
+                  ? <><b style={{ color: T.ink }}>{confirmRemove.business?.name}</b> disappears from this phone only.<br />Your stamps are safe — add card <b style={{ color: T.ink }}>{confirmRemove.unique_key}</b> anytime.</>
+                  : <><b style={{ color: T.ink }}>{confirmRemove.business?.name}</b> 카드가 이 휴대폰에서만 사라져요.<br />스탬프는 그대로 — 번호 <b style={{ color: T.ink }}>{confirmRemove.unique_key}</b>로 다시 추가할 수 있어요.</>}
+              </div>
+            </div>
+            <button className="wk-press" onClick={() => removeCard(confirmRemove)} style={{
+              width: '100%', marginTop: 20, padding: '17px', borderRadius: 999, border: 'none', cursor: 'pointer',
+              background: '#B4483C', color: 'white', fontSize: 15, fontWeight: 800, fontFamily: DISPLAY,
+            }}>
+              {t('Remove from this phone', '이 휴대폰에서 지우기')}
+            </button>
+            <button onClick={() => setConfirmRemove(null)} style={{
+              width: '100%', marginTop: 8, padding: 12, border: 'none', background: 'none',
+              color: T.sub, fontSize: 13.5, cursor: 'pointer', fontFamily: FONT,
+            }}>
+              {t('Cancel', '취소')}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

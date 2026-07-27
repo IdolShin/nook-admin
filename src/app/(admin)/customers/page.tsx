@@ -347,7 +347,7 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon, onAddStam
               passes.map((p) => {
                 const meta = PASS_STATUS[p.status] ?? PASS_STATUS.active;
                 const coupon = p.coupons;
-                const expiryDate = new Date(p.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const expiryDate = p.expires_at ? new Date(p.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No expiry';
                 return (
                   <div key={p.id} style={{ padding: '10px 12px', border: '1px solid #F0F0F2', borderRadius: 10, marginBottom: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -372,6 +372,27 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon, onAddStam
               cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', color: '#1D9E75', marginTop: 4, fontWeight: 500,
             }}>
               <Ticket size={13} /> Send coupon
+            </button>
+          </div>
+        )}
+
+        {customer.uniqueKey && (
+          <div style={{
+            marginTop: 14, padding: '12px 14px', borderRadius: 12,
+            background: '#F6F1E6', border: '1px solid #EDE6D8',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#8A8D94', letterSpacing: '0.06em' }}>CARD NUMBER</div>
+              <div style={{ fontSize: 17, fontWeight: 800, fontFamily: 'var(--font-mono)', letterSpacing: '0.04em', color: '#26332C' }}>
+                {customer.uniqueKey}
+              </div>
+            </div>
+            <button
+              onClick={() => { navigator.clipboard?.writeText(customer.uniqueKey); toast('Card number copied — give it to the customer', 'success'); }}
+              style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid #EDE6D8', background: 'white', cursor: 'pointer', fontSize: 12.5, fontFamily: 'inherit', fontWeight: 600 }}
+            >
+              Copy
             </button>
           </div>
         )}

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { decodeToken, canView } from '@/lib/permissions';
 import { api, type ApiBusiness } from '@/lib/api';
-import { Lock, TrendingUp, TrendingDown, Users, Gift, Ticket, RefreshCw, ChevronDown } from 'lucide-react';
+import { Lock, TrendingUp, TrendingDown, Users, Gift, Ticket, RefreshCw, ChevronDown , Nfc } from 'lucide-react';
 
 interface AnalyticsData {
   total_customers: number;
@@ -16,6 +16,10 @@ interface AnalyticsData {
   stamps_prev_30d: number;
   total_redemptions: number;
   redemptions_30d: number;
+  taps_30d?: number;
+  active_tags?: number;
+  total_tags?: number;
+  nfc_share_30d?: number;
   coupons_issued: number;
   coupons_redeemed: number;
   stamps_by_day: number[];
@@ -245,11 +249,19 @@ export default function AnalyticsPage() {
       )}
 
       {/* KPI cards — 2 col on mobile, 4 col on desktop */}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 5}, 1fr)`, gap: isMobile ? 10 : 16 }}>
         <KpiCard label="Total customers" value={data?.total_customers ?? '—'} subValue={data ? `+${data.new_customers_30d} this month` : undefined} delta={custDelta?.label} up={custDelta?.up} icon={Users} loading={loading} />
         <KpiCard label="Stamps (30d)" value={data?.stamps_last_30d ?? '—'} subValue={data ? `${data.total_stamps.toLocaleString()} all-time` : undefined} delta={stampDelta?.label} up={stampDelta?.up} icon={Gift} loading={loading} />
         <KpiCard label="Redemptions (30d)" value={data?.redemptions_30d ?? '—'} subValue={data ? `${redeemRate}% redeem rate` : undefined} delta={data ? `${data.total_redemptions} all-time` : undefined} icon={Gift} loading={loading} />
         <KpiCard label="Coupon usage" value={data ? `${couponRate}%` : '—'} subValue={data ? `${data.coupons_redeemed}/${data.coupons_issued} issued` : undefined} delta={data?.coupons_issued === 0 ? 'No coupons yet' : undefined} icon={Ticket} loading={loading} />
+        <KpiCard
+          label="NFC taps (30d)"
+          value={data?.taps_30d ?? '—'}
+          subValue={data ? `${data.nfc_share_30d ?? 0}% of all stamps` : undefined}
+          delta={data ? `${data.active_tags ?? 0} active stamp${(data.active_tags ?? 0) === 1 ? '' : 's'}` : undefined}
+          icon={Nfc}
+          loading={loading}
+        />
       </div>
 
       {/* Charts row */}
