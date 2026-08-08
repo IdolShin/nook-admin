@@ -17,6 +17,7 @@ export default function TagsPage() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [uid, setUid] = useState('');
+  const [tagMode, setTagMode] = useState<'sdm' | 'basic'>('basic');
   const [metaKey, setMetaKey] = useState('');
   const [fileKey, setFileKey] = useState('');
   const [saving, setSaving] = useState(false);
@@ -44,6 +45,7 @@ export default function TagsPage() {
       await api.createTag({
         name: name.trim() || 'NFC Stamp',
         uid: u,
+        tag_mode: tagMode,
         ...(metaKey.trim() ? { meta_key: metaKey.trim() } : {}),
         ...(fileKey.trim() ? { file_key: fileKey.trim() } : {}),
       });
@@ -101,6 +103,31 @@ export default function TagsPage() {
                 style={{ width: '100%', marginTop: 5, padding: '11px 13px', border: '1.5px solid #D4E6DB', borderRadius: 9, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
+              <label style={{ fontSize: 12.5, fontWeight: 700, color: '#5A5F68' }}>태그 종류</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6 }}>
+                {([
+                  { v: 'basic', t: '일반 태그', d: 'NTAG213/215/216 · 스티커', s: '테스트·소규모 매장용' },
+                  { v: 'sdm',   t: 'NTAG 424 DNA', d: '암호 서명(SDM) 지원', s: '복제 방지 · 실전 권장' },
+                ] as const).map(o => (
+                  <button key={o.v} type="button" onClick={() => setTagMode(o.v)} style={{
+                    textAlign: 'left', padding: '12px 13px', borderRadius: 12, cursor: 'pointer',
+                    border: tagMode === o.v ? '2px solid #1D9E75' : '1.5px solid #E5E7EB',
+                    background: tagMode === o.v ? '#E8F7F2' : 'white', fontFamily: 'inherit',
+                  }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: '#1A1A1F' }}>{o.t}</div>
+                    <div style={{ fontSize: 11.5, color: '#5A5F68', marginTop: 2 }}>{o.d}</div>
+                    <div style={{ fontSize: 11, color: tagMode === o.v ? '#085041' : '#8A8F98', marginTop: 3, fontWeight: 600 }}>{o.s}</div>
+                  </button>
+                ))}
+              </div>
+              <div style={{ fontSize: 11.5, color: '#8A8F98', marginTop: 6, lineHeight: 1.6 }}>
+                {tagMode === 'basic'
+                  ? '일반 태그는 서명이 없어 URL만 알면 적립될 수 있어요. 같은 손님은 3분에 1번만 적립되도록 제한됩니다.'
+                  : '탭할 때마다 1회용 암호 서명이 생성돼 복제·재사용이 불가능합니다.'}
+              </div>
+            </div>
+
+            <div>
               <label style={{ fontSize: 12.5, fontWeight: 700, color: '#5A5F68' }}>태그 UID (14자리 hex)</label>
               <input value={uid} onChange={(e) => setUid(e.target.value)} placeholder="04AABBCCDDEE80"
                 style={{ width: '100%', marginTop: 5, padding: '11px 13px', border: '1.5px solid #D4E6DB', borderRadius: 9, fontSize: 14, fontFamily: "'JetBrains Mono', monospace", outline: 'none', boxSizing: 'border-box' }} />
@@ -108,7 +135,7 @@ export default function TagsPage() {
                 휴대폰에 <b>NFC Tools</b> 앱을 설치하고 태그를 읽으면 &quot;Serial number&quot;로 표시됩니다. 콜론(:)은 자동 제거돼요.
               </div>
             </div>
-            <details>
+            {tagMode === 'sdm' && <details>
               <summary style={{ fontSize: 12.5, fontWeight: 700, color: '#5A5F68', cursor: 'pointer' }}>고급: 커스텀 AES 키 (기본값 = 공장 초기 키 00...0)</summary>
               <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
                 <input value={metaKey} onChange={(e) => setMetaKey(e.target.value)} placeholder="Meta Read Key (32 hex) — 비우면 기본 키"
@@ -116,7 +143,7 @@ export default function TagsPage() {
                 <input value={fileKey} onChange={(e) => setFileKey(e.target.value)} placeholder="File Read Key (32 hex) — 비우면 기본 키"
                   style={{ width: '100%', padding: '10px 13px', border: '1.5px solid #D4E6DB', borderRadius: 9, fontSize: 13, fontFamily: "'JetBrains Mono', monospace", outline: 'none', boxSizing: 'border-box' }} />
               </div>
-            </details>
+            </details>}
             {formError && <div style={{ color: '#DC2626', fontSize: 12.5 }}>{formError}</div>}
             <button onClick={handleCreate} disabled={saving} style={{
               padding: '13px', borderRadius: 10, border: 'none', cursor: 'pointer',
@@ -128,22 +155,39 @@ export default function TagsPage() {
         </div>
       )}
 
-      {/* Setup guide */}
+      {/* Setup guide — differs by tag type */}
       <div style={{ ...CARD, marginBottom: 16, background: '#F8FBFA' }}>
-        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#085041', marginBottom: 8 }}>📋 태그 초기 설정 (한 번만)</div>
-        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#3A3F48', lineHeight: 1.9 }}>
-          <li><b>NXP TagWriter</b> 앱 설치 → 태그 읽기 → UID 확인 → 위에서 등록</li>
-          <li>TagWriter에서 <b>SDM(Mirroring) 활성화</b> 후 아래 URL 템플릿 기록:</li>
-        </ol>
-        <code style={{
-          display: 'block', marginTop: 8, padding: '11px 13px', background: '#0D1B2E', color: '#7DE3C0',
-          borderRadius: 9, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", overflowX: 'auto', whiteSpace: 'nowrap',
-        }}>
-          https://nook-wallet.com/t?picc_data=00000000000000000000000000000000&amp;cmac=0000000000000000
-        </code>
-        <div style={{ fontSize: 12, color: '#8A8F98', marginTop: 8, lineHeight: 1.7 }}>
-          picc_data 자리에 <b>Encrypted PICC mirror</b>, cmac 자리에 <b>SDMMAC mirror</b>를 매핑하세요.
-          설정 후 폰을 태그에 대면 적립 페이지가 자동으로 열립니다.
+        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#085041', marginBottom: 10 }}>📋 태그에 URL 기록하기 (태그당 한 번만)</div>
+
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: '#1A1A1F', marginBottom: 5 }}>① 일반 태그 (NTAG213/215/216 스티커)</div>
+          <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: '#3A3F48', lineHeight: 1.85 }}>
+            <li><b>NFC Tools</b> 앱 → READ 탭 → 스티커에 폰 대기 → <b>Serial number</b>(UID) 확인 후 위에서 등록</li>
+            <li>같은 앱 → WRITE → Add a record → <b>URL/URI</b> → 아래 주소 입력 (UID를 본인 태그 값으로) → Write</li>
+          </ol>
+          <code style={{
+            display: 'block', marginTop: 8, padding: '11px 13px', background: '#0F3527', color: '#7DE3C0',
+            borderRadius: 9, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", overflowX: 'auto', whiteSpace: 'nowrap',
+          }}>
+            https://nook-wallet.com/t?uid=04AABBCCDDEE80
+          </code>
+        </div>
+
+        <div>
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: '#1A1A1F', marginBottom: 5 }}>② NTAG 424 DNA (실전용 · 복제 방지)</div>
+          <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: '#3A3F48', lineHeight: 1.85 }}>
+            <li><b>NXP TagWriter</b> 앱 → 태그 읽기 → UID 확인 → 위에서 등록 (종류: NTAG 424 DNA 선택)</li>
+            <li>TagWriter에서 <b>SDM(Mirroring) 활성화</b> 후 아래 템플릿 기록</li>
+          </ol>
+          <code style={{
+            display: 'block', marginTop: 8, padding: '11px 13px', background: '#0F3527', color: '#7DE3C0',
+            borderRadius: 9, fontSize: 12, fontFamily: "'JetBrains Mono', monospace", overflowX: 'auto', whiteSpace: 'nowrap',
+          }}>
+            https://nook-wallet.com/t?picc_data=00000000000000000000000000000000&amp;cmac=0000000000000000
+          </code>
+          <div style={{ fontSize: 11.5, color: '#8A8F98', marginTop: 7, lineHeight: 1.7 }}>
+            picc_data 자리에 <b>Encrypted PICC mirror</b>, cmac 자리에 <b>SDMMAC mirror</b>를 매핑하세요.
+          </div>
         </div>
       </div>
 
@@ -182,6 +226,13 @@ export default function TagsPage() {
                 <div style={{ fontSize: 17, fontWeight: 800, color: '#1D9E75', fontFamily: "'JetBrains Mono', monospace" }}>{t.taps_30d ?? 0}</div>
                 <div style={{ fontSize: 11, color: '#8A8F98' }}>taps · 30d</div>
               </div>
+              <span style={{
+                padding: '4px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 700,
+                background: t.tag_mode === 'basic' ? '#FBF0D7' : '#E8F7F2',
+                color: t.tag_mode === 'basic' ? '#8C5A11' : '#085041',
+              }}>
+                {t.tag_mode === 'basic' ? '일반' : '424 DNA'}
+              </span>
               <span style={{
                 padding: '4px 10px', borderRadius: 999, fontSize: 12, fontWeight: 700,
                 background: t.is_active ? '#E8F7F2' : '#F3F4F6',

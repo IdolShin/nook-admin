@@ -361,7 +361,8 @@ function TapPageInner() {
     const uid = params.get('uid') ?? undefined;
     const ctr = params.get('ctr') ?? undefined;
 
-    if (!cmac || (!picc_data && !uid)) {
+    // basic-mode tags carry only a uid; SDM tags carry picc_data/uid + cmac
+    if (!picc_data && !uid) {
       setErrorMsg(getLang() === 'en'
         ? 'Invalid link. Please tap the NFC stamp at the store again.'
         : '잘못된 링크입니다. 매장의 NFC 스탬프에 휴대폰을 다시 대주세요.');
