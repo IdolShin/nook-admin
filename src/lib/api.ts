@@ -148,8 +148,8 @@ export const api = {
     if (!res.ok) { const e = new Error(j.error ?? res.statusText) as Error & { code?: string }; e.code = j.code; throw e; }
     return j;
   },
-  tapCollect: async (tap_token: string, unique_key: string): Promise<TapCollectResult> => {
-    const res = await fetch(`${BASE}/api/tap/collect`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tap_token, unique_key }) });
+  tapCollect: async (tap_token: string, unique_key?: string, account_token?: string): Promise<TapCollectResult> => {
+    const res = await fetch(`${BASE}/api/tap/collect`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tap_token, ...(unique_key ? { unique_key } : {}), ...(account_token ? { account_token } : {}) }) });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) { const e = new Error(j.error ?? res.statusText) as Error & { code?: string }; e.code = j.code; throw e; }
     return j;

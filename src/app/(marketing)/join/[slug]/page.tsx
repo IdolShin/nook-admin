@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useRef } from 'react';
 import Link from 'next/link';
+import AddToHome from '@/components/AddToHome';
 import '../../marketing.css';
 
 type Lang = 'ko' | 'en';
@@ -496,9 +497,41 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               </div>
             )}
 
+            {/* Save cards to an account so they survive a new phone */}
+            <a href={`/login?next=${encodeURIComponent('/wallet')}`} style={{
+              display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none',
+              background: 'white', border: '1.5px solid #16A377', borderRadius: 18,
+              padding: '13px 15px', marginBottom: 10,
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 999, background: '#DFF2E9', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+              }}>🔐</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: '#26332C' }}>
+                  {T('계정 만들기 (선택)', 'Create an account (optional)', lang)}
+                </div>
+                <div style={{ fontSize: 11.5, color: '#7A8279', marginTop: 2, lineHeight: 1.4 }}>
+                  {T('폰을 바꿔도 카드가 그대로 따라와요', 'Your cards follow you to a new phone', lang)}
+                </div>
+              </div>
+              <span style={{ color: '#16A377', fontSize: 15, fontWeight: 800 }}>→</span>
+            </a>
+
+            <a href="/wallet" style={{
+              display: 'block', textAlign: 'center', padding: '14px', borderRadius: 999,
+              background: '#16A377', color: 'white', marginBottom: 10,
+              fontSize: 14.5, fontWeight: 700, textDecoration: 'none',
+              boxShadow: '0 6px 18px rgba(22,163,119,0.28)',
+            }}>
+              {T('내 월렛 보기', 'Open my wallet', lang)}
+            </a>
+
+            <AddToHome lang={lang === 'ko' ? 'ko' : 'en'} />
+
             <Link href="/" style={{
               display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
-              border: '1.5px solid #1D9E75', color: '#1D9E75',
+              border: '1.5px solid #1D9E75', color: '#1D9E75', marginTop: 10,
               fontSize: 14, fontWeight: 500, textDecoration: 'none',
             }}>
               {T('홈페이지로 가기', 'Go to Homepage', lang)}

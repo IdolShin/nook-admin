@@ -12,6 +12,8 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api, TapVerifyResult, TapCollectResult } from '@/lib/api';
+import { account as acct, getAccountToken } from '@/lib/account';
+import AddToHome from '@/components/AddToHome';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -309,7 +311,7 @@ function TapPageInner() {
   const [redeemed, setRedeemed] = useState(false);
 
   // identify form state
-  const [mode, setMode] = useState<'choose' | 'existing' | 'new'>('choose');
+  const [mode, setMode] = useState<'choose' | 'existing' | 'new' | 'accountJoin'>('choose');
   const [keyInput, setKeyInput] = useState('');
   const [userIdInput, setUserIdInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -325,13 +327,15 @@ function TapPageInner() {
     try { localStorage.setItem('nook_lang', next); } catch { /* non-fatal */ }
   }
 
-  const doCollect = useCallback(async (tapToken: string, uniqueKey: string, businessId: string) => {
+  const doCollect = useCallback(async (tapToken: string, uniqueKey: string | undefined, businessId: string, useAccount = false) => {
     setPhase('collecting');
     try {
-      const r = await api.tapCollect(tapToken, uniqueKey);
+      const r = useAccount
+        ? await api.tapCollect(tapToken, undefined, getAccountToken() ?? undefined)
+        : await api.tapCollect(tapToken, uniqueKey);
       saveMembership(businessId, {
         customer_id: r.customer_id,
-        unique_key: r.unique_key ?? uniqueKey,
+        unique_key: r.unique_key ?? uniqueKey ?? '',
         user_id: r.user_id ?? undefined,
         business_name: r.business_name,
       });
@@ -340,7 +344,12 @@ function TapPageInner() {
       if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
     } catch (e) {
       const err = e as Error & { code?: string };
-      if (err.code === 'CUSTOMER_NOT_FOUND') {
+      if (err.code === 'NO_CARD_FOR_BUSINESS') {
+        // Logged in, but never visited this store — offer instant join
+        setPhase('identify');
+        setMode('accountJoin');
+        setFormError('');
+      } else if (err.code === 'CUSTOMER_NOT_FOUND' || err.code === 'ACCOUNT_TOKEN_EXPIRED') {
         setPhase('identify');
         setMode('choose');
         setFormError('');
@@ -375,7 +384,10 @@ function TapPageInner() {
         const v = await api.tapVerify({ picc_data, cmac, uid, ctr });
         setVerify(v);
         const member = getMemberships()[v.business.id];
-        if (member?.unique_key) {
+        if (getAccountToken()) {
+          // Logged in → the account decides which card gets the stamp
+          await doCollect(v.tap_token, undefined, v.business.id, true);
+        } else if (member?.unique_key) {
           await doCollect(v.tap_token, member.unique_key, v.business.id);
         } else {
           setPhase('identify');
@@ -420,6 +432,20 @@ function TapPageInner() {
         customer_id: j.customer?.id, unique_key: uniqueKey, user_id: uid, business_name: verify.business.name,
       });
       await doCollect(verify.tap_token, uniqueKey, verify.business.id);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : t('Something went wrong.', '오류가 발생했습니다.'));
+    }
+    setSending(false);
+  }
+
+  async function handleAccountJoin() {
+    if (!verify) return;
+    const card = verify.cards[0];
+    if (!card) { setFormError(t('This store has no active card.', '이 매장에 활성화된 카드가 없습니다.')); return; }
+    setSending(true); setFormError('');
+    try {
+      await acct.join(card.id);
+      await doCollect(verify.tap_token, undefined, verify.business.id, true);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : t('Something went wrong.', '오류가 발생했습니다.'));
     }
@@ -639,6 +665,8 @@ function TapPageInner() {
             }}>
               {t('Open my wallet', '내 월렛 보기')}
             </a>
+            <AddToHome lang={lang} />
+
             <div style={{ textAlign: 'center', marginTop: 14, fontSize: 12, color: C.sub }}>
               {t('Thanks for visiting 🌿', '방문해 주셔서 감사합니다 🌿')}
             </div>
@@ -659,6 +687,29 @@ function TapPageInner() {
               </div>
             </div>
 
+            {mode === 'accountJoin' && (
+              <div style={{ background: C.card, borderRadius: 20, padding: 22, border: `1px solid ${C.line}` }}>
+                <div style={{
+                  width: 58, height: 58, borderRadius: 999, background: C.mint, margin: '0 auto 14px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
+                }}>👋</div>
+                <div className="nk-display" style={{ fontSize: 19, fontWeight: 900, textAlign: 'center' }}>
+                  {lang === 'en' ? `First time at ${verify.business.name}` : `${verify.business.name} 첫 방문이네요`}
+                </div>
+                <div style={{ fontSize: 13.5, color: C.sub, marginTop: 7, textAlign: 'center', lineHeight: 1.6 }}>
+                  {t('Get your card here and collect right away.', '여기 카드를 받고 바로 적립하세요.')}
+                </div>
+                {formError && <div style={{ color: '#C0392B', fontSize: 12.5, marginTop: 10, textAlign: 'center' }}>{formError}</div>}
+                <button className="nk-press" onClick={handleAccountJoin} disabled={sending} style={{
+                  width: '100%', marginTop: 18, padding: '17px', borderRadius: 999, border: 'none',
+                  cursor: 'pointer', fontFamily: DISPLAY, fontSize: 15.5, fontWeight: 800, color: 'white',
+                  background: sending ? '#9AA5A0' : C.brand, boxShadow: '0 6px 18px rgba(22,163,119,0.3)',
+                }}>
+                  {sending ? t('Adding…', '만드는 중…') : t('Get my card & collect', '카드 받고 적립하기')}
+                </button>
+              </div>
+            )}
+
             {mode === 'choose' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <button className="nk-press" onClick={() => { setMode('new'); setFormError(''); }} style={{
@@ -674,6 +725,13 @@ function TapPageInner() {
                 }}>
                   {t('I already have a card', '이미 카드가 있어요')}
                 </button>
+                <a href={`/login?next=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/wallet')}`}
+                  style={{
+                    textAlign: 'center', padding: '14px', textDecoration: 'none',
+                    color: C.sub, fontSize: 13.5, fontWeight: 700, fontFamily: FONT,
+                  }}>
+                  {t('Log in to my Nook account →', 'Nook 계정으로 로그인 →')}
+                </a>
               </div>
             )}
 

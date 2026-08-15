@@ -7,6 +7,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, WalletCard } from '@/lib/api';
+import { account as acct, getAccount, getAccountToken, clearSession, CustomerAccount } from '@/lib/account';
+import AddToHome from '@/components/AddToHome';
 
 const CARD_H = 172;
 const PEEK = 66;
@@ -269,6 +271,7 @@ export default function WalletPage() {
   const [redeemTier, setRedeemTier] = useState<{ label: string; points: number } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<WalletCard | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [me, setMe] = useState<CustomerAccount | null>(null);
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -289,7 +292,26 @@ export default function WalletPage() {
 
   const load = useCallback(async () => {
     const members = getMemberships();
-    const keys = Object.values(members).map((m) => m.unique_key).filter(Boolean);
+    let keys = Object.values(members).map((m) => m.unique_key).filter(Boolean);
+
+    // Logged in? The account is the source of truth — its cards work on any device.
+    if (getAccountToken()) {
+      const info = await acct.me();
+      if (info) {
+        setMe(info.account);
+        const merged = new Set([...(info.keys || []), ...keys]);
+        keys = Array.from(merged);
+        // quietly attach any device-only card to the account
+        for (const k of keys) {
+          if (!(info.keys || []).includes(k)) acct.link(k).catch(() => {});
+        }
+      } else {
+        setMe(null);
+      }
+    } else {
+      setMe(getAccount());
+    }
+
     if (keys.length === 0) { setCards([]); setLoading(false); return; }
     try {
       const r = await api.walletCards(keys);
@@ -359,7 +381,7 @@ export default function WalletPage() {
 
   const sel = selected ? sorted.find(({ c }) => c.unique_key === selected) ?? null : null;
   const rest = sel ? sorted.filter(({ c }) => c.unique_key !== selected) : [];
-  const ownerName = cards[0]?.user_id ?? '';
+  const ownerName = me?.name ?? cards[0]?.user_id ?? '';
 
   async function handleAdd() {
     const k = keyInput.trim().toUpperCase();
@@ -473,6 +495,24 @@ export default function WalletPage() {
             }}>
               {lang === 'en' ? '한국어' : 'EN'}
             </button>
+            {me ? (
+              <button className="wk-press" onClick={() => {
+                if (confirm(t('Log out of this wallet?', '로그아웃할까요?'))) { clearSession(); setMe(null); load(); }
+              }} aria-label="Account" style={{
+                width: 42, height: 42, borderRadius: 999, cursor: 'pointer', fontFamily: DISPLAY,
+                background: T.mint, border: `1px solid ${T.brand}`, color: '#0E5A43', fontSize: 15, fontWeight: 900,
+              }}>
+                {(me.name ?? 'N').trim().charAt(0).toUpperCase()}
+              </button>
+            ) : (
+              <a href="/login" className="wk-press" style={{
+                padding: '10px 15px', borderRadius: 999, textDecoration: 'none', fontFamily: DISPLAY,
+                background: T.brand, color: 'white', fontSize: 12.5, fontWeight: 800,
+                boxShadow: '0 4px 12px rgba(22,163,119,0.28)',
+              }}>
+                {t('Log in', '로그인')}
+              </a>
+            )}
             <button className="wk-press" onClick={() => { setSearchOpen(!searchOpen); setQuery(''); setSelected(null); }} aria-label="Search" style={{
               width: 42, height: 42, borderRadius: 999, cursor: 'pointer',
               background: searchOpen ? T.brand : T.card,
@@ -497,6 +537,29 @@ export default function WalletPage() {
               animation: 'wk-rise 200ms ease-out',
             }}
           />
+        )}
+
+        {/* ── Not logged in: cards live only on this phone ── */}
+        {!loading && !me && cards.length > 0 && !sel && (
+          <a href="/login" className="wk-press" style={{
+            display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none',
+            background: T.card, border: `1.5px solid ${T.brand}`, borderRadius: 20,
+            padding: '13px 15px', marginBottom: 14, animation: 'wk-rise 320ms ease-out',
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 999, background: T.mint, flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+            }}>🔐</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: T.ink, fontFamily: DISPLAY }}>
+                {t('Save your cards to an account', '내 계정에 카드 저장하기')}
+              </div>
+              <div style={{ fontSize: 12, color: T.sub, marginTop: 2, lineHeight: 1.4 }}>
+                {t('Right now they live only on this phone', '지금은 이 폰에만 저장돼 있어요')}
+              </div>
+            </div>
+            <span style={{ color: T.brand, fontSize: 15, fontWeight: 800 }}>→</span>
+          </a>
         )}
 
         {/* ── At-a-glance summary (simple status) ── */}
@@ -769,6 +832,8 @@ export default function WalletPage() {
             )}
           </div>
         )}
+
+        {!loading && cards.length > 0 && !sel && <AddToHome lang={lang} />}
 
         <div style={{ textAlign: 'center', marginTop: 28, color: '#B9B29F', fontSize: 11.5, lineHeight: 1.8 }}>
           {t('Tap the NFC stamp at any store — your card opens and collects automatically', '매장 NFC 스탬프에 탭하면 카드가 자동으로 열리고 적립됩니다')}<br />
