@@ -7,7 +7,7 @@
 // (Camera scanning removed — no longer needed with NFC.)
 
 import { useState } from 'react';
-import { Check, X, Hash, Ticket, Gift, Nfc } from 'lucide-react';
+import { Check, X, Hash, Ticket, Gift, Nfc, Undo2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { usePlan } from '@/hooks/usePlan';
 
@@ -18,6 +18,8 @@ interface StampResult {
   msg: string;
   customer?: string;
   customerId?: string;
+  stampId?: string | null;      // set right after a stamp — enables one-tap undo
+  redeemed?: boolean;           // a reward was just given out — can be taken back
   stamps?: number;
   goal?: number;
   rewardReady?: boolean;
@@ -39,6 +41,7 @@ export default function CollectPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<StampResult | null>(null);
   const [redeeming, setRedeeming] = useState(false);
+  const [undoing, setUndoing] = useState(false);
 
   async function submitStamp() {
     const d = digits.trim();
@@ -51,6 +54,7 @@ export default function CollectPage() {
         msg: data.message,
         customer: data.customer_name,
         customerId: data.customer_id,
+        stampId: data.stamp_id,
         stamps: data.new_stamps ?? undefined,
         goal: data.goal_stamps ?? undefined,
         rewardReady: data.reward_ready,
@@ -71,13 +75,52 @@ export default function CollectPage() {
     setRedeeming(true);
     try {
       const r = await api.redeemStamp(result.customerId);
-      setResult({ ok: true, msg: r.message, customer: result.customer });
+      setResult({ ok: true, msg: r.message, customer: result.customer, customerId: result.customerId, redeemed: true });
     } catch (e) {
       let msg = e instanceof Error ? e.message : 'Redeem failed';
       try { msg = JSON.parse(msg).error ?? msg; } catch { /* keep */ }
       setResult({ ...result, msg });
     }
     setRedeeming(false);
+  }
+
+  // ─── Undo — the "oops, I tapped twice" button ──────────────
+  async function undoStamp() {
+    if (!result || undoing) return;
+    setUndoing(true);
+    try {
+      const r = await api.undoStamp(
+        result.stampId ? { stamp_id: result.stampId } : { customer_id: result.customerId }
+      );
+      setResult({
+        ok: true,
+        msg: r.message,
+        customer: result.customer,
+        customerId: r.customer_id,
+        stamps: r.current ?? undefined,
+        goal: r.goal_stamps ?? undefined,
+        points: r.total_points,
+      });
+    } catch (e) {
+      let msg = e instanceof Error ? e.message : 'Undo failed';
+      try { msg = JSON.parse(msg).error ?? msg; } catch { /* keep */ }
+      setResult({ ...result, msg, ok: false });
+    }
+    setUndoing(false);
+  }
+
+  async function undoRedeem() {
+    if (!result?.customerId || undoing) return;
+    setUndoing(true);
+    try {
+      const r = await api.undoRedeem({ customer_id: result.customerId });
+      setResult({ ok: true, msg: r.message, customer: result.customer, customerId: result.customerId });
+    } catch (e) {
+      let msg = e instanceof Error ? e.message : 'Undo failed';
+      try { msg = JSON.parse(msg).error ?? msg; } catch { /* keep */ }
+      setResult({ ...result, msg, ok: false });
+    }
+    setUndoing(false);
   }
 
   async function submitCoupon() {
@@ -243,6 +286,19 @@ export default function CollectPage() {
                   <Gift size={15} /> {redeeming ? 'Confirming…' : '리워드 지급 확인 (카드 리셋)'}
                 </button>
               </div>
+            )}
+
+            {/* Undo — 실수로 두 번 찍었을 때 바로 되돌리기 */}
+            {result.ok && (result.stampId || result.redeemed) && (
+              <button onClick={result.redeemed ? undoRedeem : undoStamp} disabled={undoing} style={{
+                width: '100%', marginTop: 12, padding: '12px', borderRadius: 10, cursor: undoing ? 'default' : 'pointer',
+                background: 'white', border: '1.5px solid #D9B7B7', color: '#B04141',
+                fontSize: 13.5, fontWeight: 800,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              }}>
+                <Undo2 size={15} />
+                {undoing ? '되돌리는 중…' : result.redeemed ? '리워드 지급 취소' : '방금 적립 취소'}
+              </button>
             )}
           </div>
         )}

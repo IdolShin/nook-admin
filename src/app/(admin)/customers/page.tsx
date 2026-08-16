@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { customerStatusMeta } from '@/lib/utils';
 import { api, type ApiCustomer, type ApiCouponPass, type ApiCoupon, type ApiRedemption } from '@/lib/api';
 import { toast } from '@/lib/toast';
-import { Search, Gift, X, Ticket, Send, ArrowUp, ArrowDown, ChevronsUpDown, Plus } from 'lucide-react';
+import { Search, Gift, X, Ticket, Send, ArrowUp, ArrowDown, ChevronsUpDown, Plus, Undo2, Trash2 } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import BottomSheet from '@/components/ui/BottomSheet';
 import ResponsiveModal from '@/components/ui/ResponsiveModal';
@@ -171,7 +171,7 @@ function CouponPickerModal({ customer, onClose }: { customer: Customer; onClose:
   );
 }
 
-function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon, onAddStamp }: { customer: Customer; onClose: () => void; onSendPush?: () => void; onSendCoupon?: () => void; onAddStamp?: () => void }) {
+function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon, onAddStamp, onUndoStamp, onDelete }: { customer: Customer; onClose: () => void; onSendPush?: () => void; onSendCoupon?: () => void; onAddStamp?: () => void; onUndoStamp?: () => void; onDelete?: () => void }) {
   const visits = [3, 5, 4, 6, 7, 5, 8, 6, 7, 9, 8, 10];
   const [activeTab, setActiveTab] = useState<'activity' | 'redeems' | 'coupons'>('activity');
   const [passes, setPasses] = useState<ApiCouponPass[]>([]);
@@ -408,6 +408,24 @@ function CustomerDetail({ customer, onClose, onSendPush, onSendCoupon, onAddStam
             <Gift size={13} color="#5C5F66" /> Reward
           </button>
         </div>
+
+        {/* Fix mistakes — undo a stamp, or remove the customer entirely */}
+        <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+          <button onClick={onUndoStamp} style={{
+            flex: 1, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            border: '1px solid #EBEBEB', borderRadius: 8, background: 'white',
+            cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', color: '#5C5F66',
+          }}>
+            <Undo2 size={13} /> Stamp -1
+          </button>
+          <button onClick={onDelete} style={{
+            height: 34, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5,
+            border: '1px solid #F0D5D5', borderRadius: 8, background: 'white',
+            cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', color: '#B04141',
+          }}>
+            <Trash2 size={13} /> Delete
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -459,6 +477,36 @@ export default function CustomersPage() {
       if (updated) setSelected(updated);
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Failed to add stamp', 'error');
+    }
+  };
+
+  const undoStampManual = async (c: Customer) => {
+    try {
+      const r = await api.undoStamp({ customer_id: c.id });
+      toast(r.message ?? 'Stamp removed', 'success');
+      const cs = await api.customers();
+      const mapped = cs.map(mapCustomer);
+      setAllCustomers(mapped);
+      const updated = mapped.find((m) => m.id === c.id);
+      if (updated) setSelected(updated);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Failed to undo stamp', 'error');
+    }
+  };
+
+  const deleteCustomer = async (c: Customer) => {
+    const ok = window.confirm(
+      `Delete ${c.name}?\n\nThis permanently removes their stamps, points and coupons. This cannot be undone.`
+    );
+    if (!ok) return;
+    try {
+      const r = await api.deleteCustomer(c.id);
+      toast(r.message ?? 'Customer deleted', 'success');
+      setSelected(null);
+      const cs = await api.customers();
+      setAllCustomers(cs.map(mapCustomer));
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Failed to delete customer', 'error');
     }
   };
 
@@ -635,7 +683,7 @@ export default function CustomersPage() {
           </div>
           )}
         </div>
-        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} onAddStamp={() => addStampManual(selected)} />}
+        {selected && !isMobile && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} onAddStamp={() => addStampManual(selected)} onUndoStamp={() => undoStampManual(selected)} onDelete={() => deleteCustomer(selected)} />}
       </div>
 
       {isMobile && (
@@ -645,7 +693,7 @@ export default function CustomersPage() {
           bottomOffset="calc(60px + env(safe-area-inset-bottom))"
           maxHeight="82vh"
         >
-          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} onAddStamp={() => addStampManual(selected)} />}
+          {selected && <CustomerDetail customer={selected} onClose={() => setSelected(null)} onSendPush={() => router.push('/push')} onSendCoupon={() => setShowCouponPicker(true)} onAddStamp={() => addStampManual(selected)} onUndoStamp={() => undoStampManual(selected)} onDelete={() => deleteCustomer(selected)} />}
         </BottomSheet>
       )}
     </div>

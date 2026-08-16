@@ -186,9 +186,14 @@ function LoginInner() {
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" inputMode="email"
             autoComplete="email" placeholder="you@email.com" style={input} />
 
-          <label style={{ fontSize: 13, fontWeight: 700, display: 'block', marginTop: 14 }}>
-            {t('Password', '비밀번호')}
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 14 }}>
+            <label style={{ fontSize: 13, fontWeight: 700 }}>{t('Password', '비밀번호')}</label>
+            {mode === 'login' && (
+              <a href="/forgot-password?scope=customer" style={{ fontSize: 12.5, color: T.brand, textDecoration: 'none', fontWeight: 700 }}>
+                {t('Forgot?', '비밀번호 찾기')}
+              </a>
+            )}
+          </div>
           <input value={password} onChange={(e) => setPassword(e.target.value)} type="password"
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             onKeyDown={(e) => e.key === 'Enter' && submit()}
@@ -219,6 +224,18 @@ function LoginInner() {
         }}>
           {t('Skip for now — use this phone only →', '나중에 할게요 · 이 폰에서만 사용 →')}
         </a>
+
+        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11.5, color: T.sub, lineHeight: 1.65 }}>
+          {t('By continuing you agree to our ', '계속하면 ')}
+          <a href="/terms" style={{ color: T.brand, textDecoration: 'none', fontWeight: 600 }}>
+            {t('Terms', '이용약관')}
+          </a>
+          {t(' and ', ' 및 ')}
+          <a href="/privacy" style={{ color: T.brand, textDecoration: 'none', fontWeight: 600 }}>
+            {t('Privacy Policy', '개인정보처리방침')}
+          </a>
+          {t('.', '에 동의하는 것으로 봅니다.')}
+        </div>
 
         <div style={{ textAlign: 'center', marginTop: 26 }}>
           <button onClick={() => {

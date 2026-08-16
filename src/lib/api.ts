@@ -91,10 +91,18 @@ export const api = {
   issueCoupon: (id: string, opts: { customer_ids?: string[]; send_push?: boolean; send_email?: boolean }) => req<{ issued: number; skipped: number; total: number }>(`/api/coupons/${id}/issue`, { method: 'POST', body: JSON.stringify(opts) }),
   redeemStamp: (customerId: string) => req<{ success: boolean; reward_desc: string; message: string }>('/api/scan/redeem', { method: 'POST', body: JSON.stringify({ customer_id: customerId }) }),
   redeemPoints: (customerId: string, points: number, rewardLabel?: string) => req<{ success: boolean; points_spent: number; new_balance: number; message: string }>('/api/scan/redeem-points', { method: 'POST', body: JSON.stringify({ customer_id: customerId, points, reward_label: rewardLabel }) }),
+  // ─── Undo mistakes (owner safety net) ────────────────────────
+  undoStamp: (opts: { stamp_id?: string; customer_id?: string; count?: number }) =>
+    req<{ success: boolean; removed: number; customer_id: string; total_stamps: number; current: number | null; total_points: number | null; goal_stamps: number | null; message: string }>('/api/scan/undo', { method: 'POST', body: JSON.stringify(opts) }),
+  undoRedeem: (opts: { redemption_id?: string; customer_id?: string }) =>
+    req<{ success: boolean; customer_id: string; undone: string; message: string }>('/api/scan/undo-redeem', { method: 'POST', body: JSON.stringify(opts) }),
+  deleteCustomer: (id: string) =>
+    req<{ success: boolean; message: string }>(`/api/customers/${id}`, { method: 'DELETE' }),
+
   customerRedemptions: (customerId: string) => req<{ redemptions: ApiRedemption[] }>(`/api/customers/${customerId}/redemptions`).then((d) => d.redemptions),
   redeemCoupon: (barcode: string) => req<{ success: boolean; coupon: ApiCoupon; customer: { name: string; phone: string }; redeemed_at: string }>('/api/coupons/redeem', { method: 'POST', body: JSON.stringify({ barcode }) }),
   couponPasses: (customerId: string) => req<{ passes: ApiCouponPass[] }>(`/api/coupons/passes/${customerId}`).then((d) => d.passes),
-  scanStamp: (code: string, scanType: 'qr' | 'barcode' | 'unique_key' | 'manual' = 'manual') => req<{ success: boolean; customer_id: string; customer_name: string; card_type: string; reward_desc: string | null; reward_tiers: RewardTier[] | null; points_earned: number | null; total_points: number | null; new_stamps: number | null; goal_stamps: number | null; rewards_earned: number | null; reward_ready: boolean; message: string }>('/api/scan', { method: 'POST', body: JSON.stringify({ code, scan_type: scanType }) }),
+  scanStamp: (code: string, scanType: 'qr' | 'barcode' | 'unique_key' | 'manual' = 'manual') => req<{ success: boolean; stamp_id: string | null; customer_id: string; customer_name: string; card_type: string; reward_desc: string | null; reward_tiers: RewardTier[] | null; points_earned: number | null; total_points: number | null; new_stamps: number | null; goal_stamps: number | null; rewards_earned: number | null; reward_ready: boolean; message: string }>('/api/scan', { method: 'POST', body: JSON.stringify({ code, scan_type: scanType }) }),
   customerLookup: (code: string, type: 'qr' | 'barcode' = 'barcode') => req<{ customer: { id: string; name: string; wallet_type: string; card: { name: string; goal_stamps: number; reward_desc: string }; current_stamps: number; goal_stamps: number; rewards_earned: number } }>(`/api/customers/lookup?code=${encodeURIComponent(code)}&type=${type}`),
   stats: (bizId?: string) => req<{ total_customers: number; active_cards: number; total_stamps: number; total_redemptions: number }>(`/api/stats${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),
   analytics: (bizId?: string) => req<ApiAnalytics>(`/api/analytics${bizId ? `?biz_id=${encodeURIComponent(bizId)}` : ''}`),

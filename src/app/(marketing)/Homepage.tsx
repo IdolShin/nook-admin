@@ -1391,7 +1391,15 @@ export default function Homepage() {
                 lang
               )}
             </div>
-            <div>© 2026 Nook Wallet. All rights reserved.</div>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+              <a href="/terms" style={{ color: 'inherit', textDecoration: 'none', opacity: 0.85 }}>
+                {t('이용약관', 'Terms', lang)}
+              </a>
+              <a href="/privacy" style={{ color: 'inherit', textDecoration: 'none', opacity: 0.85 }}>
+                {t('개인정보처리방침', 'Privacy', lang)}
+              </a>
+              <span>© 2026 Nook Wallet. All rights reserved.</span>
+            </div>
           </div>
         </div>
       </footer>

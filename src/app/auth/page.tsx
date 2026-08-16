@@ -222,7 +222,7 @@ export default function AuthPage() {
             label="Password" type="password" placeholder="••••••••"
             value={password} onChange={setPassword}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            hint={mode === 'login' ? <a href="#" style={{ color: '#085041', textDecoration: 'none', fontWeight: 500, fontSize: 12 }}>Forgot?</a> : undefined}
+            hint={mode === 'login' ? <a href="/forgot-password?scope=business" style={{ color: '#085041', textDecoration: 'none', fontWeight: 500, fontSize: 12 }}>Forgot?</a> : undefined}
           />
 
           {error && (

@@ -829,6 +829,14 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
                 <span style={{ color: '#E05050', fontWeight: 700 }}>
                   {T('(필수)', '(required)', lang)}
                 </span>
+                <br />
+                <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#1D9E75', textDecoration: 'none', fontWeight: 600 }}>
+                  {T('이용약관', 'Terms', lang)}
+                </a>
+                {' · '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#1D9E75', textDecoration: 'none', fontWeight: 600 }}>
+                  {T('개인정보처리방침', 'Privacy Policy', lang)}
+                </a>
               </span>
             </label>
 
