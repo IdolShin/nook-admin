@@ -107,6 +107,8 @@ export default function PushPage() {
 
   // Template language
   const [templateLang, setTemplateLang] = useState<'ko' | 'en'>('ko');
+  // How many customers can actually receive a push (have allowed notifications)
+  const [pushReach, setPushReach] = useState<{ total: number; reachable: number; percent: number } | null>(null);
 
   const bizName = typeof window !== 'undefined' ? localStorage.getItem('nook_biz') ?? 'My Business' : 'My Business';
 
@@ -116,6 +118,8 @@ export default function PushPage() {
       setCustomers(cs);
       setSelectedIds(new Set(cs.map((c) => c.id)));
     }).catch(() => {}).finally(() => setLoadingCx(false));
+
+    api.pushReach().then(setPushReach).catch(() => { /* optional */ });
 
     try {
       const saved = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? '[]');
@@ -270,6 +274,32 @@ export default function PushPage() {
               title="Audience"
               hint={<span style={{ color: '#1D9E75', fontWeight: 500 }}>{reach} selected</span>}
             >
+              {/* Who can actually receive this — selecting 100 people means
+                  nothing if only 3 of them allowed notifications. */}
+              {pushReach && pushReach.total > 0 && (
+                <div style={{
+                  marginBottom: 10, padding: '11px 14px', borderRadius: 10, fontSize: 12,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                  background: pushReach.percent >= 50 ? '#E8F7F2' : '#FFF9E8',
+                  border: `1px solid ${pushReach.percent >= 50 ? '#B7E4D3' : '#F0D48A'}`,
+                  color: pushReach.percent >= 50 ? '#085041' : '#8C5A11',
+                }}>
+                  <div>
+                    <div style={{ fontWeight: 700 }}>
+                      {pushReach.reachable}/{pushReach.total}명이 알림을 받을 수 있어요 ({pushReach.percent}%)
+                    </div>
+                    <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2, lineHeight: 1.5 }}>
+                      {pushReach.percent >= 50
+                        ? '나머지 손님은 아직 알림을 켜지 않았어요. 월렛 화면에서 자동으로 안내됩니다.'
+                        : '손님이 월렛을 열면 "알림 켜기" 안내가 뜹니다. 매장에서 한 번 열어보시라고 권해주세요.'}
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-mono)', flexShrink: 0,
+                  }}>{pushReach.percent}%</span>
+                </div>
+              )}
+
               {/* Plan banner */}
               {!isSuperadmin && isPremium && (
                 <div style={{ marginBottom: 10, padding: '10px 14px', background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)', border: '1px solid #93C5FD', borderRadius: 10, fontSize: 12, color: '#1D4ED8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

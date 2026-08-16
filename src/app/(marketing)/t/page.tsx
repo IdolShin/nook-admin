@@ -14,6 +14,7 @@ import { useSearchParams } from 'next/navigation';
 import { api, TapVerifyResult, TapCollectResult } from '@/lib/api';
 import { account as acct, getAccountToken } from '@/lib/account';
 import AddToHome from '@/components/AddToHome';
+import EnableNotifications from '@/components/EnableNotifications';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -309,6 +310,7 @@ function TapPageInner() {
   const [errorCode, setErrorCode] = useState('');
   const [showRedeem, setShowRedeem] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
+  const [reviewSent, setReviewSent] = useState(false);
 
   // identify form state
   const [mode, setMode] = useState<'choose' | 'existing' | 'new' | 'accountJoin'>('choose');
@@ -454,12 +456,14 @@ function TapPageInner() {
 
   function handleReview() {
     if (!result?.review || !verify) return;
+    // Open first — a popup blocked by a slow fetch is worse than a missed log.
+    window.open(result.review.url, '_blank');
+    setReviewSent(true);
     fetch(`${BASE}/api/reviews/initiate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ customer_id: result.customer_id, business_id: verify.business.id }),
     }).catch(() => { /* non-fatal */ });
-    window.open(result.review.url, '_blank');
   }
 
   const brand = result?.card_color || verify?.cards?.[0]?.color || C.brand;
@@ -647,13 +651,24 @@ function TapPageInner() {
                   sub={result.tap_promo}
                 />
               )}
-              {result.review && !result.welcome_coupon && (
-                <Moment icon="⭐" tone="gold" delay={490}
-                  title={lang === 'en' ? `Leave a Google review, get ${result.review.reward_label}` : `구글 리뷰 남기면 ${result.review.reward_label}`}
-                  sub={t('Takes 30 seconds', '30초면 충분해요')}
-                  onClick={handleReview}
-                />
-              )}
+              {result.review && !result.welcome_coupon && (() => {
+                const rv = result.review;
+                const gift = rv.reward_type === 'coupon'
+                  ? t('a coupon', '쿠폰')
+                  : t(`${rv.stamp_count ?? 1} bonus stamp${(rv.stamp_count ?? 1) > 1 ? 's' : ''}`, `보너스 스탬프 ${rv.stamp_count ?? 1}개`);
+                const wait = (rv.days_to_wait ?? 3) > 0
+                  ? t(`Arrives in ${rv.days_to_wait} days · takes 30 seconds`, `${rv.days_to_wait}일 뒤 지급 · 30초면 충분해요`)
+                  : t('Takes 30 seconds', '30초면 충분해요');
+                return (
+                  <Moment icon="⭐" tone="gold" delay={490}
+                    title={reviewSent
+                      ? t('Thanks for the review!', '리뷰 감사합니다!')
+                      : t(`Leave a Google review, get ${gift}`, `구글 리뷰 남기면 ${gift}`)}
+                    sub={reviewSent ? t('Your reward is on its way', '리워드가 곧 도착해요') : wait}
+                    onClick={reviewSent ? undefined : handleReview}
+                  />
+                );
+              })()}
             </div>
 
             {/* CTA */}
@@ -665,6 +680,9 @@ function TapPageInner() {
             }}>
               {t('Open my wallet', '내 월렛 보기')}
             </a>
+            {result.unique_key && (
+              <EnableNotifications uniqueKeys={[result.unique_key]} lang={lang} />
+            )}
             <AddToHome lang={lang} />
 
             <div style={{ textAlign: 'center', marginTop: 14, fontSize: 12, color: C.sub }}>

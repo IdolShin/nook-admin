@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, X, ChevronDown, ChevronRight, AlertTriangle, Check, Eye, EyeOff, Shield, Users, Briefcase, CreditCard, Zap, MapPin, LocateFixed } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { api, type ApiBusiness, type ApiStaffUser } from '@/lib/api';
+import { api, type ApiBusiness, type ApiStaffUser, type ApiCoupon, type ApiReviewConfig } from '@/lib/api';
 import { decodeToken } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/lib/toast';
@@ -429,6 +429,179 @@ function TapPromoCard() {
   );
 }
 
+// ─── Google review rewards ───────────────────────────────────
+// Ask for a review right after a stamp lands (best possible moment),
+// then hold the reward a few days so people don't review-and-delete.
+function GoogleReviewCard() {
+  const [url, setUrl] = useState('');
+  const [cfg, setCfg] = useState<ApiReviewConfig>({
+    enabled: false, reward_type: 'stamp', stamp_count: 1, coupon_id: null, days_to_wait: 3,
+  });
+  const [coupons, setCoupons] = useState<ApiCoupon[]>([]);
+  const [stats, setStats] = useState<{ pending: number; issued: number; requests_30d: number } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.getReviewConfig()
+      .then((r) => {
+        setUrl(r.google_review_url ?? '');
+        if (r.review_reward_config) setCfg({ ...cfg, ...r.review_reward_config });
+      })
+      .catch(() => { /* first run */ })
+      .finally(() => setLoaded(true));
+    api.coupons().then(setCoupons).catch(() => { /* optional */ });
+    api.reviewStats().then(setStats).catch(() => { /* optional */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function save(next?: Partial<ApiReviewConfig>, nextUrl?: string) {
+    const merged = { ...cfg, ...(next ?? {}) };
+    const u = (nextUrl ?? url).trim();
+    if (merged.enabled && !u) {
+      toast('먼저 구글 리뷰 링크를 넣어주세요', 'error');
+      return;
+    }
+    if (merged.enabled && merged.reward_type === 'coupon' && !merged.coupon_id) {
+      toast('보낼 쿠폰을 선택해주세요', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.updateReviewConfig({ google_review_url: u, review_reward_config: merged });
+      setCfg(merged); setUrl(u);
+      toast(merged.enabled ? '저장! 이제 적립 직후 리뷰 요청이 뜹니다.' : '리뷰 리워드를 껐어요.', 'success');
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Failed to save', 'error');
+    }
+    setSaving(false);
+  }
+
+  const input: React.CSSProperties = {
+    width: '100%', padding: '11px 13px', border: '1px solid #EBEBEB', borderRadius: 9,
+    fontSize: 13.5, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+  };
+
+  return (
+    <SCard
+      title="구글 리뷰 리워드"
+      desc="손님이 적립한 직후 — 가장 기분 좋은 순간에 — 리뷰를 부탁하고, 며칠 뒤 자동으로 보상을 지급합니다."
+      right={
+        <span style={{
+          fontSize: 11.5, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
+          background: cfg.enabled ? '#E8F7F2' : '#F3F4F6', color: cfg.enabled ? '#085041' : '#8A8D94',
+        }}>
+          {cfg.enabled ? '⭐ 켜짐' : '꺼짐'}
+        </span>
+      }
+    >
+      <label style={{ fontSize: 12.5, fontWeight: 700, color: '#5C5F66', display: 'block', marginBottom: 6 }}>
+        구글 리뷰 링크
+      </label>
+      <input
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        onBlur={() => { if (loaded && url.trim()) save(undefined, url); }}
+        placeholder="https://g.page/r/.../review"
+        disabled={!loaded}
+        style={input}
+      />
+      <div style={{ fontSize: 11.5, color: '#8A8D94', marginTop: 6, lineHeight: 1.6 }}>
+        구글 비즈니스 프로필 → 리뷰 요청하기 → 링크 복사. 이 링크를 넣으면 손님이 바로 리뷰 작성 화면으로 갑니다.
+      </div>
+
+      <div style={{ height: 1, background: '#F0F0F2', margin: '16px 0' }} />
+
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: '#5C5F66', marginBottom: 8 }}>보상 내용</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        {([['stamp', '스탬프 추가'], ['coupon', '쿠폰 발송']] as const).map(([v, label]) => (
+          <button key={v} onClick={() => setCfg({ ...cfg, reward_type: v })} disabled={!loaded} style={{
+            flex: 1, height: 38, borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+            border: cfg.reward_type === v ? 'none' : '1.5px solid #EBEBEB',
+            background: cfg.reward_type === v ? '#085041' : 'white',
+            color: cfg.reward_type === v ? 'white' : '#5C5F66',
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {cfg.reward_type === 'stamp' ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 13, color: '#5C5F66' }}>스탬프</span>
+          {[1, 2, 3].map((n) => (
+            <button key={n} onClick={() => setCfg({ ...cfg, stamp_count: n })} style={{
+              width: 44, height: 36, borderRadius: 9, cursor: 'pointer', fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
+              border: cfg.stamp_count === n ? 'none' : '1.5px solid #EBEBEB',
+              background: cfg.stamp_count === n ? '#1D9E75' : 'white',
+              color: cfg.stamp_count === n ? 'white' : '#5C5F66',
+            }}>+{n}</button>
+          ))}
+          <span style={{ fontSize: 12, color: '#8A8D94' }}>개 적립</span>
+        </div>
+      ) : (
+        <select
+          value={cfg.coupon_id ?? ''}
+          onChange={(e) => setCfg({ ...cfg, coupon_id: e.target.value || null })}
+          style={{ ...input, cursor: 'pointer' }}
+        >
+          <option value="">쿠폰 선택…</option>
+          {coupons.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+        </select>
+      )}
+
+      <div style={{ height: 1, background: '#F0F0F2', margin: '16px 0' }} />
+
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: '#5C5F66', marginBottom: 8 }}>
+        보상까지 대기 기간
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {[0, 3, 7].map((d) => (
+          <button key={d} onClick={() => setCfg({ ...cfg, days_to_wait: d })} style={{
+            flex: 1, height: 38, borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+            border: cfg.days_to_wait === d ? 'none' : '1.5px solid #EBEBEB',
+            background: cfg.days_to_wait === d ? '#085041' : 'white',
+            color: cfg.days_to_wait === d ? 'white' : '#5C5F66',
+          }}>{d === 0 ? '즉시' : `${d}일 후`}</button>
+        ))}
+      </div>
+      <div style={{ fontSize: 11.5, color: '#8A8D94', marginTop: 8, lineHeight: 1.6 }}>
+        며칠 기다렸다 주면 리뷰를 쓰고 바로 지우는 걸 막을 수 있어요. <b>3일</b>을 권합니다.
+        보상은 매일 아침 9시에 자동 지급되고, 손님에게 알림도 갑니다.
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+        <button onClick={() => save({ enabled: !cfg.enabled })} disabled={saving || !loaded} style={{
+          flex: 1, height: 40, borderRadius: 10, border: 'none', cursor: 'pointer',
+          background: saving ? '#9CA3AF' : cfg.enabled ? '#F3F4F6' : '#1D9E75',
+          color: cfg.enabled ? '#5C5F66' : 'white', fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
+        }}>
+          {saving ? '저장 중…' : cfg.enabled ? '끄기' : '켜기'}
+        </button>
+        <button onClick={() => save()} disabled={saving || !loaded} style={{
+          height: 40, padding: '0 18px', borderRadius: 10, border: '1.5px solid #EBEBEB', cursor: 'pointer',
+          background: 'white', color: '#5C5F66', fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
+        }}>
+          변경사항 저장
+        </button>
+      </div>
+
+      {stats && (stats.requests_30d > 0 || stats.pending > 0 || stats.issued > 0) && (
+        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+          {[
+            { n: stats.requests_30d, l: '30일 요청' },
+            { n: stats.pending, l: '대기 중' },
+            { n: stats.issued, l: '지급 완료' },
+          ].map((s) => (
+            <div key={s.l} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, background: '#F6F1E6', textAlign: 'center' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#26332C' }}>{s.n}</div>
+              <div style={{ fontSize: 11, color: '#8A8D94', marginTop: 2 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </SCard>
+  );
+}
+
 // ─── Daily stamp limit (anti-abuse) ──────────────────────────
 function DailyLimitCard() {
   const [limit, setLimit] = useState<number | null>(1);
@@ -726,6 +899,7 @@ export default function SettingsPage() {
           </SCard>
           <StoreLocationCard />
           <DailyLimitCard />
+          <GoogleReviewCard />
           <TapPromoCard />
           <SCard title="Danger zone" danger>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>

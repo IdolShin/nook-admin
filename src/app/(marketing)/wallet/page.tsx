@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, WalletCard } from '@/lib/api';
 import { account as acct, getAccount, getAccountToken, clearSession, CustomerAccount } from '@/lib/account';
 import AddToHome from '@/components/AddToHome';
+import EnableNotifications from '@/components/EnableNotifications';
 
 const CARD_H = 172;
 const PEEK = 66;
@@ -833,7 +834,12 @@ export default function WalletPage() {
           </div>
         )}
 
-        {!loading && cards.length > 0 && !sel && <AddToHome lang={lang} />}
+        {!loading && cards.length > 0 && !sel && (
+          <>
+            <EnableNotifications uniqueKeys={cards.map((c) => c.unique_key)} lang={lang} />
+            <AddToHome lang={lang} />
+          </>
+        )}
 
         <div style={{ textAlign: 'center', marginTop: 28, color: '#B9B29F', fontSize: 11.5, lineHeight: 1.8 }}>
           {t('Tap the NFC stamp at any store — your card opens and collects automatically', '매장 NFC 스탬프에 탭하면 카드가 자동으로 열리고 적립됩니다')}<br />
