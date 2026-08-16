@@ -13,8 +13,7 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 // ─── Web Push subscription ───────────────────────────────────
 // Subscribes the customer's browser so broadcast pushes appear as a normal
-// notification with the title + body shown directly on the lock screen
-// (not the "New message" placeholder that Google Wallet messages show).
+// notification with the title + body shown directly on the lock screen.
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -85,28 +84,37 @@ const MONTHS = [
   { ko: '11월', en: 'Nov', val: '11' }, { ko: '12월', en: 'Dec', val: '12' },
 ];
 
-function AppleWalletBadge() {
+// Reassures the customer before they sign up: this card lives on your phone,
+// works on any phone, and there is nothing to download.
+function WalletBadges({ lang }: { lang: Lang }) {
+  const pill: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 5,
+    background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '5px 12px',
+    border: '1px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(8px)',
+    fontSize: 11, fontWeight: 600, color: 'white', letterSpacing: '-0.01em',
+  };
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '5px 12px', border: '1px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(8px)' }}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
-        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-      </svg>
-      <span style={{ fontSize: 11, fontWeight: 600, color: 'white', letterSpacing: '-0.01em' }}>Apple Wallet</span>
-    </div>
-  );
-}
-
-function GoogleWalletBadge() {
-  return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '5px 12px', border: '1px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(8px)' }}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-      </svg>
-      <span style={{ fontSize: 11, fontWeight: 600, color: 'white', letterSpacing: '-0.01em' }}>Google Wallet</span>
-    </div>
+    <>
+      <div style={pill}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="3" />
+          <path d="M11 18h2" />
+        </svg>
+        {T('모바일 월렛', 'Mobile wallet', lang)}
+      </div>
+      <div style={pill}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 8.5a8 8 0 0 1 0 7M9.5 6a12 12 0 0 1 0 12M13 3.5a16 16 0 0 1 0 17" />
+        </svg>
+        {T('탭 한 번 적립', 'Tap to collect', lang)}
+      </div>
+      <div style={pill}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+        {T('앱 설치 없음', 'No app needed', lang)}
+      </div>
+    </>
   );
 }
 
@@ -249,7 +257,6 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
   const [errorMsg, setErrorMsg] = useState('');
 
   // Success data
-  const [walletLink, setWalletLink] = useState('');
   const [uniqueKey, setUniqueKey] = useState('');
 
   useEffect(() => {
@@ -309,7 +316,6 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
       await acct.google(r.credential);
       const j = await acct.join(selectedCard.id);
       setUniqueKey(j.unique_key);
-      setWalletLink('');
       setStep('success');
       try {
         if (business?.id) {
@@ -402,7 +408,6 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
         throw new Error(j.error ?? T('등록에 실패했습니다.', 'Registration failed.', lang));
       }
       const data = await res.json();
-      setWalletLink(data.wallet_link ?? '');
       setUniqueKey(data.customer?.unique_key ?? '');
       // Save membership locally so NFC taps auto-credit on this device
       try {
@@ -506,53 +511,37 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
           </div>
 
           <div style={{ padding: '28px 24px 32px' }}>
-            {walletLink ? (
-              <>
-                {/* Add to Google Wallet button */}
-                <a
-                  href={walletLink}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                    width: '100%', height: 56, borderRadius: 28, boxSizing: 'border-box',
-                    background: '#1F1F1F', color: 'white', textDecoration: 'none',
-                    fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-                  }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                  </svg>
-                  {T('구글 월렛에 추가하기', 'Add to Google Wallet', lang)}
-                </a>
-
-                <div style={{ textAlign: 'center', color: '#5C5F66', fontSize: 13, marginTop: 16, marginBottom: 24, lineHeight: 1.6 }}>
-                  {T(
-                    '버튼을 눌러 카드를 구글 월렛에 저장하세요. 매장 방문 시 월렛의 카드를 보여주시면 스탬프가 적립됩니다!',
-                    'Tap the button to save your card to Google Wallet. Show it to staff when you visit to collect stamps!',
-                    lang
-                  )}
-                </div>
-              </>
-            ) : (
-              <div style={{
-                background: '#F5F7F6', borderRadius: 12, padding: '16px', marginBottom: 24,
-                textAlign: 'center', color: '#5C5F66', fontSize: 13, lineHeight: 1.6,
-              }}>
+            {/* How to collect from now on: tap the stamp, or read out this number */}
+            <div style={{
+              background: '#F6F1E6', border: '1px solid #EDE6D8', borderRadius: 16,
+              padding: '18px 16px', marginBottom: 18, textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 26, marginBottom: 6 }}>📲</div>
+              <div style={{ fontSize: 14.5, fontWeight: 800, color: '#26332C' }}>
+                {T('다음부터는 스탬프에 폰만 대세요', 'Next time, just tap the stamp', lang)}
+              </div>
+              <div style={{ fontSize: 12.5, color: '#7A8279', marginTop: 6, lineHeight: 1.6 }}>
                 {T(
-                  '카드가 발급되었습니다. 매장 방문 시 직원에게 아래 멤버 번호를 알려주세요.',
-                  'Your card has been created. Tell staff your member ID below when you visit.',
+                  '카운터에 있는 NFC 스탬프에 폰을 갖다 대면 바로 적립돼요.',
+                  'Hold your phone to the NFC stamp on the counter and it collects instantly.',
                   lang
                 )}
-                {uniqueKey && (
-                  <div style={{ fontSize: 18, fontWeight: 700, color: '#1A1A1F', fontFamily: 'monospace', letterSpacing: '0.08em', marginTop: 8 }}>
+              </div>
+
+              {uniqueKey && (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #EDE6D8' }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 800, color: '#8A8D94', letterSpacing: '0.08em' }}>
+                    {T('내 카드 번호', 'YOUR CARD NUMBER', lang)}
+                  </div>
+                  <div style={{ fontSize: 21, fontWeight: 800, color: '#26332C', fontFamily: 'monospace', letterSpacing: '0.08em', marginTop: 4 }}>
                     {uniqueKey}
                   </div>
-                )}
-              </div>
-            )}
+                  <div style={{ fontSize: 11.5, color: '#8A8D94', marginTop: 5, lineHeight: 1.5 }}>
+                    {T('폰이 잘 안 될 때 직원에게 알려주세요', 'Read this to staff if your phone won’t tap', lang)}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Save cards to an account so they survive a new phone */}
             <a href={`/login?next=${encodeURIComponent('/wallet')}`} style={{
@@ -672,8 +661,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
 
           {/* Wallet badges */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
-            <AppleWalletBadge />
-            <GoogleWalletBadge />
+            <WalletBadges lang={lang} />
           </div>
         </div>
 

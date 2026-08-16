@@ -100,21 +100,32 @@ export default function PrivacyPage() {
         ]} />
       </Section>
 
-      <Section title={en ? 'Google sign-in and Google Wallet' : '구글 로그인 및 구글 월렛'}>
+      <Section title={en ? 'Google sign-in' : '구글 로그인'}>
         {en ? (
           <>
             If you sign in with Google, we receive only your name, email address and profile
             picture from Google. We use it to create your Nook account and to recognize you when
-            you come back on a different phone. If you add a card to Google Wallet, we send Google
-            the information printed on that pass — the shop name, your card number, and your
-            current stamp or point balance — so the pass stays up to date.
+            you come back on a different phone. That is the only thing we use Google for — your
+            cards themselves live in Nook Wallet, not in any Google product.
+            {' '}
+            <i>
+              Legacy note: a small number of early users added a pass to Google Wallet before we
+              moved to Nook Wallet. For those existing passes only, we still send Google the shop
+              name, card number and stamp balance so the pass doesn’t go stale. No new passes are
+              created.
+            </i>
           </>
         ) : (
           <>
             구글로 로그인하시면 구글로부터 이름, 이메일, 프로필 사진만 받습니다. Nook 계정 생성과
-            다른 기기에서 재방문 시 본인 확인에 사용합니다. 구글 월렛에 카드를 추가하시면, 패스에
-            표시되는 정보(매장명, 카드번호, 현재 스탬프/포인트)를 구글에 전송해 패스를 최신 상태로
-            유지합니다.
+            다른 기기에서 재방문 시 본인 확인에만 사용합니다. 구글은 로그인에만 쓰이며, 카드 자체는
+            구글이 아닌 Nook Wallet에 보관됩니다.
+            {' '}
+            <i>
+              참고: Nook Wallet으로 전환하기 전 일부 초기 이용자가 구글 월렛에 패스를 추가했습니다.
+              해당 기존 패스에 한해, 내용이 오래되지 않도록 매장명·카드번호·적립 수를 구글에
+              계속 전송합니다. 새로 발급되는 패스는 없습니다.
+            </i>
           </>
         )}
         <Callout>
@@ -148,13 +159,13 @@ export default function PrivacyPage() {
           <><b>The shop you joined</b> — sees your display name, card number, stamp history and birthday month/day (if given). A shop can only see its own customers, never another shop’s.</>,
           <><b>Supabase</b> — database hosting.</>,
           <><b>Railway</b> — application hosting.</>,
-          <><b>Google</b> — sign-in and Google Wallet passes.</>,
+          <><b>Google</b> — sign-in only (if you choose to sign in with Google).</>,
           <><b>Resend</b> — sending emails such as password resets and coupons.</>,
         ] : [
           <><b>가입하신 매장</b> — 표시 이름, 카드번호, 적립 내역, 생일 월·일(입력 시)을 봅니다. 매장은 자기 고객만 볼 수 있고 다른 매장 고객은 볼 수 없습니다.</>,
           <><b>Supabase</b> — 데이터베이스 호스팅.</>,
           <><b>Railway</b> — 애플리케이션 호스팅.</>,
-          <><b>Google</b> — 로그인 및 구글 월렛 패스.</>,
+          <><b>Google</b> — 구글 로그인을 사용하시는 경우 로그인 처리에만.</>,
           <><b>Resend</b> — 비밀번호 재설정·쿠폰 등 이메일 발송.</>,
         ]} />
         <div style={{ marginTop: 12 }}>

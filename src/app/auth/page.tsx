@@ -271,7 +271,7 @@ export default function AuthPage() {
 
           <div style={{ display: 'grid', gap: 18, marginTop: 30, position: 'relative' }}>
             {[
-              { t: 'Apple & Google Wallet', d: 'No app to download. Lives where customers already are.' },
+              { t: 'Mobile wallet', d: 'No app to download. Opens right on their phone.' },
               { t: 'QR enrollment in 30s', d: 'Scan, enter phone, done. Tap-to-stamp at checkout.' },
               { t: 'Push that converts', d: 'Wallet pushes hit the lock screen — 60%+ open rates.' },
             ].map((f, i) => (

@@ -10,9 +10,9 @@ import { toast } from '@/lib/toast';
 
 // ─── Integrations data ─────────────────────────────────────────
 const INTEGRATIONS = [
-  { n: 'Google Wallet', d: 'Issue passes to Android users',    ok: true,  note: '' },
-  { n: 'Apple Wallet',  d: 'Issue passes to iOS users',        ok: false, note: 'Apple Developer account required ($99/yr)' },
-  { n: 'Resend',        d: 'Transactional email delivery',     ok: false, note: 'API key not configured in Railway env' },
+  { n: 'Mobile Wallet', d: 'Cards on any phone — iPhone & Android', ok: true, note: '' },
+  { n: 'NFC Stamps',    d: 'Tap-to-collect stamps on your counter',  ok: true, note: '' },
+  { n: 'Resend',        d: 'Transactional email delivery',     ok: true,  note: '' },
   { n: 'Web Push',      d: 'Browser push notifications',       ok: true,  note: '' },
   { n: 'Stripe',        d: 'Subscription billing',             ok: false, note: 'Not yet integrated' },
   { n: 'Twilio',        d: 'SMS fallback notifications',       ok: false, note: 'Not yet integrated' },
@@ -762,14 +762,14 @@ export default function SettingsPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#E8F7F2', borderRadius: 10, marginTop: 8 }}>
               <div style={{ flex: 1, lineHeight: 1.4 }}>
                 <div style={{ fontWeight: 500, color: '#085041' }}>Trial {String.fromCharCode(183)} 14 days left</div>
-                <div style={{ fontSize: 12, color: '#085041', opacity: 0.8 }}>Pro is $79/mo per business {String.fromCharCode(183)} unlimited cards, Apple Wallet, coupon system.</div>
+                <div style={{ fontSize: 12, color: '#085041', opacity: 0.8 }}>Pro is $99/mo per business {String.fromCharCode(183)} 3 cards, coupon system, 2 NFC stamps.</div>
               </div>
             </div>
             <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
               {[
-                { plan: 'Basic', price: '$59/mo', features: 'Up to 100 customers, 1 card, stamps + Google Wallet' },
-                { plan: 'Pro', price: '$79/mo', features: 'Up to 500 customers, 3 cards, coupons, Apple Wallet' },
-                { plan: 'Premium', price: '$119/mo', features: 'Unlimited everything, analytics, priority support' },
+                { plan: 'Basic', price: '$79/mo', features: 'Up to 100 customers, 1 card, mobile wallet + 1 NFC stamp' },
+                { plan: 'Pro', price: '$99/mo', features: 'Up to 500 customers, 3 cards, coupons, 2 NFC stamps' },
+                { plan: 'Premium', price: '$129/mo', features: 'Unlimited everything, analytics, priority support' },
               ].map((p) => (
                 <div key={p.plan} style={{ padding: 12, borderRadius: 10, border: '1px solid #EBEBEB', lineHeight: 1.4 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{p.plan}</div>

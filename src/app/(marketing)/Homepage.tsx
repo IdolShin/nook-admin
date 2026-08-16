@@ -38,8 +38,8 @@ const journeyFrames: JourneyFrame[] = [
     tag: { ko: '첫 방문', en: 'FIRST VISIT' },
     h: { ko: '첫 방문, 첫 스탬프', en: 'First visit, first stamp' },
     p: {
-      ko: '손님이 처음 매장 방문. 직원이 QR을 스캔하는 순간, 스탬프가 적립되고 잠금화면에 알림이 뜹니다.',
-      en: 'First-time customer. Staff scans the QR — stamp lands, lock-screen notification fires instantly.',
+      ko: '손님이 처음 매장 방문. 카운터의 NFC 스탬프에 폰을 대는 순간, 스탬프가 적립되고 잠금화면에 알림이 뜹니다.',
+      en: 'First-time customer. They tap their phone on your NFC stamp — the stamp lands and a lock-screen notification fires instantly.',
     },
     notif: {
       kind: 'stamp',
@@ -403,7 +403,7 @@ export default function Homepage() {
         <div className="hero-grid">
           <div>
             <div className="eyebrow">
-              {t('Apple Wallet · Google Wallet 지원', 'Apple Wallet · Google Wallet supported', lang)}
+              {t('NFC 스탬프 탭 → 3초 적립', 'Tap the NFC stamp — 3 seconds to a stamp', lang)}
             </div>
             <h1 className="h1">
               {lang === 'ko' ? (
@@ -421,8 +421,8 @@ export default function Homepage() {
             </h1>
             <p className="h1-sub">
               {t(
-                '앱 다운로드 없이 — 고객 휴대폰 월렛에 바로 저장되는 디지털 적립카드 + 푸시 알림 + 할인 쿠폰.',
-                'No app download. Digital loyalty cards, push notifications, and exclusive coupons — all in their phone wallet.',
+                '앱 다운로드 없이 — 손님 폰에 저장되는 모바일 월렛 적립카드 + 푸시 알림 + 할인 쿠폰. NFC 스탬프에 폰만 대면 끝.',
+                'No app download. A mobile wallet card that lives on your customer’s phone — stamps, push notifications, and coupons. They just tap the NFC stamp.',
                 lang
               )}
             </p>
@@ -442,7 +442,7 @@ export default function Homepage() {
             <div className="hero-checks">
               <span>{t('✓ 앱 설치 없음', '✓ No app install', lang)}</span>
               <span>{t('✓ 10분 셋업', '✓ 10-min setup', lang)}</span>
-              <span>✓ Apple · Google Wallet</span>
+              <span>{t('✓ 아이폰 · 안드로이드 모두', '✓ iPhone & Android', lang)}</span>
             </div>
           </div>
 
@@ -574,7 +574,7 @@ export default function Homepage() {
               <div className="lbl">
                 {t('셋업 완료까지 걸리는 시간', 'Time to launch your card', lang)}
               </div>
-              <div className="delta">{t('QR 출력해서 붙이면 끝', 'Print QR, you\'re live', lang)}</div>
+              <div className="delta">{t('QR 붙이고 스탬프 올려두면 끝', 'Stick up the QR, set out the stamp', lang)}</div>
             </div>
           </div>
         </div>
@@ -660,8 +660,8 @@ export default function Homepage() {
               <h3>{t('항상 휴대폰에 있는 적립카드', 'Always in their phone wallet', lang)}</h3>
               <p>
                 {t(
-                  '종이 쿠폰은 잃어버리고, 플라스틱 카드는 집에 두고 옵니다. Nook 카드는 Apple·Google Wallet에 저장되어 언제나 함께합니다.',
-                  'Paper coupons get lost. Plastic cards get forgotten. Nook cards live in Apple & Google Wallet — always with your customer.',
+                  '종이 쿠폰은 잃어버리고, 플라스틱 카드는 집에 두고 옵니다. Nook 카드는 손님 폰의 모바일 월렛에 저장돼서 언제나 함께 다닙니다.',
+                  'Paper coupons get lost. Plastic cards get left at home. A Nook card lives in the mobile wallet on your customer’s phone — always with them.',
                   lang
                 )}
               </p>
@@ -834,22 +834,22 @@ export default function Homepage() {
             </div>
             <div className="step reveal" style={{ transitionDelay: '80ms' }}>
               <div className="nbr">2</div>
-              <h3>{t('QR로 손님 등록', 'Customer scans QR', lang)}</h3>
+              <h3>{t('QR 한 번으로 가입', 'One QR to join', lang)}</h3>
               <p>
                 {t(
-                  '매장에 QR을 붙여두세요. 손님이 한 번 스캔하면 월렛에 카드가 추가됩니다.',
-                  'Place QR in your shop. One scan and the card is in their wallet.',
+                  '매장에 가입 QR을 붙여두세요. 손님이 한 번 찍으면 폰에 모바일 월렛 카드가 생깁니다. 앱 설치 없이 10초.',
+                  'Put the sign-up QR on your counter. One scan and a mobile wallet card appears on their phone — 10 seconds, no app.',
                   lang
                 )}
               </p>
             </div>
             <div className="step reveal" style={{ transitionDelay: '160ms' }}>
               <div className="nbr">3</div>
-              <h3>{t('방문마다 스탬프', 'Stamp every visit', lang)}</h3>
+              <h3>{t('탭 한 번이면 적립', 'Tap to collect', lang)}</h3>
               <p>
                 {t(
-                  '직원이 폰·태블릿으로 손님 QR을 스캔하면 자동 적립 + 손님 폰에 알림.',
-                  'Staff scans the customer\'s QR — stamp added, notification sent.',
+                  '손님이 카운터의 NFC 스탬프에 폰을 대면 3초 만에 적립 + 알림. 직원은 손 하나 안 대도 됩니다.',
+                  'The customer taps their phone on your NFC stamp — stamp added and notified in 3 seconds. Staff do nothing.',
                   lang
                 )}
               </p>
@@ -1077,7 +1077,7 @@ export default function Homepage() {
               <ul>
                 <li>{t('적립카드 1종 (스탬프 전용)', '1 loyalty card (stamp only)', lang)}</li>
                 <li>{t('고객 100명까지', 'Up to 100 customers', lang)}</li>
-                <li>{t('Apple + Google Wallet 지원', 'Apple + Google Wallet', lang)}</li>
+                <li>{t('모바일 월렛 + NFC 스탬프 1개', 'Mobile wallet + 1 NFC stamp', lang)}</li>
                 <li>{t('푸시 알림 월 1회', '1 push notification / month', lang)}</li>
                 <li>{t('기본 분석', 'Basic analytics', lang)}</li>
                 <li>{t('이메일 지원', 'Email support', lang)}</li>
@@ -1098,7 +1098,7 @@ export default function Homepage() {
               <ul>
                 <li>{t('적립카드 3종 (스탬프 · 할인쿠폰 · 이벤트쿠폰)', '3 cards (Stamp · Discount · Event)', lang)}</li>
                 <li>{t('고객 500명까지', 'Up to 500 customers', lang)}</li>
-                <li>Apple + Google Wallet</li>
+                <li>{t('모바일 월렛 + NFC 스탬프 2개', 'Mobile wallet + 2 NFC stamps', lang)}</li>
                 <li>{t('푸시 알림 주 1회', '1 push notification / week', lang)}</li>
                 <li>{t('구글 리뷰 시 쿠폰 (제한적)', 'Google review coupon (limited)', lang)}</li>
                 <li>{t('전체 분석 대시보드', 'Full analytics dashboard', lang)}</li>
@@ -1214,8 +1214,8 @@ export default function Homepage() {
               <summary>{t('손님이 앱을 다운받아야 하나요?', 'Do customers need to download an app?', lang)}</summary>
               <p>
                 {t(
-                  '아니요. Apple Wallet · Google Wallet은 모든 폰에 기본 내장되어 있어요. 앱 설치, 회원가입 모두 필요 없습니다.',
-                  'No. Apple Wallet and Google Wallet come built into every phone. No app, no account signup needed.',
+                  '아니요. Nook 월렛은 폰 브라우저에서 바로 열려요. 앱스토어에 갈 필요도, 다운로드도 없습니다. 원하면 홈 화면에 아이콘으로 추가해서 앱처럼 쓸 수 있어요.',
+                  'No. The Nook wallet opens right in their phone browser — no app store, no download. If they like it, one tap adds an icon to their home screen and it opens like an app.',
                   lang
                 )}
               </p>
@@ -1226,8 +1226,8 @@ export default function Homepage() {
               </summary>
               <p>
                 {t(
-                  '네. 아이폰은 Apple Wallet, 안드로이드는 Google Wallet 사용. 둘 다 완벽 지원합니다.',
-                  'Yes. iPhone uses Apple Wallet, Android uses Google Wallet. Both fully supported.',
+                  '네. 아이폰·안드로이드 모두 똑같이 동작합니다. NFC 스탬프에 폰을 대면 카드가 자동으로 열리고 적립돼요.',
+                  'Yes — iPhone and Android work exactly the same. Tap the NFC stamp and their card opens and collects automatically.',
                   lang
                 )}
               </p>
@@ -1238,8 +1238,8 @@ export default function Homepage() {
               </summary>
               <p>
                 {t(
-                  'Nook 스캐너 웹앱을 직원 폰·태블릿에 띄워두세요. 손님 카드의 QR을 비추면 자동 적립.',
-                  'Open the Nook Scanner web app on a staff phone or tablet. Aim at the customer\'s QR — stamp added automatically.',
+                  '찍을 필요가 없어요. 카운터에 놓인 NFC 스탬프에 손님이 폰을 대면 끝입니다. 폰에 NFC가 없거나 잘 안 될 때만, 직원이 손님 카드번호를 입력해서 수동으로 적립할 수 있어요.',
+                  'They don’t have to. The customer taps their phone on the NFC stamp sitting on your counter — that’s it. If a phone doesn’t cooperate, staff can type the customer’s card number to add the stamp manually.',
                   lang
                 )}
               </p>
@@ -1248,8 +1248,8 @@ export default function Homepage() {
               <summary>{t('쿠폰은 어떻게 사용하나요?', 'How are coupons redeemed?', lang)}</summary>
               <p>
                 {t(
-                  '손님이 월렛에서 쿠폰을 열면 바코드가 표시됩니다. 직원이 스캐너 앱으로 스캔 → 자동 소진 + 만료 처리.',
-                  'Customer opens the coupon — barcode appears. Staff scans it with Nook Scanner → auto-marked as used.',
+                  '손님이 월렛에서 쿠폰을 열면 번호가 크게 표시됩니다. 직원이 그 번호를 적립 화면에 입력하면 바로 사용 처리 + 만료.',
+                  'The customer opens the coupon and a big number appears. Staff type that number into the Collect screen — used and expired on the spot.',
                   lang
                 )}
               </p>
@@ -1284,8 +1284,8 @@ export default function Homepage() {
               <summary>{t('설정이 어렵지 않나요?', 'Is setup difficult?', lang)}</summary>
               <p>
                 {t(
-                  '10분이면 충분합니다. 가입 → 카드 만들기 → QR 출력해서 매장에 붙이기 — 끝. 기술 지식 필요 없어요.',
-                  'About 10 minutes. Sign up, create card, print the QR, stick it in your shop. No tech knowledge needed.',
+                  '10분이면 충분합니다. 가입 → 카드 만들기 → 가입 QR 붙이고 NFC 스탬프 올려두기 — 끝. 기술 지식 필요 없어요.',
+                  'About 10 minutes. Sign up, create your card, stick up the QR and set the NFC stamp on the counter. No tech knowledge needed.',
                   lang
                 )}
               </p>

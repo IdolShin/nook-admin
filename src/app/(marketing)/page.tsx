@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   keywords: 'loyalty card, 적립카드, digital wallet, Korean restaurant, Fort Lee, NJ, 쿠폰, 단골',
   openGraph: {
     title: 'Nook — Digital Loyalty Cards for Local Businesses',
-    description: 'Stamp cards in Apple & Google Wallet. Push notifications. Smart coupons. No app needed.',
+    description: 'A mobile wallet stamp card on your customer’s phone. Tap the NFC stamp to collect. Push notifications and smart coupons. No app needed.',
     type: 'website',
   },
 };

@@ -10,7 +10,7 @@ const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
   '/cards':      { t: 'Loyalty cards',      s: 'Design, manage, and track every loyalty card.', cta: 'New card' },
   '/coupons':    { t: 'Coupons',            s: 'Create, issue, and track coupon passes for your customers.' },
   '/customers':  { t: 'Customers',          s: "Everyone who's added one of your cards to their wallet.", cta: 'Add customer' },
-  '/push':       { t: 'Push notifications', s: 'Reach customers right inside Apple & Google Wallet.' },
+  '/push':       { t: 'Push notifications', s: "Land a message on your customers' lock screens." },
   '/analytics':  { t: 'Analytics',          s: 'Performance across cards, businesses, and time.' },
   '/settings':   { t: 'Settings',           s: 'Account, billing, and platform configuration.' },
   '/scan':       { t: 'Manual collect',     s: 'Add stamps or redeem coupons by number — NFC tap is automatic.' },
@@ -18,9 +18,7 @@ const PAGE_META: Record<string, { t: string; s: string; cta?: string }> = {
 
 // Hard-coded alerts (will match integrations in settings)
 const ALERTS = [
-  { title: 'Apple Wallet not connected', desc: 'Apple Developer account required ($99/yr)', type: 'warning' as const },
-  { title: 'Resend not configured', desc: 'Add RESEND_API_KEY to Railway environment', type: 'warning' as const },
-  { title: 'Stripe not integrated', desc: 'Subscription billing not yet set up', type: 'info' as const },
+  { title: 'Stripe not integrated', desc: 'Subscription billing not yet set up', type: 'warning' as const },
   { title: 'Twilio not integrated', desc: 'SMS notifications not yet set up', type: 'info' as const },
 ];
 

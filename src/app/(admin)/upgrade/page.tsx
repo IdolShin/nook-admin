@@ -22,13 +22,13 @@ const PLANS = [
     features: [
       'Up to 100 customers',
       '1 stamp card',
-      'Google Wallet passes',
+      'Mobile wallet card',
+      '1 NFC tap-to-collect stamp',
       'Push notifications (1/month)',
       'QR code enrollment',
       'Basic analytics',
     ],
     missing: [
-      'Apple Wallet',
       'Coupon system',
       'Audience targeting',
       'Multiple card types',
@@ -52,7 +52,7 @@ const PLANS = [
     features: [
       'Up to 500 customers',
       'Up to 3 cards (all types)',
-      'Google + Apple Wallet',
+      'Mobile wallet + 2 NFC stamps',
       'Push notifications (1/week)',
       'Coupon system',
       'QR code enrollment',
@@ -81,7 +81,7 @@ const PLANS = [
     features: [
       'Unlimited customers',
       'Unlimited cards (all types)',
-      'Google + Apple Wallet',
+      'Mobile wallet + unlimited NFC stamps',
       'Unlimited push notifications',
       'Audience targeting (New/Active/Inactive)',
       'Coupon system',
