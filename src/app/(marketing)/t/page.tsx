@@ -712,12 +712,22 @@ function TapPageInner() {
 
             {mode === 'choose' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <a href={`/login?next=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/wallet')}`}
+                  className="nk-press" style={{
+                    padding: '18px', borderRadius: 999, textAlign: 'center', textDecoration: 'none',
+                    background: C.brand, color: 'white', fontSize: 15.5, fontWeight: 800, fontFamily: DISPLAY,
+                    boxShadow: '0 6px 18px rgba(22,163,119,0.32)',
+                  }}>
+                  {t('Continue with Google · 3 sec', '구글 계정으로 시작 · 3초')}
+                </a>
+                <div style={{ textAlign: 'center', fontSize: 11.5, color: C.sub, marginTop: -2, marginBottom: 2 }}>
+                  {t('Recommended — stamps follow you to any phone', '추천 — 폰을 바꿔도 스탬프가 따라와요')}
+                </div>
                 <button className="nk-press" onClick={() => { setMode('new'); setFormError(''); }} style={{
-                  padding: '18px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                  background: C.brand, color: 'white', fontSize: 15.5, fontWeight: 800, fontFamily: DISPLAY,
-                  boxShadow: '0 6px 18px rgba(22,163,119,0.32)',
+                  padding: '17px', borderRadius: 999, border: `1.5px solid ${C.line}`, cursor: 'pointer',
+                  background: C.card, color: C.ink, fontSize: 15, fontWeight: 800, fontFamily: DISPLAY,
                 }}>
-                  {t("I'm new · 10-second sign-up", '처음이에요 · 10초 가입')}
+                  {t('Nickname only (this phone)', '닉네임만 (이 폰에서만)')}
                 </button>
                 <button className="nk-press" onClick={() => { setMode('existing'); setFormError(''); }} style={{
                   padding: '18px', borderRadius: 999, border: `1.5px solid ${C.line}`, cursor: 'pointer',
@@ -725,13 +735,7 @@ function TapPageInner() {
                 }}>
                   {t('I already have a card', '이미 카드가 있어요')}
                 </button>
-                <a href={`/login?next=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/wallet')}`}
-                  style={{
-                    textAlign: 'center', padding: '14px', textDecoration: 'none',
-                    color: C.sub, fontSize: 13.5, fontWeight: 700, fontFamily: FONT,
-                  }}>
-                  {t('Log in to my Nook account →', 'Nook 계정으로 로그인 →')}
-                </a>
+
               </div>
             )}
 

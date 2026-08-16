@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, use, useRef } from 'react';
+import { useState, useEffect, use, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import AddToHome from '@/components/AddToHome';
+import { account as acct, getAccountToken } from '@/lib/account';
 import '../../marketing.css';
 
 type Lang = 'ko' | 'en';
@@ -295,6 +296,62 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
     return { val: String(d).padStart(2, '0'), label: String(d) };
   });
 
+
+  // ── Google sign-up (primary path: card is saved to a real account) ──
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+  const googleCbRef = useRef<(r: { credential: string }) => void>(() => {});
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  const handleGoogle = useCallback(async (r: { credential: string }) => {
+    if (!selectedCard) { setErrorMsg(T('카드를 선택해주세요.', 'Please choose a card.', lang)); return; }
+    setGoogleBusy(true); setErrorMsg('');
+    try {
+      await acct.google(r.credential);
+      const j = await acct.join(selectedCard.id);
+      setUniqueKey(j.unique_key);
+      setWalletLink('');
+      setStep('success');
+      try {
+        if (business?.id) {
+          const raw = localStorage.getItem('nook_memberships');
+          const map = raw ? JSON.parse(raw) : {};
+          map[business.id] = { unique_key: j.unique_key, business_name: business.name };
+          localStorage.setItem('nook_memberships', JSON.stringify(map));
+        }
+      } catch { /* non-fatal */ }
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : T('구글 가입에 실패했습니다.', 'Google sign-up failed.', lang));
+    }
+    setGoogleBusy(false);
+  }, [selectedCard, business, lang]);
+  googleCbRef.current = handleGoogle;
+
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId || step !== 'form') return;
+    function init() {
+      const g = (window as unknown as { google?: { accounts?: { id?: { initialize: (o: Record<string, unknown>) => void; renderButton: (el: HTMLElement, o: Record<string, string>) => void } } } }).google;
+      if (!g?.accounts?.id) return;
+      g.accounts.id.initialize({
+        client_id: clientId!,
+        callback: (r: { credential: string }) => googleCbRef.current(r),
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      const el = googleBtnRef.current;
+      if (el) {
+        g.accounts.id.renderButton(el, {
+          type: 'standard', theme: 'filled_blue', size: 'large',
+          width: String(el.offsetWidth || 320), text: 'continue_with', shape: 'pill',
+        });
+      }
+    }
+    const w = window as unknown as { google?: { accounts?: { id?: unknown } } };
+    if (w.google?.accounts?.id) { init(); return; }
+    const iv = setInterval(() => { if (w.google?.accounts?.id) { clearInterval(iv); init(); } }, 90);
+    return () => clearInterval(iv);
+  }, [step, selectedCard]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedCard) { setErrorMsg(T('카드를 선택해주세요.', 'Please select a card.', lang)); return; }
@@ -545,6 +602,8 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
   // ── Form ─────────────────────────────────────────────────────
   return (
     <div style={containerStyle}>
+      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+      <script src="https://accounts.google.com/gsi/client" async defer />
       <div style={{
         width: isMobile ? '100%' : 420, maxWidth: 480,
         background: 'white',
@@ -655,12 +714,41 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
               </div>
             )}
 
+            {/* ── Google first: card is saved to a real account ── */}
+            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && cards.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{
+                  background: '#F4FAF7', border: '1.5px solid #C9E7D9', borderRadius: 16,
+                  padding: '16px 16px 14px',
+                }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0E5A43', textAlign: 'center' }}>
+                    {T('구글 계정으로 3초 만에 시작', 'Start in 3 seconds with Google', lang)}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: '#5C7A6C', textAlign: 'center', marginTop: 4, lineHeight: 1.5 }}>
+                    {T('폰을 바꿔도 스탬프가 그대로 따라와요', 'Your stamps follow you to any phone', lang)}
+                  </div>
+                  <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center', marginTop: 12, minHeight: 44, opacity: googleBusy ? 0.5 : 1 }} />
+                  {googleBusy && (
+                    <div style={{ fontSize: 12, color: '#5C7A6C', textAlign: 'center', marginTop: 8 }}>
+                      {T('카드 만드는 중…', 'Creating your card…', lang)}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0 4px' }}>
+                  <div style={{ flex: 1, height: 1, background: '#EBEBEB' }} />
+                  <span style={{ fontSize: 12, color: '#8A8D94', fontWeight: 600 }}>{T('또는', 'or', lang)}</span>
+                  <div style={{ flex: 1, height: 1, background: '#EBEBEB' }} />
+                </div>
+              </div>
+            )}
+
             {/* User ID */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#5C5F66', display: 'block', marginBottom: 8 }}>
-                User ID <span style={{ color: '#E05050' }}>*</span>
-                <span style={{ fontSize: 11, fontWeight: 400, color: '#8A8D94', marginLeft: 6 }}>
-                  {T('(이름 또는 닉네임)', '(name or nickname)', lang)}
+                {T('닉네임으로 빠르게', 'Quick start with a nickname', lang)} <span style={{ color: '#E05050' }}>*</span>
+                <span style={{ fontSize: 11, fontWeight: 400, color: '#B4884A', marginLeft: 6 }}>
+                  {T('· 이 폰에서만 저장돼요', '· saved on this phone only', lang)}
                 </span>
               </label>
               <input
