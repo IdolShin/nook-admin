@@ -798,23 +798,41 @@ function TapPageInner() {
         )}
 
         {/* ── Error ── */}
-        {phase === 'error' && (
-          <div style={{ textAlign: 'center', paddingTop: 96, animation: 'nk-rise 360ms ease-out' }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: 22, margin: '0 auto',
-              background: errorCode === 'REPLAY' || errorCode === 'TOKEN_EXPIRED' ? C.mint : '#FBEAE8',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28,
-            }}>
-              {errorCode === 'REPLAY' || errorCode === 'TOKEN_EXPIRED' ? '🔄' : '⚠️'}
+        {phase === 'error' && (() => {
+          const retry = errorCode === 'REPLAY' || errorCode === 'TOKEN_EXPIRED';
+          // "already collected today" is the expected happy-path refusal —
+          // it should feel like a friendly note, not a failure.
+          const daily = errorCode === 'DAILY_LIMIT_REACHED' || errorCode === 'COOLDOWN';
+          return (
+            <div style={{ textAlign: 'center', paddingTop: 96, animation: 'nk-rise 360ms ease-out' }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 22, margin: '0 auto',
+                background: daily ? '#FFF4DC' : retry ? C.mint : '#FBEAE8',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28,
+              }}>
+                {daily ? '☕️' : retry ? '🔄' : '⚠️'}
+              </div>
+              <div style={{ fontSize: 17.5, fontWeight: 800, letterSpacing: '-0.02em', marginTop: 16 }}>
+                {daily
+                  ? t('Already collected today', '오늘은 이미 적립했어요')
+                  : retry
+                    ? t('Please tap the stamp again', '스탬프에 다시 탭해주세요')
+                    : t("Couldn't collect", '적립할 수 없어요')}
+              </div>
+              <div style={{ fontSize: 13.5, color: C.sub, marginTop: 8, lineHeight: 1.6 }}>
+                {daily ? t('See you on your next visit!', '다음 방문 때 또 적립해드릴게요!') : errorMsg}
+              </div>
+              {daily && (
+                <a href="/wallet" style={{
+                  display: 'inline-block', marginTop: 22, padding: '14px 26px', borderRadius: 999,
+                  background: C.brand, color: 'white', textDecoration: 'none', fontSize: 14.5, fontWeight: 800,
+                }}>
+                  {t('See my card', '내 카드 보기')}
+                </a>
+              )}
             </div>
-            <div style={{ fontSize: 17.5, fontWeight: 800, letterSpacing: '-0.02em', marginTop: 16 }}>
-              {errorCode === 'REPLAY' || errorCode === 'TOKEN_EXPIRED'
-                ? t('Please tap the stamp again', '스탬프에 다시 탭해주세요')
-                : t("Couldn't collect", '적립할 수 없어요')}
-            </div>
-            <div style={{ fontSize: 13.5, color: C.sub, marginTop: 8, lineHeight: 1.6 }}>{errorMsg}</div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* ── Redeem overlay ── */}

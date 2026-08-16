@@ -7,7 +7,7 @@
 // (Camera scanning removed — no longer needed with NFC.)
 
 import { useState } from 'react';
-import { Check, X, Hash, Ticket, Gift, Nfc, Undo2 } from 'lucide-react';
+import { Check, X, Hash, Ticket, Gift, Nfc, Undo2, Clock } from 'lucide-react';
 import { api } from '@/lib/api';
 import { usePlan } from '@/hooks/usePlan';
 
@@ -20,6 +20,7 @@ interface StampResult {
   customerId?: string;
   stampId?: string | null;      // set right after a stamp — enables one-tap undo
   redeemed?: boolean;           // a reward was just given out — can be taken back
+  limitHit?: boolean;           // already collected today — expected, not an error
   stamps?: number;
   goal?: number;
   rewardReady?: boolean;
@@ -64,8 +65,15 @@ export default function CollectPage() {
       setDigits('');
     } catch (e) {
       let msg = e instanceof Error ? e.message : 'Failed';
-      try { msg = JSON.parse(msg).error ?? msg; } catch { /* keep */ }
-      setResult({ ok: false, msg });
+      let name: string | undefined;
+      try {
+        const j = JSON.parse(msg);
+        msg = j.error ?? msg;
+        name = j.customer_name;
+      } catch { /* keep */ }
+      const code = (e as { code?: string }).code;
+      setResult({ ok: false, msg, customer: name, limitHit: code === 'DAILY_LIMIT_REACHED' });
+      if (code === 'DAILY_LIMIT_REACHED') setDigits('');
     }
     setLoading(false);
   }
@@ -246,20 +254,27 @@ export default function CollectPage() {
         {result && (
           <div style={{
             marginTop: 16, borderRadius: 16, padding: 20, border: '1px solid',
-            borderColor: result.ok ? '#B7E4D3' : '#FCA5A5',
-            background: result.ok ? '#E8F7F2' : '#FEF2F2',
+            borderColor: result.ok ? '#B7E4D3' : result.limitHit ? '#F0D48A' : '#FCA5A5',
+            background: result.ok ? '#E8F7F2' : result.limitHit ? '#FFF9E8' : '#FEF2F2',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{
                 width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                background: result.ok ? '#1D9E75' : '#DC2626',
+                background: result.ok ? '#1D9E75' : result.limitHit ? '#D9A31E' : '#DC2626',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                {result.ok ? <Check size={20} color="white" /> : <X size={20} color="white" />}
+                {result.ok ? <Check size={20} color="white" />
+                  : result.limitHit ? <Clock size={20} color="white" />
+                  : <X size={20} color="white" />}
               </div>
               <div style={{ flex: 1 }}>
                 {result.customer && <div style={{ fontSize: 15, fontWeight: 800, color: '#1A1A1F' }}>{result.customer}</div>}
-                <div style={{ fontSize: 13, color: result.ok ? '#085041' : '#DC2626', marginTop: 2 }}>{result.msg}</div>
+                <div style={{ fontSize: 13, color: result.ok ? '#085041' : result.limitHit ? '#8C5A11' : '#DC2626', marginTop: 2 }}>{result.msg}</div>
+                {result.limitHit && (
+                  <div style={{ fontSize: 11.5, color: '#A07A28', marginTop: 5 }}>
+                    오늘 이미 적립했어요 · 한도는 설정 &gt; 하루 적립 한도에서 바꿀 수 있어요
+                  </div>
+                )}
               </div>
               {result.ok && result.stamps !== undefined && (
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#085041', fontFamily: "'JetBrains Mono', monospace" }}>

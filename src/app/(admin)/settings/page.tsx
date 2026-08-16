@@ -429,6 +429,87 @@ function TapPromoCard() {
   );
 }
 
+// ─── Daily stamp limit (anti-abuse) ──────────────────────────
+function DailyLimitCard() {
+  const [limit, setLimit] = useState<number | null>(1);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.getLocation()
+      .then((l) => { setLimit(l.daily_stamp_limit ?? null); setLoaded(true); })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  async function save(next: number | null) {
+    setSaving(true);
+    try {
+      await api.saveLocation({ daily_stamp_limit: next });
+      setLimit(next);
+      toast(
+        next === null
+          ? '한도 없음으로 저장했어요. 하루에 몇 번이든 적립됩니다.'
+          : `하루 ${next}회로 저장했어요. 같은 카드는 하루 ${next}번까지만 적립돼요.`,
+        'success'
+      );
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Failed to save', 'error');
+    }
+    setSaving(false);
+  }
+
+  const options: Array<{ v: number | null; label: string }> = [
+    { v: 1, label: '1회' },
+    { v: 2, label: '2회' },
+    { v: 3, label: '3회' },
+    { v: null, label: '무제한' },
+  ];
+
+  return (
+    <SCard
+      title="하루 적립 한도"
+      desc="같은 손님이 하루에 몇 번까지 적립할 수 있는지. 실수로 두 번 찍히거나, 스탬프를 반복해서 태그하는 걸 막아줍니다."
+      right={
+        <span style={{
+          fontSize: 11.5, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
+          background: limit === null ? '#FEF3E2' : '#E8F7F2',
+          color: limit === null ? '#8C5A11' : '#085041',
+        }}>
+          {limit === null ? '무제한' : `하루 ${limit}회`}
+        </span>
+      }
+    >
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {options.map((o) => {
+          const active = limit === o.v;
+          return (
+            <button
+              key={String(o.v)}
+              onClick={() => save(o.v)}
+              disabled={saving || !loaded}
+              style={{
+                flex: '1 1 70px', height: 40, borderRadius: 10, cursor: saving || !loaded ? 'default' : 'pointer',
+                border: active ? 'none' : '1.5px solid #EBEBEB',
+                background: active ? '#085041' : 'white',
+                color: active ? 'white' : '#5C5F66',
+                fontSize: 13.5, fontWeight: 700, fontFamily: 'inherit',
+              }}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 11.5, color: '#8A8D94', marginTop: 10, lineHeight: 1.6 }}>
+        하루 기준은 <b>동부시간 자정</b>이에요. 카드 한 장마다 따로 세니, 손님이 스탬프카드와 멤버십을 둘 다 갖고 있으면 각각 적용됩니다.
+        {limit === null && (
+          <><br /><span style={{ color: '#B4741A', fontWeight: 600 }}>⚠️ 무제한은 테스트용으로만 쓰세요. 실제 매장은 1회를 권합니다.</span></>
+        )}
+      </div>
+    </SCard>
+  );
+}
+
 // ─── Store location (for wallet proximity features) ──────────
 function StoreLocationCard() {
   const [address, setAddress] = useState('');
@@ -644,6 +725,7 @@ export default function SettingsPage() {
             <FieldRow label="Timezone" value="America/New_York" readOnly />
           </SCard>
           <StoreLocationCard />
+          <DailyLimitCard />
           <TapPromoCard />
           <SCard title="Danger zone" danger>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>

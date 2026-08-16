@@ -34,8 +34,13 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
       document.cookie = 'nook_auth=; path=/; max-age=0';
       window.location.href = '/auth';
     }
-    const msg = await res.text().catch(() => res.statusText);
-    throw new Error(msg || String(res.status));
+    const raw = await res.text().catch(() => res.statusText);
+    // Keep the machine-readable code (e.g. DAILY_LIMIT_REACHED) on the error
+    // so callers can tell "expected refusal" apart from "something broke".
+    const err = new Error(raw || String(res.status)) as Error & { code?: string; status?: number };
+    err.status = res.status;
+    try { err.code = (JSON.parse(raw) as { code?: string }).code; } catch { /* not JSON */ }
+    throw err;
   }
   return res.json() as Promise<T>;
 }
@@ -170,9 +175,9 @@ export const api = {
   deleteTag: (id: string) => req<{ success: boolean }>(`/api/tags/${id}`, { method: 'DELETE' }),
 
   // ─── Store location (proximity features) ─────────────────────
-  getLocation: () => req<{ address: string; lat: number | null; lng: number | null; tap_promo: string }>('/api/location'),
+  getLocation: () => req<{ address: string; lat: number | null; lng: number | null; tap_promo: string; daily_stamp_limit: number | null }>('/api/location'),
   geocodeAddress: (address: string) => req<{ results: Array<{ lat: number; lng: number; display_name: string }> }>('/api/location/geocode', { method: 'POST', body: JSON.stringify({ address }) }).then((d) => d.results),
-  saveLocation: (data: { lat?: number; lng?: number; address?: string; tap_promo?: string }) => req<{ business: { id: string; name: string; address: string | null; lat: number; lng: number } }>('/api/location', { method: 'PATCH', body: JSON.stringify(data) }),
+  saveLocation: (data: { lat?: number; lng?: number; address?: string; tap_promo?: string; daily_stamp_limit?: number | null }) => req<{ business: { id: string; name: string; address: string | null; lat: number; lng: number; daily_stamp_limit: number | null } }>('/api/location', { method: 'PATCH', body: JSON.stringify(data) }),
 
   // ─── Customer wallet view (public) ───────────────────────────
   redeemPointsPublic: async (unique_key: string, points: number, reward_label?: string): Promise<{ success: boolean; points_spent: number; new_balance: number; reward_label: string | null; business_name: string; customer_name: string; redeemed_at: string }> => {
